@@ -28,6 +28,29 @@ import {
   HelpCircle,
   Maximize2,
   Globe,
+  Building2,
+  Award,
+  Contact,
+  Clock,
+  CalendarDays,
+  Palmtree,
+  FileText,
+  IndianRupee,
+  Wallet,
+  ClipboardList,
+  Briefcase,
+  FileSearch,
+  Star,
+  Target,
+  BookOpen,
+  GraduationCap,
+  FolderOpen,
+  PartyPopper,
+  Megaphone,
+  Receipt,
+  Package,
+  LifeBuoy,
+  BarChart3,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
@@ -77,6 +100,28 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       ],
     },
     {
+      key: "hr-group",
+      icon: <Contact size={20} />,
+      label: "HR Management",
+      children: [
+        {
+          key: "/employees",
+          icon: <Users size={20} />,
+          label: "Employees",
+        },
+        {
+          key: "/departments",
+          icon: <Building2 size={20} />,
+          label: "Departments",
+        },
+        {
+          key: "/designations",
+          icon: <Award size={20} />,
+          label: "Designations",
+        },
+      ],
+    },
+    {
       key: "onboarding-group",
       icon: <UserPlus size={20} />,
       label: "Onboarding",
@@ -92,6 +137,133 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           label: "Onboarding List",
         },
       ],
+    },
+    {
+      key: "attendance-group",
+      icon: <Clock size={20} />,
+      label: "Attendance",
+      children: [
+        {
+          key: "/attendance",
+          icon: <ClipboardList size={20} />,
+          label: "Attendance List",
+        },
+        {
+          key: "/attendance/my",
+          icon: <CalendarDays size={20} />,
+          label: "My Attendance",
+        },
+      ],
+    },
+    {
+      key: "leaves-group",
+      icon: <Palmtree size={20} />,
+      label: "Leave Management",
+      children: [
+        {
+          key: "/leaves",
+          icon: <FileText size={20} />,
+          label: "Leave Requests",
+        },
+        {
+          key: "/leaves/apply",
+          icon: <CalendarDays size={20} />,
+          label: "Apply Leave",
+        },
+      ],
+    },
+    {
+      key: "payroll-group",
+      icon: <IndianRupee size={20} />,
+      label: "Payroll",
+      children: [
+        {
+          key: "/payroll",
+          icon: <Wallet size={20} />,
+          label: "Payroll Management",
+        },
+      ],
+    },
+    {
+      key: "recruitment-group",
+      icon: <Briefcase size={20} />,
+      label: "Recruitment",
+      children: [
+        {
+          key: "/recruitment",
+          icon: <FileSearch size={20} />,
+          label: "Job Postings",
+        },
+        {
+          key: "/recruitment/applications",
+          icon: <Users size={20} />,
+          label: "Applications",
+        },
+      ],
+    },
+    {
+      key: "performance-group",
+      icon: <Star size={20} />,
+      label: "Performance",
+      children: [
+        {
+          key: "/performance",
+          icon: <Target size={20} />,
+          label: "Reviews & Goals",
+        },
+        {
+          key: "/performance/review",
+          icon: <ClipboardList size={20} />,
+          label: "Review Form",
+        },
+      ],
+    },
+    {
+      key: "training-group",
+      icon: <GraduationCap size={20} />,
+      label: "Training",
+      children: [
+        {
+          key: "/training",
+          icon: <BookOpen size={20} />,
+          label: "Programs",
+        },
+      ],
+    },
+    {
+      key: "/documents",
+      icon: <FolderOpen size={20} />,
+      label: "Documents",
+    },
+    {
+      key: "/holidays",
+      icon: <PartyPopper size={20} />,
+      label: "Holidays",
+    },
+    {
+      key: "/announcements",
+      icon: <Megaphone size={20} />,
+      label: "Announcements",
+    },
+    {
+      key: "/expenses",
+      icon: <Receipt size={20} />,
+      label: "Expenses",
+    },
+    {
+      key: "/assets",
+      icon: <Package size={20} />,
+      label: "Assets",
+    },
+    {
+      key: "/helpdesk",
+      icon: <LifeBuoy size={20} />,
+      label: "Helpdesk",
+    },
+    {
+      key: "/reports",
+      icon: <BarChart3 size={20} />,
+      label: "Reports",
     },
   ];
 
@@ -235,7 +407,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
-          defaultOpenKeys={["admin-group", "onboarding-group"]}
+          defaultOpenKeys={["admin-group", "hr-group", "onboarding-group", "attendance-group", "leaves-group", "payroll-group"]}
           items={menuItems}
           onClick={({ key }) => navigate(key)}
           style={{
