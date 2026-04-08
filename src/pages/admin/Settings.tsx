@@ -1,10 +1,14 @@
 import React from 'react';
 import { Card, Form, Input, Button, Switch, Select, Divider, Typography, Row, Col, Tabs, Space, Radio, Tooltip } from 'antd';
 import {
-  SaveOutlined, BankOutlined, BellOutlined, LockOutlined, BgColorsOutlined,
-  CheckOutlined,
-} from '@ant-design/icons';
+  Save,
+  Bell,
+  Lock,
+  Palette,
+  Check,
+} from 'lucide-react';
 import { useTheme, getColorPalettes, type ThemeColor, type ThemeMode } from '../../context/ThemeContext';
+import { BankOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -15,7 +19,7 @@ const Settings: React.FC = () => {
 
   const themeTab = {
     key: 'appearance',
-    label: <span><BgColorsOutlined /> Appearance</span>,
+    label: <span><Palette size={16} style={{ verticalAlign: 'middle' }} /> Appearance</span>,
     children: (
       <div style={{ maxWidth: 640 }}>
         {/* Mode Selection */}
@@ -74,7 +78,7 @@ const Settings: React.FC = () => {
                         background: palettes[colorTheme].primary,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <CheckOutlined style={{ color: '#fff', fontSize: 11 }} />
+                        <Check size={11} color="#fff" />
                       </div>
                     )}
                   </div>
@@ -125,7 +129,7 @@ const Settings: React.FC = () => {
                     background: palette.primary,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <CheckOutlined style={{ color: '#fff', fontSize: 11 }} />
+                    <Check size={11} color="#fff" />
                   </div>
                 )}
               </div>
@@ -157,7 +161,7 @@ const Settings: React.FC = () => {
     themeTab,
     {
       key: 'company',
-      label: <span><BankOutlined /> Company</span>,
+      label: <span><BankOutlined size={16} style={{ verticalAlign: 'middle' }} /> Company</span>,
       children: (
         <Form layout="vertical" style={{ maxWidth: 600 }}>
           <Form.Item label="Company Name"><Input defaultValue="Acme Corp Pvt Ltd" /></Form.Item>
@@ -175,13 +179,13 @@ const Settings: React.FC = () => {
             ]} /></Form.Item></Col>
           </Row>
           <Form.Item label="Address"><Input.TextArea rows={3} defaultValue="123 Tech Park, Bangalore, India" /></Form.Item>
-          <Button type="primary" icon={<SaveOutlined />}>Save Changes</Button>
+          <Button type="primary" icon={<Save size={16} />}>Save Changes</Button>
         </Form>
       ),
     },
     {
       key: 'notifications',
-      label: <span><BellOutlined /> Notifications</span>,
+      label: <span><Bell size={16} style={{ verticalAlign: 'middle' }} /> Notifications</span>,
       children: (
         <div style={{ maxWidth: 600 }}>
           {[
@@ -204,7 +208,7 @@ const Settings: React.FC = () => {
     },
     {
       key: 'security',
-      label: <span><LockOutlined /> Security</span>,
+      label: <span><Lock size={16} style={{ verticalAlign: 'middle' }} /> Security</span>,
       children: (
         <Form layout="vertical" style={{ maxWidth: 600 }}>
           <Form.Item label="Password Policy">
@@ -227,7 +231,7 @@ const Settings: React.FC = () => {
             <Switch defaultChecked />
           </div>
           <Divider />
-          <Button type="primary" icon={<SaveOutlined />}>Save Security Settings</Button>
+          <Button type="primary" icon={<Save size={16} />}>Save Security Settings</Button>
         </Form>
       ),
     },
