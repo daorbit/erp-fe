@@ -1,12 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import {
   Card, Table, Button, Input, Space, Tag, Avatar, Typography, Modal, Form,
   Select, Row, Col, Dropdown, Badge, Tooltip,
 } from 'antd';
 import {
-  PlusOutlined, SearchOutlined, EditOutlined, DeleteOutlined, MoreOutlined,
-  UserOutlined, MailOutlined, PhoneOutlined, FilterOutlined, ExportOutlined,
-} from '@ant-design/icons';
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  MoreHorizontal,
+  User,
+  Mail,
+  Phone,
+  SlidersHorizontal,
+  Upload,
+} from 'lucide-react';
 
 const { Title, Text } = Typography;
 
@@ -60,10 +69,10 @@ const UserManagement: React.FC = () => {
       title: 'Actions', key: 'actions',
       render: () => (
         <Dropdown menu={{ items: [
-          { key: 'edit', icon: <EditOutlined />, label: 'Edit' },
-          { key: 'delete', icon: <DeleteOutlined />, label: 'Delete', danger: true },
+          { key: 'edit', icon: <Edit2 size={16} />, label: 'Edit' },
+          { key: 'delete', icon: <Trash2 size={16} />, label: 'Delete', danger: true },
         ]}} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<MoreHorizontal size={18} />} />
         </Dropdown>
       ),
     },
@@ -77,8 +86,8 @@ const UserManagement: React.FC = () => {
           <Text type="secondary">Manage all employees and their access</Text>
         </div>
         <Space>
-          <Button icon={<ExportOutlined />}>Export</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
+          <Button icon={<Upload size={16} />}>Export</Button>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsModalOpen(true)}>
             Add Employee
           </Button>
         </Space>
@@ -88,12 +97,12 @@ const UserManagement: React.FC = () => {
         <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
           <Input
             placeholder="Search employees..."
-            prefix={<SearchOutlined />}
+            prefix={<Search size={16} />}
             value={searchText}
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 300 }}
           />
-          <Button icon={<FilterOutlined />}>Filters</Button>
+          <Button icon={<SlidersHorizontal size={16} />}>Filters</Button>
         </Space>
         <Table dataSource={filteredUsers} columns={columns} pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} employees` }} />
       </Card>
@@ -109,19 +118,19 @@ const UserManagement: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
-                <Input prefix={<UserOutlined />} placeholder="Enter full name" />
+                <Input prefix={<User size={16} />} placeholder="Enter full name" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-                <Input prefix={<MailOutlined />} placeholder="Enter email" />
+                <Input prefix={<Mail size={16} />} placeholder="Enter email" />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="phone" label="Phone" rules={[{ required: true }]}>
-                <Input prefix={<PhoneOutlined />} placeholder="Enter phone" />
+                <Input prefix={<Phone size={16} />} placeholder="Enter phone" />
               </Form.Item>
             </Col>
             <Col span={12}>

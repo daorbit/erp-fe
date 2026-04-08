@@ -1,22 +1,22 @@
 import React from 'react';
 import { Row, Col, Card, Statistic, Table, Tag, Progress, Typography, Space, List, Avatar } from 'antd';
 import {
-  TeamOutlined,
-  UserAddOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ArrowUpOutlined,
-  FileProtectOutlined,
-} from '@ant-design/icons';
+  Users,
+  UserPlus,
+  CheckCircle2,
+  Clock3,
+  ArrowUpRight,
+  ShieldCheck,
+} from 'lucide-react';
 
 const { Title, Text } = Typography;
 
 const Dashboard: React.FC = () => {
   const statsCards = [
-    { title: 'Total Employees', value: 248, icon: <TeamOutlined />, color: '#1a56db', change: '+12%' },
-    { title: 'Pending Onboarding', value: 15, icon: <UserAddOutlined />, color: '#d97706', change: '+3' },
-    { title: 'KYC Completed', value: 230, icon: <CheckCircleOutlined />, color: '#059669', change: '93%' },
-    { title: 'Pending Approvals', value: 8, icon: <ClockCircleOutlined />, color: '#dc2626', change: '-2' },
+    { title: 'Total Employees', value: 248, icon: <Users size={20} />, color: '#1a56db', change: '+12%' },
+    { title: 'Pending Onboarding', value: 15, icon: <UserPlus size={20} />, color: '#d97706', change: '+3' },
+    { title: 'KYC Completed', value: 230, icon: <CheckCircle2 size={20} />, color: '#059669', change: '93%' },
+    { title: 'Pending Approvals', value: 8, icon: <Clock3 size={20} />, color: '#dc2626', change: '-2' },
   ];
 
   const recentOnboarding = [
@@ -49,10 +49,10 @@ const Dashboard: React.FC = () => {
   ];
 
   const activities = [
-    { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <FileProtectOutlined style={{ color: '#1a56db' }} /> },
-    { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircleOutlined style={{ color: '#059669' }} /> },
-    { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserAddOutlined style={{ color: '#d97706' }} /> },
-    { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <FileProtectOutlined style={{ color: '#1a56db' }} /> },
+    { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <ShieldCheck style={{ color: '#1a56db' }} size={18} /> },
+    { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircle2 style={{ color: '#059669' }} size={18} /> },
+    { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserPlus style={{ color: '#d97706' }} size={18} /> },
+    { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <ShieldCheck style={{ color: '#1a56db' }} size={18} /> },
   ];
 
   return (
@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <Text style={{ color: stat.color, fontSize: 12 }}>
-                <ArrowUpOutlined /> {stat.change} from last month
+                <ArrowUpRight size={12} /> {stat.change} from last month
               </Text>
             </Card>
           </Col>

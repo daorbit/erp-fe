@@ -4,9 +4,15 @@ import {
   Typography, Divider, Radio, Space, Result, message, Checkbox,
 } from 'antd';
 import {
-  UserOutlined, IdcardOutlined, BankOutlined, CheckCircleOutlined,
-  UploadOutlined, ArrowLeftOutlined, ArrowRightOutlined, FileProtectOutlined,
-} from '@ant-design/icons';
+  User,
+  IdCard,
+  CheckCircle2,
+  UploadCloud,
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+} from 'lucide-react';
+import { BankOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
@@ -16,11 +22,11 @@ const KYCOnboarding: React.FC = () => {
   const [form] = Form.useForm();
 
   const steps = [
-    { title: 'Personal Info', icon: <UserOutlined /> },
-    { title: 'ID Verification', icon: <IdcardOutlined /> },
-    { title: 'Bank Details', icon: <BankOutlined /> },
-    { title: 'Documents', icon: <FileProtectOutlined /> },
-    { title: 'Review', icon: <CheckCircleOutlined /> },
+    { title: 'Personal Info', icon: <User size={18} /> },
+    { title: 'ID Verification', icon: <IdCard size={18} /> },
+    { title: 'Bank Details', icon: <BankOutlined size={18} /> },
+    { title: 'Documents', icon: <ShieldCheck size={18} /> },
+    { title: 'Review', icon: <CheckCircle2 size={18} /> },
   ];
 
   const next = () => {
@@ -79,7 +85,7 @@ const KYCOnboarding: React.FC = () => {
               <Col span={12}>
                 <Form.Item name="aadhaarUpload" label="Upload Aadhaar Card" rules={[{ required: true }]}>
                   <Dragger {...uploadProps}>
-                    <p><UploadOutlined style={{ fontSize: 24, color: '#1a56db' }} /></p>
+                    <p><UploadCloud size={24} color="#1a56db" /></p>
                     <p>Click or drag Aadhaar card here</p>
                     <p style={{ color: '#999', fontSize: 12 }}>PDF, JPG, PNG (max 5MB)</p>
                   </Dragger>
@@ -88,7 +94,7 @@ const KYCOnboarding: React.FC = () => {
               <Col span={12}>
                 <Form.Item name="panUpload" label="Upload PAN Card" rules={[{ required: true }]}>
                   <Dragger {...uploadProps}>
-                    <p><UploadOutlined style={{ fontSize: 24, color: '#1a56db' }} /></p>
+                    <p><UploadCloud size={24} color="#1a56db" /></p>
                     <p>Click or drag PAN card here</p>
                     <p style={{ color: '#999', fontSize: 12 }}>PDF, JPG, PNG (max 5MB)</p>
                   </Dragger>
@@ -133,7 +139,7 @@ const KYCOnboarding: React.FC = () => {
             <Divider />
             <Form.Item name="cancelledCheque" label="Upload Cancelled Cheque / Passbook">
               <Dragger {...uploadProps}>
-                <p><UploadOutlined style={{ fontSize: 24, color: '#1a56db' }} /></p>
+                <p><UploadCloud style={{ fontSize: 24, color: '#1a56db' }} /></p>
                 <p>Click or drag file here</p>
                 <p style={{ color: '#999', fontSize: 12 }}>PDF, JPG, PNG (max 5MB)</p>
               </Dragger>
@@ -157,7 +163,7 @@ const KYCOnboarding: React.FC = () => {
                 <Col span={8} key={doc.name} style={{ marginBottom: 16 }}>
                   <Form.Item name={doc.name} label={doc.label}>
                     <Dragger {...uploadProps} style={{ padding: '12px' }}>
-                      <p><UploadOutlined style={{ fontSize: 20, color: '#1a56db' }} /></p>
+                      <p><UploadCloud size={20} color="#1a56db" /></p>
                       <p style={{ fontSize: 13 }}>{doc.desc}</p>
                       <p style={{ color: '#999', fontSize: 11 }}>Max 5MB</p>
                     </Dragger>
@@ -171,7 +177,7 @@ const KYCOnboarding: React.FC = () => {
         return (
           <Result
             status="info"
-            icon={<CheckCircleOutlined style={{ color: '#1a56db' }} />}
+            icon={<CheckCircle2 style={{ color: '#1a56db' }} size={18} />}
             title="Review & Submit"
             subTitle="Please review all the information before submitting the KYC application."
             extra={
@@ -184,7 +190,7 @@ const KYCOnboarding: React.FC = () => {
                 ].map((item, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}>
                     <Text>{item.label}</Text>
-                    <Text style={{ color: '#059669' }}><CheckCircleOutlined /> {item.status}</Text>
+                    <Text style={{ color: '#059669' }}><CheckCircle2 size={14} /> {item.status}</Text>
                   </div>
                 ))}
                 <Divider />
@@ -220,10 +226,10 @@ const KYCOnboarding: React.FC = () => {
           <>
             <Divider />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button disabled={current === 0} onClick={() => setCurrent(current - 1)} icon={<ArrowLeftOutlined />}>
+              <Button disabled={current === 0} onClick={() => setCurrent(current - 1)} icon={<ArrowLeft size={16} />}>
                 Previous
               </Button>
-              <Button type="primary" onClick={next} icon={<ArrowRightOutlined />} iconPosition="end">
+              <Button type="primary" onClick={next} icon={<ArrowRight size={16} />} iconPosition="end">
                 {current === 3 ? 'Review' : 'Next Step'}
               </Button>
             </div>

@@ -11,24 +11,24 @@ import {
   Input,
 } from "antd";
 import {
-  DashboardOutlined,
-  UserAddOutlined,
-  TeamOutlined,
-  SettingOutlined,
-  BellOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  LogoutOutlined,
-  UserOutlined,
-  IdcardOutlined,
-  AppstoreOutlined,
-  SearchOutlined,
-  SunOutlined,
-  MoonOutlined,
-  QuestionCircleOutlined,
-  ExpandOutlined,
-  GlobalOutlined,
-} from "@ant-design/icons";
+  LayoutDashboard,
+  UserPlus,
+  Users,
+  Settings,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  User,
+  IdCard,
+  LayoutGrid,
+  Search,
+  Sun,
+  Moon,
+  HelpCircle,
+  Maximize2,
+  Globe,
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -56,39 +56,39 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const menuItems = [
     {
       key: "/admin",
-      icon: <DashboardOutlined />,
+      icon: <LayoutDashboard size={20} />,
       label: "Dashboard",
     },
     {
       key: "admin-group",
-      icon: <AppstoreOutlined />,
+      icon: <LayoutGrid size={20} />,
       label: "Admin Panel",
       children: [
         {
           key: "/admin/users",
-          icon: <TeamOutlined />,
+          icon: <Users size={20} />,
           label: "User Management",
         },
         {
           key: "/admin/settings",
-          icon: <SettingOutlined />,
+          icon: <Settings size={20} />,
           label: "Settings",
         },
       ],
     },
     {
       key: "onboarding-group",
-      icon: <UserAddOutlined />,
+      icon: <UserPlus size={20} />,
       label: "Onboarding",
       children: [
         {
           key: "/onboarding/new",
-          icon: <IdcardOutlined />,
+          icon: <IdCard size={20} />,
           label: "New Employee KYC",
         },
         {
           key: "/onboarding/list",
-          icon: <TeamOutlined />,
+          icon: <Users size={20} />,
           label: "Onboarding List",
         },
       ],
@@ -97,12 +97,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   const userMenu = {
     items: [
-      { key: "profile", icon: <UserOutlined />, label: "My Profile" },
-      { key: "settings", icon: <SettingOutlined />, label: "Account Settings" },
+      { key: "profile", icon: <User size={16} />, label: "My Profile" },
+      { key: "settings", icon: <Settings size={16} />, label: "Account Settings" },
       { type: "divider" as const },
       {
         key: "logout",
-        icon: <LogoutOutlined />,
+        icon: <LogOut size={16} />,
         label: "Sign Out",
         danger: true,
       },
@@ -283,7 +283,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                     "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
                   boxShadow: "0 2px 8px rgba(59,130,246,0.3)",
                 }}
-                icon={<UserOutlined />}
+                icon={<User size={18} />}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Text
@@ -302,7 +302,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 </Text>
               </div>
               <Tooltip title="Sign Out">
-                <LogoutOutlined
+                <LogOut
                   style={{
                     color: "rgba(255,255,255,0.3)",
                     cursor: "pointer",
@@ -357,7 +357,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 color: isDark ? "#9ca3af" : "#64748b",
               }}
             >
-              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             </div>
 
             <div>
@@ -391,7 +391,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   transition: "all 0.2s",
                 }}
               >
-                <GlobalOutlined style={{ fontSize: 16 }} />
+                <Globe size={16} />
               </div>
             </Tooltip>
 
@@ -413,9 +413,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 }}
               >
                 {isDark ? (
-                  <SunOutlined style={{ fontSize: 16 }} />
+                  <Sun size={16} />
                 ) : (
-                  <MoonOutlined style={{ fontSize: 16 }} />
+                  <Moon size={16} />
                 )}
               </div>
             </Tooltip>
@@ -440,7 +440,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   color: isDark ? "#9ca3af" : "#64748b",
                 }}
               >
-                <ExpandOutlined style={{ fontSize: 16 }} />
+                <Maximize2 size={16} />
               </div>
             </Tooltip>
 
@@ -464,7 +464,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                     color: isDark ? "#9ca3af" : "#64748b",
                   }}
                 >
-                  <BellOutlined style={{ fontSize: 16 }} />
+                  <Bell size={16} />
                 </div>
               </Badge>
             </Dropdown>
@@ -500,7 +500,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                       "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
                     boxShadow: "0 2px 8px rgba(59,130,246,0.25)",
                   }}
-                  icon={<UserOutlined />}
+                  icon={<User size={18} />}
                 />
                 <div style={{ lineHeight: 1.3 }}>
                   <Text
