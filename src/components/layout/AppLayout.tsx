@@ -193,6 +193,17 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             gap: 12,
           }}
         >
+          <img
+            src="/logo.png"
+            alt="Sheeraj Codeworks"
+            style={{
+              width: collapsed ? 40 : 48,
+              height: collapsed ? 40 : 48,
+              objectFit: "contain",
+              borderRadius: 14,
+             }}
+          />
+
           {!collapsed && (
             <div>
               <Text
@@ -204,7 +215,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   lineHeight: 1.2,
                 }}
               >
-                ERP-FE
+                Sheeraj Codeworks
               </Text>
               <Text
                 style={{
