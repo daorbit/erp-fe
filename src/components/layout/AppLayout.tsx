@@ -41,7 +41,7 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
-   const navigate = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
   const { mode, setMode, colorTheme } = useTheme();
 
@@ -98,7 +98,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const userMenu = {
     items: [
       { key: "profile", icon: <User size={16} />, label: "My Profile" },
-      { key: "settings", icon: <Settings size={16} />, label: "Account Settings" },
+      {
+        key: "settings",
+        icon: <Settings size={16} />,
+        label: "Account Settings",
+      },
       { type: "divider" as const },
       {
         key: "logout",
@@ -189,30 +193,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             gap: 12,
           }}
         >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              boxShadow: "0 4px 12px rgba(59,130,246,0.4)",
-            }}
-          >
-            <Text
-              style={{
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: 15,
-                letterSpacing: -0.5,
-              }}
-            >
-              HR
-            </Text>
-          </div>
           {!collapsed && (
             <div>
               <Text
@@ -357,7 +337,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                 color: isDark ? "#9ca3af" : "#64748b",
               }}
             >
-              {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              {collapsed ? (
+                <ChevronRight size={18} />
+              ) : (
+                <ChevronLeft size={18} />
+              )}
             </div>
 
             <div>
@@ -412,11 +396,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   transition: "all 0.2s",
                 }}
               >
-                {isDark ? (
-                  <Sun size={16} />
-                ) : (
-                  <Moon size={16} />
-                )}
+                {isDark ? <Sun size={16} /> : <Moon size={16} />}
               </div>
             </Tooltip>
 
