@@ -40,10 +40,25 @@ const JobPostings: React.FC = () => {
 
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', render: (v: string) => <span className="font-medium">{v}</span> },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (v: string) => <Tag color="blue">{v}</Tag> },
+    {
+      title: 'Department', dataIndex: 'department', key: 'department',
+      filters: ['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'Operations'].map(d => ({ text: d, value: d })),
+      onFilter: (value: any, record: any) => record.department === value,
+      render: (v: string) => <Tag color="blue">{v}</Tag>,
+    },
     { title: 'Vacancies', dataIndex: 'vacancies', key: 'vacancies' },
     { title: 'Applications', dataIndex: 'applicationCount', key: 'applicationCount', render: (v: number) => v || 0 },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Open', value: 'open' },
+        { text: 'Closed', value: 'closed' },
+        { text: 'Draft', value: 'draft' },
+        { text: 'On Hold', value: 'on_hold' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions',
       render: (_: any, r: any) => (

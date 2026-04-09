@@ -60,7 +60,18 @@ const PayrollList: React.FC = () => {
     { title: 'Gross', dataIndex: 'grossPay', key: 'grossPay', render: (v: number) => formatINR(v || 0) },
     { title: 'Deductions', dataIndex: 'totalDeductions', key: 'totalDeductions', render: (v: number) => formatINR(v || 0) },
     { title: 'Net Pay', dataIndex: 'netPay', key: 'netPay', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Draft', value: 'draft' },
+        { text: 'Generated', value: 'generated' },
+        { text: 'Approved', value: 'approved' },
+        { text: 'Paid', value: 'paid' },
+        { text: 'Cancelled', value: 'cancelled' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions',
       render: (_: any, r: any) => (

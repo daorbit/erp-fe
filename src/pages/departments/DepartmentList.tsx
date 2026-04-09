@@ -42,7 +42,15 @@ const DepartmentList: React.FC = () => {
     { title: 'Code', dataIndex: 'code', key: 'code', render: (c: string) => <Tag>{c || '-'}</Tag> },
     { title: 'Head of Department', dataIndex: 'head', key: 'head', render: (h: any) => typeof h === 'object' ? h?.name : (h || '-') },
     { title: 'Employees', dataIndex: 'employeeCount', key: 'employeeCount', render: (c: number) => c ?? 0 },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'active' ? 'green' : 'red'}>{s}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Active', value: 'active' },
+        { text: 'Inactive', value: 'inactive' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={s === 'active' ? 'green' : 'red'}>{s}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', width: 80,
       render: (_: any, r: any) => (

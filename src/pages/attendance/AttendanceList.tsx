@@ -70,11 +70,30 @@ const AttendanceList: React.FC = () => {
         );
       },
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : (d || '-')}</Tag> },
+    {
+      title: 'Department', dataIndex: 'department', key: 'department',
+      filters: [...new Set(records.map((r: any) => typeof r.department === 'object' ? r.department?.name : r.department).filter(Boolean))].map((d: any) => ({ text: d, value: d })),
+      onFilter: (value: any, record: any) => {
+        const dept = typeof record.department === 'object' ? record.department?.name : record.department;
+        return dept === value;
+      },
+      render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : (d || '-')}</Tag>,
+    },
     { title: 'Check In', dataIndex: 'checkIn', key: 'checkIn', render: (t: string) => t || '-' },
     { title: 'Check Out', dataIndex: 'checkOut', key: 'checkOut', render: (t: string) => t || '-' },
     { title: 'Work Hours', dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Present', value: 'present' },
+        { text: 'Absent', value: 'absent' },
+        { text: 'Late', value: 'late' },
+        { text: 'Half Day', value: 'half_day' },
+        { text: 'On Leave', value: 'on_leave' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag>,
+    },
   ];
 
   return (

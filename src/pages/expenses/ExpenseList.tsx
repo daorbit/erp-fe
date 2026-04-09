@@ -72,11 +72,27 @@ const ExpenseList: React.FC = () => {
 
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Category', dataIndex: 'category', key: 'category', render: (c: string) => <Tag>{c}</Tag> },
+    {
+      title: 'Category', dataIndex: 'category', key: 'category',
+      filters: ['travel', 'food', 'accommodation', 'transport', 'office_supplies', 'other'].map(c => ({ text: c, value: c })),
+      onFilter: (value: any, record: any) => record.category === value,
+      render: (c: string) => <Tag>{c}</Tag>,
+    },
     { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a: number) => <Text strong>{formatINR(a ?? 0)}</Text> },
     { title: 'Date', dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
     { title: 'Employee', dataIndex: 'employeeName', key: 'employeeName', responsive: ['lg'] as any },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Pending', value: 'pending' },
+        { text: 'Approved', value: 'approved' },
+        { text: 'Rejected', value: 'rejected' },
+        { text: 'Reimbursed', value: 'reimbursed' },
+        { text: 'Draft', value: 'draft' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', width: 180,
       render: (_: any, r: any) => (

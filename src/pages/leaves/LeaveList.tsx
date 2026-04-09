@@ -69,12 +69,27 @@ const LeaveList: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Leave Type', dataIndex: 'leaveType', key: 'leaveType', render: (v: string) => <Tag color="blue">{v}</Tag> },
+    {
+      title: 'Leave Type', dataIndex: 'leaveType', key: 'leaveType',
+      filters: leaveTypes.map((lt: any) => ({ text: lt.name, value: lt.name })),
+      onFilter: (value: any, record: any) => record.leaveType === value,
+      render: (v: string) => <Tag color="blue">{v}</Tag>,
+    },
     { title: 'From', dataIndex: 'startDate', key: 'startDate' },
     { title: 'To', dataIndex: 'endDate', key: 'endDate' },
     { title: 'Days', dataIndex: 'days', key: 'days' },
     { title: 'Reason', dataIndex: 'reason', key: 'reason', ellipsis: true },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Pending', value: 'pending' },
+        { text: 'Approved', value: 'approved' },
+        { text: 'Rejected', value: 'rejected' },
+        { text: 'Cancelled', value: 'cancelled' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions',
       render: (_: any, r: any) => r.status === 'pending' ? (

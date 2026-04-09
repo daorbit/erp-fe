@@ -80,11 +80,37 @@ const AssetList: React.FC = () => {
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
     { title: 'Tag', dataIndex: 'assetTag', key: 'assetTag', render: (t: string) => <Text code>{t}</Text> },
-    { title: 'Category', dataIndex: 'category', key: 'category', render: (c: string) => <Tag>{c}</Tag> },
+    {
+      title: 'Category', dataIndex: 'category', key: 'category',
+      filters: ['laptop', 'desktop', 'monitor', 'phone', 'furniture', 'other'].map(c => ({ text: c, value: c })),
+      onFilter: (value: any, record: any) => record.category === value,
+      render: (c: string) => <Tag>{c}</Tag>,
+    },
     { title: 'Brand', dataIndex: 'brand', key: 'brand', responsive: ['lg'] as any },
     { title: 'Assigned To', dataIndex: 'assignedTo', key: 'assignedTo', render: (a: any) => a ? (typeof a === 'string' ? a : a.name ?? '-') : '-' },
-    { title: 'Condition', dataIndex: 'condition', key: 'condition', render: (c: string) => <Tag color={conditionColor[c] ?? 'default'}>{c}</Tag> },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag> },
+    {
+      title: 'Condition', dataIndex: 'condition', key: 'condition',
+      filters: [
+        { text: 'New', value: 'new' },
+        { text: 'Good', value: 'good' },
+        { text: 'Fair', value: 'fair' },
+        { text: 'Poor', value: 'poor' },
+      ],
+      onFilter: (value: any, record: any) => record.condition === value,
+      render: (c: string) => <Tag color={conditionColor[c] ?? 'default'}>{c}</Tag>,
+    },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Available', value: 'available' },
+        { text: 'Assigned', value: 'assigned' },
+        { text: 'In Repair', value: 'in_repair' },
+        { text: 'Retired', value: 'retired' },
+        { text: 'Lost', value: 'lost' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', width: 180,
       render: (_: any, r: any) => (

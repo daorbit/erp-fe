@@ -17,6 +17,11 @@ export const fontFamilies = [
   { label: 'DM Sans', value: "'DM Sans', sans-serif" },
   { label: 'Nunito', value: "'Nunito', sans-serif" },
   { label: 'Roboto', value: "'Roboto', sans-serif" },
+  { label: 'Open Sans', value: "'Open Sans', sans-serif" },
+  { label: 'Lato', value: "'Lato', sans-serif" },
+  { label: 'Montserrat', value: "'Montserrat', sans-serif" },
+  { label: 'Source Sans Pro', value: "'Source Sans Pro', sans-serif" },
+  { label: 'Raleway', value: "'Raleway', sans-serif" },
 ];
 
 function hexToRgb(hex: string) {

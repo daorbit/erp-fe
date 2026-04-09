@@ -84,11 +84,40 @@ const EmployeeList: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : d}</Tag> },
+    {
+      title: 'Department', dataIndex: 'department', key: 'department',
+      filters: departments.map((d: any) => ({ text: d.name, value: d.name })),
+      onFilter: (value: any, record: any) => {
+        const dept = typeof record.department === 'object' ? record.department?.name : record.department;
+        return dept === value;
+      },
+      render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : d}</Tag>,
+    },
     { title: 'Designation', dataIndex: 'designation', key: 'designation', render: (d: any) => typeof d === 'object' ? d?.title : (d || '-') },
     { title: 'Join Date', dataIndex: 'joinDate', key: 'joinDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag> },
-    { title: 'Type', dataIndex: 'employmentType', key: 'employmentType', render: (t: string) => <Tag color={typeColor[t] || 'default'}>{t || '-'}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Active', value: 'active' },
+        { text: 'Inactive', value: 'inactive' },
+        { text: 'On Leave', value: 'on_leave' },
+        { text: 'Probation', value: 'probation' },
+        { text: 'Terminated', value: 'terminated' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag>,
+    },
+    {
+      title: 'Type', dataIndex: 'employmentType', key: 'employmentType',
+      filters: [
+        { text: 'Full Time', value: 'full_time' },
+        { text: 'Part Time', value: 'part_time' },
+        { text: 'Contract', value: 'contract' },
+        { text: 'Intern', value: 'intern' },
+      ],
+      onFilter: (value: any, record: any) => record.employmentType === value,
+      render: (t: string) => <Tag color={typeColor[t] || 'default'}>{t || '-'}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', width: 80,
       render: (_: any, r: any) => (

@@ -85,11 +85,37 @@ const TicketList: React.FC = () => {
         <Button type="link" className="!p-0" onClick={() => { setSelectedTicket(r); setDetailOpen(true); }}>{r.subject}</Button>
       ),
     },
-    { title: 'Category', dataIndex: 'category', key: 'category', render: (c: string) => <Tag>{c}</Tag> },
-    { title: 'Priority', dataIndex: 'priority', key: 'priority', render: (p: string) => <Tag color={priorityColor[p] ?? 'default'}>{p}</Tag> },
+    {
+      title: 'Category', dataIndex: 'category', key: 'category',
+      filters: ['it', 'hr', 'admin', 'finance', 'facilities', 'other'].map(c => ({ text: c, value: c })),
+      onFilter: (value: any, record: any) => record.category === value,
+      render: (c: string) => <Tag>{c}</Tag>,
+    },
+    {
+      title: 'Priority', dataIndex: 'priority', key: 'priority',
+      filters: [
+        { text: 'Low', value: 'low' },
+        { text: 'Medium', value: 'medium' },
+        { text: 'High', value: 'high' },
+        { text: 'Critical', value: 'critical' },
+      ],
+      onFilter: (value: any, record: any) => record.priority === value,
+      render: (p: string) => <Tag color={priorityColor[p] ?? 'default'}>{p}</Tag>,
+    },
     { title: 'Employee', dataIndex: 'employeeName', key: 'employeeName', responsive: ['lg'] as any },
     { title: 'Assigned To', dataIndex: 'assignedTo', key: 'assignedTo', render: (a: any) => a ? (typeof a === 'string' ? a : a.name ?? '-') : '-', responsive: ['lg'] as any },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag> },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status',
+      filters: [
+        { text: 'Open', value: 'open' },
+        { text: 'In Progress', value: 'in_progress' },
+        { text: 'Resolved', value: 'resolved' },
+        { text: 'Closed', value: 'closed' },
+        { text: 'Pending', value: 'pending' },
+      ],
+      onFilter: (value: any, record: any) => record.status === value,
+      render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', width: 150,
       render: (_: any, r: any) => (
