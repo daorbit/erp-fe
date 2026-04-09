@@ -3,6 +3,7 @@ import { Card, Table, Tag, Button, Drawer, Form, Input, InputNumber, Select, Typ
 import { App } from 'antd';
 import { Briefcase, Users, Calendar, CheckCircle2, Plus, Edit2 } from 'lucide-react';
 import { useJobList, useCreateJob, useUpdateJob } from '@/hooks/queries/useRecruitment';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -15,6 +16,7 @@ const statusColor: Record<string, string> = {
 };
 
 const JobPostings: React.FC = () => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<any>(null);
   const [form] = Form.useForm();
@@ -39,9 +41,9 @@ const JobPostings: React.FC = () => {
   ];
 
   const columns = [
-    { title: 'Title', dataIndex: 'title', key: 'title', render: (v: string) => <span className="font-medium">{v}</span> },
+    { title: t('name'), dataIndex: 'title', key: 'title', render: (v: string) => <span className="font-medium">{v}</span> },
     {
-      title: 'Department', dataIndex: 'department', key: 'department',
+      title: t('department'), dataIndex: 'department', key: 'department',
       filters: ['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'Operations'].map(d => ({ text: d, value: d })),
       onFilter: (value: any, record: any) => record.department === value,
       render: (v: string) => <Tag color="blue">{v}</Tag>,
@@ -49,7 +51,7 @@ const JobPostings: React.FC = () => {
     { title: 'Vacancies', dataIndex: 'vacancies', key: 'vacancies' },
     { title: 'Applications', dataIndex: 'applicationCount', key: 'applicationCount', render: (v: number) => v || 0 },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       filters: [
         { text: 'Open', value: 'open' },
         { text: 'Closed', value: 'closed' },
@@ -60,20 +62,35 @@ const JobPostings: React.FC = () => {
       render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag>,
     },
     {
-      title: 'Actions', key: 'actions',
+      title: t('actions'), key: 'actions',
       render: (_: any, r: any) => (
-        <Button size="small" type="link" icon={<Edit2 size={14} />} onClick={() => { setEditingJob(r); form.setFieldsValue(r); setDrawerOpen(true); }}>Edit</Button>
+        <Button size="small" type="link" icon={<Edit2 size={14} />} onClick={() => { setEditingJob(r); form.setFieldsValue(r); setDrawerOpen(true); }}>{t('edit')}</Button>
       ),
     },
   ];
 
   const handleSubmit = (values: any) => {
+    const payload: any = {
+      title: values.title,
+      department: values.department,
+      vacancies: values.vacancies,
+      description: values.description || '',
+      location: values.location || '',
+      experience: {
+        min: values.minExperience || 0,
+        max: values.maxExperience || 0,
+      },
+      status: values.status,
+      skills: values.skills || [],
+    };
+    // Remove undefined
+    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
     if (editingJob) {
-      updateMutation.mutate({ id: editingJob._id || editingJob.id, data: values }, {
+      updateMutation.mutate({ id: editingJob._id || editingJob.id, data: payload }, {
         onSuccess: () => { message.success('Job updated'); closeDrawer(); },
       });
     } else {
-      createMutation.mutate(values, {
+      createMutation.mutate(payload, {
         onSuccess: () => { message.success('Job created'); closeDrawer(); },
       });
     }
@@ -89,10 +106,10 @@ const JobPostings: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Job Postings</Title>
-          <Text type="secondary">Manage open positions and recruitment</Text>
+          <Title level={4} className="!mb-1">{t('job_postings')}</Title>
+          <Text type="secondary">{t('manage_recruitment')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>Create Job</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('create_job')}</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -138,14 +155,22 @@ const JobPostings: React.FC = () => {
               ]} />
             </Form.Item>
           </div>
-          <Form.Item name="description" label="Description">
+          <Form.Item name="location" label="Location" rules={[{ required: true }]}>
+            <Input placeholder="e.g. Bangalore, Remote" />
+          </Form.Item>
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="minExperience" label="Min Experience (yrs)">
+              <InputNumber min={0} className="w-full" />
+            </Form.Item>
+            <Form.Item name="maxExperience" label="Max Experience (yrs)">
+              <InputNumber min={0} className="w-full" />
+            </Form.Item>
+          </div>
+          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
             <TextArea rows={4} placeholder="Job description..." />
           </Form.Item>
-          <Form.Item name="requirements" label="Requirements">
-            <TextArea rows={3} placeholder="Requirements..." />
-          </Form.Item>
           <div className="flex justify-end gap-3">
-            <Button onClick={closeDrawer}>Cancel</Button>
+            <Button onClick={closeDrawer}>{t('cancel')}</Button>
             <Button type="primary" htmlType="submit" loading={createMutation.isPending || updateMutation.isPending}>
               {editingJob ? 'Update' : 'Create'}
             </Button>

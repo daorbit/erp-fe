@@ -23,27 +23,25 @@ interface SidebarProps {
 function buildMenuItems(items: NavItem[], t: (key: string) => string): MenuProps['items'] {
   return items.map((item) => {
     const Icon = item.icon;
-    const title = item.titleKey ? t(item.titleKey) : item.title;
     if (item.children) {
       return {
-        key: title,
+        key: item.titleKey,
         icon: <Icon size={18} />,
-        label: title,
+        label: t(item.titleKey),
         children: item.children.map((child) => {
           const ChildIcon = child.icon;
-          const childTitle = child.titleKey ? t(child.titleKey) : child.title;
           return {
-            key: child.href || childTitle,
+            key: child.href || child.titleKey,
             icon: <ChildIcon size={16} />,
-            label: childTitle,
+            label: t(child.titleKey),
           };
         }),
       };
     }
     return {
-      key: item.href || title,
+      key: item.href || item.titleKey,
       icon: <Icon size={18} />,
-      label: title,
+      label: t(item.titleKey),
     };
   });
 }
@@ -51,24 +49,23 @@ function buildMenuItems(items: NavItem[], t: (key: string) => string): MenuProps
 export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
   const collapsed = useSelector((state: any) => state.ui?.sidebarCollapsed ?? false);
   const themeMode = useSelector((state: any) => state.ui?.themeMode ?? 'light');
+  const { t } = useTranslation();
   const isDark = themeMode === 'dark';
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { t } = useTranslation();
   const menuItems = useMemo(() => buildMenuItems(navigationItems, t), [t]);
-
   const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
 
   const openKeys = useMemo(() => {
     const keys: string[] = [];
     navigationItems.forEach((item) => {
       if (item.children?.some((c) => c.href === location.pathname)) {
-        keys.push(item.titleKey ? t(item.titleKey) : item.title);
+        keys.push(item.titleKey);
       }
     });
     return keys;
-  }, [location.pathname, t]);
+  }, [location.pathname]);
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key.startsWith('/')) {
@@ -119,8 +116,8 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
           <div className={`flex items-center gap-2.5 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-100'}`}>
             <Avatar size={36} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
-              <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>{t('admin_user')}</span>
-              <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>{t('super_admin')}</span>
+              <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>Admin User</span>
+              <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>Super Admin</span>
             </div>
             <button className={`transition-colors ${isDark ? 'text-white/30 hover:text-white/60' : 'text-slate-500 hover:text-slate-700'}`}>
               <LogOut size={14} />

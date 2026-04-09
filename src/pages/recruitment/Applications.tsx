@@ -3,6 +3,7 @@ import { Card, Table, Tag, Button, Drawer, Descriptions, Select, Rate, Typograph
 import { App } from 'antd';
 import { FileText, Users, Calendar, CheckCircle2, Eye, Star } from 'lucide-react';
 import { useApplicationList, useUpdateApplicationStatus, useScheduleInterview } from '@/hooks/queries/useRecruitment';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -18,6 +19,7 @@ const statusColor: Record<string, string> = {
 const allStatuses = ['applied', 'screening', 'interview', 'offered', 'hired', 'rejected'];
 
 const Applications: React.FC = () => {
+  const { t } = useTranslation();
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [interviewForm] = Form.useForm();
@@ -42,7 +44,12 @@ const Applications: React.FC = () => {
 
   const handleScheduleInterview = (values: any) => {
     if (!selectedApp) return;
-    scheduleMutation.mutate({ id: selectedApp._id || selectedApp.id, data: { ...values, date: values.date?.format('YYYY-MM-DD HH:mm') } }, {
+    const payload: any = {
+      interviewDate: values.date?.toISOString(),
+      interviewers: values.interviewer ? [values.interviewer] : [],
+      interviewNotes: values.notes,
+    };
+    scheduleMutation.mutate({ id: selectedApp._id || selectedApp.id, data: payload }, {
       onSuccess: () => {
         message.success('Interview scheduled');
         interviewForm.resetFields();
@@ -63,15 +70,15 @@ const Applications: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Email', dataIndex: 'email', key: 'email', responsive: ['md'] as any },
+    { title: t('email'), dataIndex: 'email', key: 'email', responsive: ['md'] as any },
     { title: 'Experience', dataIndex: 'experience', key: 'experience', render: (v: number) => v ? `${v} yrs` : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
     { title: 'Rating', dataIndex: 'rating', key: 'rating', render: (v: number) => <Rate disabled defaultValue={v || 0} count={5} className="text-sm" /> },
     {
-      title: 'Actions', key: 'actions',
+      title: t('actions'), key: 'actions',
       render: (_: any, r: any) => (
         <Space>
-          <Button size="small" type="link" icon={<Eye size={14} />} onClick={() => { setSelectedApp(r); setDetailDrawerOpen(true); }}>View</Button>
+          <Button size="small" type="link" icon={<Eye size={14} />} onClick={() => { setSelectedApp(r); setDetailDrawerOpen(true); }}>{t('view')}</Button>
           <Select size="small" value={r.status} onChange={(val) => handleStatusChange(r._id || r.id, val)} className="min-w-[100px]"
             options={allStatuses.map(s => ({ value: s, label: s }))} />
         </Space>
@@ -82,8 +89,8 @@ const Applications: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <Title level={4} className="!mb-1">Applications</Title>
-        <Text type="secondary">Manage job applications and candidates</Text>
+        <Title level={4} className="!mb-1">{t('applications')}</Title>
+        <Text type="secondary">{t('manage_recruitment')}</Text>
       </div>
 
       <Row gutter={[16, 16]}>

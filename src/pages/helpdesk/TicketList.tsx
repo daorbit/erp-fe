@@ -3,6 +3,7 @@ import { Card, Table, Tag, Button, Input, Drawer, Form, Select, Row, Col, Typogr
 import { App } from 'antd';
 import { Plus, Search, AlertCircle, Clock, CheckCircle2, MessageSquare, Send } from 'lucide-react';
 import { useTicketList, useCreateTicket, useAddTicketComment, useUpdateTicketStatus } from '@/hooks/queries/useHelpdesk';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -14,6 +15,7 @@ const priorityColor: Record<string, string> = {
 };
 
 const TicketList: React.FC = () => {
+  const { t } = useTranslation();
   const [createOpen, setCreateOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
@@ -86,13 +88,13 @@ const TicketList: React.FC = () => {
       ),
     },
     {
-      title: 'Category', dataIndex: 'category', key: 'category',
+      title: t('category'), dataIndex: 'category', key: 'category',
       filters: ['it', 'hr', 'admin', 'finance', 'facilities', 'other'].map(c => ({ text: c, value: c })),
       onFilter: (value: any, record: any) => record.category === value,
       render: (c: string) => <Tag>{c}</Tag>,
     },
     {
-      title: 'Priority', dataIndex: 'priority', key: 'priority',
+      title: t('priority'), dataIndex: 'priority', key: 'priority',
       filters: [
         { text: 'Low', value: 'low' },
         { text: 'Medium', value: 'medium' },
@@ -102,10 +104,10 @@ const TicketList: React.FC = () => {
       onFilter: (value: any, record: any) => record.priority === value,
       render: (p: string) => <Tag color={priorityColor[p] ?? 'default'}>{p}</Tag>,
     },
-    { title: 'Employee', dataIndex: 'employeeName', key: 'employeeName', responsive: ['lg'] as any },
+    { title: t('employee'), dataIndex: 'employeeName', key: 'employeeName', responsive: ['lg'] as any },
     { title: 'Assigned To', dataIndex: 'assignedTo', key: 'assignedTo', render: (a: any) => a ? (typeof a === 'string' ? a : a.name ?? '-') : '-', responsive: ['lg'] as any },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       filters: [
         { text: 'Open', value: 'open' },
         { text: 'In Progress', value: 'in_progress' },
@@ -117,7 +119,7 @@ const TicketList: React.FC = () => {
       render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
     },
     {
-      title: 'Actions', key: 'actions', width: 150,
+      title: t('actions'), key: 'actions', width: 150,
       render: (_: any, r: any) => (
         <Select size="small" value={r.status} onChange={(v: string) => handleStatusChange(r._id ?? r.id, v)} className="min-w-[120px]"
           options={['open', 'in_progress', 'resolved', 'closed'].map(s => ({ value: s, label: s }))} />
@@ -129,10 +131,10 @@ const TicketList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Helpdesk</Title>
-          <Text type="secondary">Manage support tickets</Text>
+          <Title level={4} className="!mb-1">{t('helpdesk')}</Title>
+          <Text type="secondary">{t('manage_helpdesk')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>New Ticket</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>{t('create_ticket')}</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -155,7 +157,7 @@ const TicketList: React.FC = () => {
 
       <Card bordered={false}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center mb-4">
-          <Input prefix={<Search size={16} />} placeholder="Search tickets..." value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
+          <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
         </div>
         <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 900 }} />
       </Card>
@@ -163,8 +165,8 @@ const TicketList: React.FC = () => {
       {/* Create Drawer */}
       <Drawer title="New Ticket" open={createOpen} onClose={() => setCreateOpen(false)} width={500} footer={
         <div className="flex justify-end gap-3">
-          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>Create</Button>
+          <Button onClick={() => setCreateOpen(false)}>{t('cancel')}</Button>
+          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
         </div>
       }>
         <Form form={form} layout="vertical" onFinish={handleCreate}>

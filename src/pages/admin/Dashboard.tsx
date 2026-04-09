@@ -17,6 +17,7 @@ import {
 import { useDashboardStats, useRecentActivities, useDepartmentDistribution } from '@/hooks/queries/useDashboard';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import AnimateIn, { StaggerContainer, StaggerItem } from '@/components/AnimateIn';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -94,6 +95,7 @@ const columns = [
 ];
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { data: statsData, isLoading: statsLoading } = useDashboardStats();
   const { data: activitiesData, isLoading: activitiesLoading } = useRecentActivities();
   const { data: employeeData, isLoading: employeesLoading } = useEmployeeList({ limit: '5' });
@@ -107,7 +109,7 @@ const Dashboard: React.FC = () => {
 
   const stats = [
     {
-      title: 'Total Employees',
+      title: t('total_employees'),
       value: apiStats?.totalEmployees ?? 248,
       icon: <Users size={20} />,
       change: apiStats?.employeeChange ?? '+20.9%',
@@ -116,7 +118,7 @@ const Dashboard: React.FC = () => {
       large: true,
     },
     {
-      title: 'Pending Onboarding',
+      title: t('pending_onboarding'),
       value: apiStats?.pendingOnboarding ?? 12,
       icon: <UserPlus size={20} />,
       change: apiStats?.onboardingChange ?? '+5.2%',
@@ -125,7 +127,7 @@ const Dashboard: React.FC = () => {
       large: true,
     },
     {
-      title: 'KYC Completed',
+      title: t('kyc_completed'),
       value: apiStats?.kycCompleted ?? 196,
       icon: <CheckCircle2 size={20} />,
       change: apiStats?.kycRate ?? '92%',
@@ -134,7 +136,7 @@ const Dashboard: React.FC = () => {
       large: false,
     },
     {
-      title: 'Pending Approvals',
+      title: t('pending_approvals'),
       value: apiStats?.pendingApprovals ?? 8,
       icon: <Clock size={20} />,
       change: apiStats?.approvalChange ?? '-12%',
@@ -148,8 +150,8 @@ const Dashboard: React.FC = () => {
     <div className="space-y-6">
       <AnimateIn variant="fadeIn">
         <div>
-          <Title level={4} className="!mb-1">HR Dashboard</Title>
-          <Text type="secondary">Welcome back, Admin. Here's what's happening today.</Text>
+          <Title level={4} className="!mb-1">{t('dashboard')}</Title>
+          <Text type="secondary">{t('welcome_back')}. {t('heres_whats_happening')}</Text>
         </div>
       </AnimateIn>
 

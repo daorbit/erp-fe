@@ -3,12 +3,14 @@ import { Card, Table, Avatar, Tag, Progress, Button, Typography, Row, Col } from
 import { Eye, UserPlus, Users, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
 const statusColor: Record<string, string> = { completed: 'green', in_progress: 'orange', pending: 'gold', rejected: 'red' };
 
 const OnboardingList: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: empData, isLoading } = useEmployeeList({ onboarding: 'true' });
   const records: any[] = empData?.data ?? [];
@@ -19,15 +21,15 @@ const OnboardingList: React.FC = () => {
   const pendingCount = records.filter((r: any) => r.kycStatus === 'pending' || r.onboardingStatus === 'pending').length;
 
   const stats = [
-    { title: 'Total Onboarding', value: totalCount, icon: <Users size={20} />, color: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-950' },
-    { title: 'Completed', value: completedCount, icon: <CheckCircle2 size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
-    { title: 'In Progress', value: inProgressCount, icon: <Clock size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
-    { title: 'Pending', value: pendingCount, icon: <AlertCircle size={20} />, color: '#ef4444', bg: 'bg-red-50 dark:bg-red-950' },
+    { title: t('onboarding'), value: totalCount, icon: <Users size={20} />, color: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-950' },
+    { title: t('kyc_completed'), value: completedCount, icon: <CheckCircle2 size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
+    { title: t('pending_onboarding'), value: inProgressCount, icon: <Clock size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
+    { title: t('pending_approvals'), value: pendingCount, icon: <AlertCircle size={20} />, color: '#ef4444', bg: 'bg-red-50 dark:bg-red-950' },
   ];
 
   const columns = [
     {
-      title: 'Employee', dataIndex: 'name', key: 'name',
+      title: t('employee'), dataIndex: 'name', key: 'name',
       render: (_: any, r: any) => {
         const name = r.name || `${r.firstName ?? ''} ${r.lastName ?? ''}`.trim();
         return (
@@ -38,11 +40,11 @@ const OnboardingList: React.FC = () => {
         );
       },
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : (d || '-')}</Tag> },
+    { title: t('department'), dataIndex: 'department', key: 'department', render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : (d || '-')}</Tag> },
     { title: 'Start Date', key: 'startDate', render: (_: any, r: any) => { const d = r.startDate || r.joinDate; return d ? new Date(d).toLocaleDateString() : '-'; } },
     { title: 'Current Step', dataIndex: 'step', key: 'step', render: (s: string) => <Text type="secondary">{s || '-'}</Text> },
     {
-      title: 'Status', key: 'kycStatus',
+      title: t('status'), key: 'kycStatus',
       render: (_: any, r: any) => {
         const status = r.kycStatus || r.onboardingStatus || 'pending';
         return <Tag color={statusColor[status] || 'default'}>{status}</Tag>;
@@ -61,15 +63,15 @@ const OnboardingList: React.FC = () => {
       },
     },
     {
-      title: 'Action', key: 'actions',
-      render: (_: any, r: any) => <Button type="link" icon={<Eye size={14} />} size="small" onClick={() => navigate(`/employees/${r._id || r.id}`)}>View</Button>,
+      title: t('actions'), key: 'actions',
+      render: (_: any, r: any) => <Button type="link" icon={<Eye size={14} />} size="small" onClick={() => navigate(`/employees/${r._id || r.id}`)}>{t('view')}</Button>,
     },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><Title level={4} className="!mb-1">Onboarding List</Title><Text type="secondary">Track all employee onboarding progress</Text></div>
+        <div><Title level={4} className="!mb-1">{t('onboarding_list')}</Title><Text type="secondary">{t('pending_onboarding')}</Text></div>
         <Button type="primary" icon={<UserPlus size={16} />} onClick={() => navigate('/onboarding/new')}>New Onboarding</Button>
       </div>
 

@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, App } from 'antd';
+import { Drawer, Form, Input, Select, App, Button, Space } from 'antd';
 import { useCreateDepartment, useUpdateDepartment } from '@/hooks/queries/useDepartments';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DepartmentFormProps {
   open: boolean;
@@ -10,6 +11,7 @@ interface DepartmentFormProps {
 }
 
 const DepartmentForm: React.FC<DepartmentFormProps> = ({ open, onClose, editData }) => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const createMutation = useCreateDepartment();
@@ -35,11 +37,19 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ open, onClose, editData
 
   const handleSubmit = async (values: any) => {
     try {
+      const payload: any = { ...values };
+      // Map 'head' to 'headOfDepartment' for backend
+      if ('head' in payload) {
+        payload.headOfDepartment = payload.head;
+        delete payload.head;
+      }
       if (isEdit) {
-        await updateMutation.mutateAsync({ id: editData._id || editData.id, data: values });
+        await updateMutation.mutateAsync({ id: editData._id || editData.id, data: payload });
         message.success('Department updated');
       } else {
-        await createMutation.mutateAsync(values);
+        // Remove 'status' - not in createDepartmentSchema
+        delete payload.status;
+        await createMutation.mutateAsync(payload);
         message.success('Department created');
       }
       onClose();
@@ -49,13 +59,13 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ open, onClose, editData
   };
 
   return (
-    <Modal
-      title={isEdit ? 'Edit Department' : 'Add Department'}
+    <Drawer
+      title={isEdit ? t('edit') + ' ' + t('department') : t('add_department')}
       open={open}
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      confirmLoading={createMutation.isPending || updateMutation.isPending}
+      onClose={onClose}
+      width={520}
       destroyOnClose
+      extra={<Space><Button onClick={onClose}>{t('cancel')}</Button><Button type="primary" loading={createMutation.isPending || updateMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item name="name" label="Department Name" rules={[{ required: true }]}>
@@ -75,7 +85,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ open, onClose, editData
           <Select options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
         </Form.Item>
       </Form>
-    </Modal>
+    </Drawer>
   );
 };
 

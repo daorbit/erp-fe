@@ -18,8 +18,9 @@ import {
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setThemeMode, setThemeColor, setFontFamily, setLanguage } from '@/store/uiSlice';
 import { colorPalettes, fontFamilies, type ThemeColor } from '@/config/theme';
-import { t, languages } from '@/config/i18n';
+import { languages } from '@/config/i18n';
 import type { Language } from '@/config/i18n';
+import { useTranslation } from '@/hooks/useTranslation';
 import AnimateIn from '@/components/AnimateIn';
 import { App } from 'antd';
 
@@ -34,6 +35,7 @@ const notificationItems = [
 ];
 
 const Settings: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { message } = App.useApp();
   const mode = useAppSelector((s) => s.ui.themeMode);
@@ -52,13 +54,13 @@ const Settings: React.FC = () => {
       key: 'appearance',
       label: (
         <span className="flex items-center gap-2">
-          <Droplet size={18} /> {t('appearance', language)}
+          <Droplet size={18} /> {t('appearance')}
         </span>
       ),
       children: (
         <div className="space-y-6">
           <AnimateIn>
-            <Card size="small" title={t('theme_mode', language)} className="!rounded-xl">
+            <Card size="small" title={t('theme_mode')} className="!rounded-xl">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(['light', 'dark'] as const).map((m) => {
                   const isSelected = mode === m;
@@ -102,7 +104,7 @@ const Settings: React.FC = () => {
           </AnimateIn>
 
           <AnimateIn>
-            <Card size="small" title={t('color_theme', language)} className="!rounded-xl">
+            <Card size="small" title={t('color_theme')} className="!rounded-xl">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {(Object.entries(colorPalettes) as [ThemeColor, typeof colorPalettes[ThemeColor]][]).map(([key, palette]) => {
                   const isSelected = colorTheme === key;
@@ -133,7 +135,7 @@ const Settings: React.FC = () => {
           </AnimateIn>
 
           <AnimateIn>
-            <Card size="small" title={<span className="flex items-center gap-2"><Type size={18} /> {t('font_family', language)}</span>} className="!rounded-xl">
+            <Card size="small" title={<span className="flex items-center gap-2"><Type size={18} /> {t('font_family')}</span>} className="!rounded-xl">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {fontFamilies.map((font) => {
                   const isSelected = fontFamily === font.value;
@@ -180,13 +182,13 @@ const Settings: React.FC = () => {
       key: 'language',
       label: (
         <span className="flex items-center gap-2">
-          <Globe size={18} /> {t('language', language)}
+          <Globe size={18} /> {t('language')}
         </span>
       ),
       children: (
         <div className="space-y-6">
           <AnimateIn>
-            <Card size="small" title={t('language', language)} className="!rounded-xl">
+            <Card size="small" title={t('language')} className="!rounded-xl">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {languages.map((lang) => {
                   const isSelected = language === lang.code;
@@ -218,7 +220,7 @@ const Settings: React.FC = () => {
                 {previewKeys.map((key) => (
                   <div key={key} className="rounded-lg border p-3 text-center">
                     <div className="text-xs text-gray-400 mb-1">{key}</div>
-                    <div className="font-medium">{t(key, language)}</div>
+                    <div className="font-medium">{t(key)}</div>
                   </div>
                 ))}
               </div>
@@ -231,7 +233,7 @@ const Settings: React.FC = () => {
       key: 'company',
       label: (
         <span className="flex items-center gap-2">
-          <Banknote size={18} /> {t('company', language)}
+          <Banknote size={18} /> {t('company')}
         </span>
       ),
       children: (
@@ -273,7 +275,7 @@ const Settings: React.FC = () => {
                 </Upload.Dragger>
               </div>
               <Button type="primary" icon={<Save size={18} />} onClick={() => message.success('Company settings saved')}>
-                {t('save', language)} Changes
+                {t('save')} Changes
               </Button>
             </div>
           </Card>
@@ -284,7 +286,7 @@ const Settings: React.FC = () => {
       key: 'notifications',
       label: (
         <span className="flex items-center gap-2">
-          <Bell size={18} /> {t('notifications', language)}
+          <Bell size={18} /> {t('notifications')}
         </span>
       ),
       children: (
@@ -306,7 +308,7 @@ const Settings: React.FC = () => {
             </div>
             <Divider />
             <Button type="primary" icon={<Save size={18} />} onClick={() => message.success('Notification settings saved')}>
-              {t('save', language)} Changes
+              {t('save')} Changes
             </Button>
           </Card>
         </AnimateIn>
@@ -316,7 +318,7 @@ const Settings: React.FC = () => {
       key: 'security',
       label: (
         <span className="flex items-center gap-2">
-          <Lock size={18} /> {t('security', language)}
+          <Lock size={18} /> {t('security')}
         </span>
       ),
       children: (
@@ -366,7 +368,7 @@ const Settings: React.FC = () => {
               </div>
               <Divider />
               <Button type="primary" icon={<Save size={18} />} onClick={() => message.success('Security settings saved')}>
-                {t('save', language)} Security Settings
+                {t('save')} Security Settings
               </Button>
             </div>
           </Card>
@@ -378,7 +380,7 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <Title level={4} className="!mb-1">{t('settings', language)}</Title>
+        <Title level={4} className="!mb-1">{t('settings')}</Title>
         <Text type="secondary">Manage your organization settings and preferences</Text>
       </div>
       <Tabs items={tabItems} tabPosition="left" className="settings-tabs" />

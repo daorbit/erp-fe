@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Tabs, Modal, Form, Input, Select, Progress, Typography, Row, Col, Space, Avatar, Rate } from 'antd';
+import { Card, Table, Tag, Button, Tabs, Drawer, Form, Input, Select, Progress, Typography, Row, Col, Space, Avatar, Rate } from 'antd';
 import { App } from 'antd';
 import { Target, Star, Plus } from 'lucide-react';
 import { useReviewList, useGoalList, useCreateGoal } from '@/hooks/queries/usePerformance';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -29,6 +30,7 @@ const reviewTypeColor: Record<string, string> = {
 };
 
 const PerformanceList: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('reviews');
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [form] = Form.useForm();
@@ -43,7 +45,7 @@ const PerformanceList: React.FC = () => {
 
   const reviewColumns = [
     {
-      title: 'Employee', dataIndex: 'employeeName', key: 'employeeName',
+      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
@@ -54,12 +56,12 @@ const PerformanceList: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Type', dataIndex: 'type', key: 'type', render: (v: string) => <Tag color={reviewTypeColor[v]}>{v}</Tag> },
+    { title: t('type'), dataIndex: 'type', key: 'type', render: (v: string) => <Tag color={reviewTypeColor[v]}>{v}</Tag> },
     { title: 'Period', dataIndex: 'period', key: 'period' },
     { title: 'Rating', dataIndex: 'rating', key: 'rating', render: (v: number) => v ? <Rate disabled defaultValue={v} count={5} className="text-sm" /> : <Text type="secondary">-</Text> },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
     {
-      title: 'Actions', key: 'actions',
+      title: t('actions'), key: 'actions',
       render: (_: any, r: any) => (
         <Button size="small" type="link" href={`/performance/review/${r._id || r.id}`}>
           {r.status === 'draft' || r.status === 'pending' ? 'Review' : 'View'}
@@ -70,7 +72,7 @@ const PerformanceList: React.FC = () => {
 
   const goalColumns = [
     {
-      title: 'Employee', dataIndex: 'employeeName', key: 'employeeName',
+      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
@@ -88,13 +90,23 @@ const PerformanceList: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Priority', dataIndex: 'priority', key: 'priority', render: (v: string) => <Tag color={priorityColor[v]}>{v}</Tag> },
+    { title: t('priority'), dataIndex: 'priority', key: 'priority', render: (v: string) => <Tag color={priorityColor[v]}>{v}</Tag> },
     { title: 'Due Date', dataIndex: 'dueDate', key: 'dueDate' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag> },
   ];
 
   const handleCreateGoal = (values: any) => {
-    createGoalMutation.mutate(values, {
+    const payload: any = {
+      employee: values.employeeId,
+      title: values.title,
+      description: values.description,
+      category: values.category,
+      priority: values.priority,
+      startDate: values.startDate ? new Date(values.startDate).toISOString() : undefined,
+      dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : undefined,
+    };
+    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+    createGoalMutation.mutate(payload, {
       onSuccess: () => {
         message.success('Goal created');
         setGoalModalOpen(false);
@@ -127,19 +139,27 @@ const PerformanceList: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <Title level={4} className="!mb-1">Performance</Title>
-        <Text type="secondary">Track employee performance reviews and goals</Text>
+        <Title level={4} className="!mb-1">{t('performance')}</Title>
+        <Text type="secondary">{t('manage_performance')}</Text>
       </div>
 
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
 
-      <Modal title="Add Goal" open={goalModalOpen} onCancel={() => setGoalModalOpen(false)} footer={null} width={500}>
+      <Drawer title={t('add')} open={goalModalOpen} onClose={() => setGoalModalOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setGoalModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createGoalMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleCreateGoal}>
           <Form.Item name="title" label="Goal Title" rules={[{ required: true }]}>
             <Input placeholder="e.g. Complete project milestone" />
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={3} placeholder="Describe the goal..." />
+          </Form.Item>
+          <Form.Item name="category" label="Category" rules={[{ required: true }]}>
+            <Select placeholder="Category" options={[
+              { value: 'performance', label: 'Performance' },
+              { value: 'learning', label: 'Learning' },
+              { value: 'project', label: 'Project' },
+              { value: 'behavioral', label: 'Behavioral' },
+            ]} />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
@@ -150,19 +170,18 @@ const PerformanceList: React.FC = () => {
                 { value: 'critical', label: 'Critical' },
               ]} />
             </Form.Item>
-            <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]}>
+            <Form.Item name="startDate" label="Start Date" rules={[{ required: true }]}>
               <Input type="date" />
             </Form.Item>
           </div>
+          <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]}>
+            <Input type="date" />
+          </Form.Item>
           <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
             <Input placeholder="Employee ID" />
           </Form.Item>
-          <div className="flex justify-end gap-3">
-            <Button onClick={() => setGoalModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={createGoalMutation.isPending}>Create</Button>
-          </div>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

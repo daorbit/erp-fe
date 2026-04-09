@@ -6,6 +6,7 @@ import {
 import { useEmployeeList, useCreateEmployee, useDeleteEmployee } from '@/hooks/queries/useEmployees';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -13,6 +14,7 @@ const statusColor: Record<string, string> = { active: 'green', inactive: 'red', 
 const typeColor: Record<string, string> = { full_time: 'blue', part_time: 'cyan', contract: 'purple', intern: 'gold' };
 
 const EmployeeList: React.FC = () => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
@@ -45,15 +47,43 @@ const EmployeeList: React.FC = () => {
   }).length;
 
   const stats = [
-    { title: 'Total Employees', value: totalEmployees, icon: <Users size={20} />, color: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-950' },
-    { title: 'Active', value: activeCount, icon: <UserCheck size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
-    { title: 'On Leave', value: onLeaveCount, icon: <UserMinus size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
-    { title: 'New Joiners (30d)', value: newJoiners, icon: <UserPlus size={20} />, color: '#8b5cf6', bg: 'bg-purple-50 dark:bg-purple-950' },
+    { title: t('total_employees'), value: totalEmployees, icon: <Users size={20} />, color: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-950' },
+    { title: t('active'), value: activeCount, icon: <UserCheck size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
+    { title: t('on_leave'), value: onLeaveCount, icon: <UserMinus size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
+    { title: t('new_joiners'), value: newJoiners, icon: <UserPlus size={20} />, color: '#8b5cf6', bg: 'bg-purple-50 dark:bg-purple-950' },
   ];
 
   const handleCreate = async (values: any) => {
     try {
-      await createMutation.mutateAsync(values);
+      const payload: any = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        password: values.password,
+        phone: values.phone,
+        gender: values.gender,
+        dateOfBirth: values.dateOfBirth?.format?.('YYYY-MM-DD') ?? values.dateOfBirth,
+        department: values.department,
+        designation: values.designation,
+        employmentType: values.employmentType,
+        joinDate: values.joinDate?.format?.('YYYY-MM-DD') ?? values.joinDate,
+        reportingManager: values.reportingManager,
+      };
+      if (values.bankName || values.accountNumber || values.ifscCode) {
+        payload.bankDetails = {
+          bankName: values.bankName,
+          accountNumber: values.accountNumber,
+          ifscCode: values.ifscCode,
+        };
+      }
+      if (values.panNumber) {
+        payload.identityDocs = {
+          panNumber: values.panNumber,
+        };
+      }
+      // Remove undefined values
+      Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+      await createMutation.mutateAsync(payload);
       message.success('Employee created successfully');
       form.resetFields();
       setDrawerOpen(false);
@@ -73,7 +103,7 @@ const EmployeeList: React.FC = () => {
 
   const columns = [
     {
-      title: 'Employee', dataIndex: 'name', key: 'name',
+      title: t('employee'), dataIndex: 'name', key: 'name',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600" src={r.avatar}>{(r.name || r.firstName || '').split(' ').map((n: string) => n[0]).join('')}</Avatar>
@@ -85,7 +115,7 @@ const EmployeeList: React.FC = () => {
       ),
     },
     {
-      title: 'Department', dataIndex: 'department', key: 'department',
+      title: t('department'), dataIndex: 'department', key: 'department',
       filters: departments.map((d: any) => ({ text: d.name, value: d.name })),
       onFilter: (value: any, record: any) => {
         const dept = typeof record.department === 'object' ? record.department?.name : record.department;
@@ -93,10 +123,10 @@ const EmployeeList: React.FC = () => {
       },
       render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : d}</Tag>,
     },
-    { title: 'Designation', dataIndex: 'designation', key: 'designation', render: (d: any) => typeof d === 'object' ? d?.title : (d || '-') },
-    { title: 'Join Date', dataIndex: 'joinDate', key: 'joinDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
+    { title: t('designation'), dataIndex: 'designation', key: 'designation', render: (d: any) => typeof d === 'object' ? d?.title : (d || '-') },
+    { title: t('join_date'), dataIndex: 'joinDate', key: 'joinDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       filters: [
         { text: 'Active', value: 'active' },
         { text: 'Inactive', value: 'inactive' },
@@ -108,7 +138,7 @@ const EmployeeList: React.FC = () => {
       render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag>,
     },
     {
-      title: 'Type', dataIndex: 'employmentType', key: 'employmentType',
+      title: t('type'), dataIndex: 'employmentType', key: 'employmentType',
       filters: [
         { text: 'Full Time', value: 'full_time' },
         { text: 'Part Time', value: 'part_time' },
@@ -119,12 +149,12 @@ const EmployeeList: React.FC = () => {
       render: (t: string) => <Tag color={typeColor[t] || 'default'}>{t || '-'}</Tag>,
     },
     {
-      title: 'Actions', key: 'actions', width: 80,
+      title: t('actions'), key: 'actions', width: 80,
       render: (_: any, r: any) => (
         <Dropdown menu={{ items: [
-          { key: 'view', icon: <Eye size={14} />, label: 'View', onClick: () => navigate(`/employees/${r._id || r.id}`) },
-          { key: 'edit', icon: <Edit2 size={14} />, label: 'Edit' },
-          { key: 'delete', icon: <Trash2 size={14} />, label: 'Delete', danger: true, onClick: () => handleDelete(r._id || r.id) },
+          { key: 'view', icon: <Eye size={14} />, label: t('view'), onClick: () => navigate(`/employees/${r._id || r.id}`) },
+          { key: 'edit', icon: <Edit2 size={14} />, label: t('edit') },
+          { key: 'delete', icon: <Trash2 size={14} />, label: t('delete'), danger: true, onClick: () => handleDelete(r._id || r.id) },
         ]}} trigger={['click']}>
           <Button type="text" icon={<MoreVertical size={16} />} />
         </Dropdown>
@@ -136,12 +166,12 @@ const EmployeeList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Employees</Title>
-          <Text type="secondary">View and manage all employees</Text>
+          <Title level={4} className="!mb-1">{t('employees')}</Title>
+          <Text type="secondary">{t('manage_employees')}</Text>
         </div>
         <Space>
-          <Button icon={<Download size={16} />}>Export</Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>Add Employee</Button>
+          <Button icon={<Download size={16} />}>{t('export')}</Button>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('add_employee')}</Button>
         </Space>
       </div>
 
@@ -165,7 +195,7 @@ const EmployeeList: React.FC = () => {
 
       <Card bordered={false}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <Input prefix={<Search size={16} />} placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs" allowClear />
+          <Input prefix={<Search size={16} />} placeholder={t('search') + '...'} value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs" allowClear />
           <Space>
             <Select placeholder="Department" allowClear className="min-w-[150px]" value={deptFilter} onChange={setDeptFilter}
               options={departments.map((d: any) => ({ value: d._id || d.id || d.name, label: d.name }))} />
@@ -176,7 +206,7 @@ const EmployeeList: React.FC = () => {
         <Table columns={columns} dataSource={employees} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
       </Card>
 
-      <Drawer title="Add Employee" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={600} destroyOnClose>
+      <Drawer title={t('add_employee')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={600} destroyOnClose>
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Tabs items={[
             { key: 'personal', label: 'Personal Info', children: (
@@ -186,6 +216,7 @@ const EmployeeList: React.FC = () => {
                   <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}><Input /></Form.Item>
                 </div>
                 <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}><Input /></Form.Item>
+                <Form.Item name="password" label="Password" rules={[{ required: true, min: 8 }]}><Input.Password /></Form.Item>
                 <div className="grid grid-cols-2 gap-4">
                   <Form.Item name="phone" label="Phone"><Input /></Form.Item>
                   <Form.Item name="dateOfBirth" label="Date of Birth"><DatePicker className="w-full" /></Form.Item>
@@ -220,8 +251,8 @@ const EmployeeList: React.FC = () => {
             )},
           ]} />
           <div className="flex justify-end gap-3 mt-4">
-            <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={createMutation.isPending}>Add Employee</Button>
+            <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
+            <Button type="primary" htmlType="submit" loading={createMutation.isPending}>{t('add_employee')}</Button>
           </div>
         </Form>
       </Drawer>

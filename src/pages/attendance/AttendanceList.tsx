@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, DatePicker, Select, Modal, Form, Input, Typography, Row, Col, Tabs, Space, Avatar, TimePicker, App } from 'antd';
+import { Card, Table, Tag, Button, DatePicker, Select, Drawer, Form, Input, Typography, Row, Col, Tabs, Space, Avatar, TimePicker, App } from 'antd';
 import { Plus, Search, UserCheck, UserX, Clock, CalendarOff } from 'lucide-react';
 import { useAttendanceList, useMarkAttendance } from '@/hooks/queries/useAttendance';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import dayjs from 'dayjs';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
 const statusColor: Record<string, string> = { present: 'green', absent: 'red', late: 'orange', half_day: 'blue', on_leave: 'purple' };
 
 const AttendanceList: React.FC = () => {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [date, setDate] = useState<string>(dayjs().format('YYYY-MM-DD'));
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
@@ -32,17 +34,18 @@ const AttendanceList: React.FC = () => {
   const leaveCount = records.filter((r: any) => r.status === 'on_leave').length;
 
   const stats = [
-    { title: 'Present', value: presentCount, icon: <UserCheck size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
-    { title: 'Absent', value: absentCount, icon: <UserX size={20} />, color: '#ef4444', bg: 'bg-red-50 dark:bg-red-950' },
-    { title: 'Late', value: lateCount, icon: <Clock size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
-    { title: 'On Leave', value: leaveCount, icon: <CalendarOff size={20} />, color: '#8b5cf6', bg: 'bg-purple-50 dark:bg-purple-950' },
+    { title: t('present_today'), value: presentCount, icon: <UserCheck size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
+    { title: t('absent_today'), value: absentCount, icon: <UserX size={20} />, color: '#ef4444', bg: 'bg-red-50 dark:bg-red-950' },
+    { title: t('late_today'), value: lateCount, icon: <Clock size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
+    { title: t('on_leave'), value: leaveCount, icon: <CalendarOff size={20} />, color: '#8b5cf6', bg: 'bg-purple-50 dark:bg-purple-950' },
   ];
 
   const handleMark = async (values: any) => {
     try {
       await markMutation.mutateAsync({
-        ...values,
+        employeeId: values.employee,
         date: values.date?.format('YYYY-MM-DD'),
+        status: values.status,
         checkIn: values.checkIn?.format('HH:mm'),
         checkOut: values.checkOut?.format('HH:mm'),
       });
@@ -56,7 +59,7 @@ const AttendanceList: React.FC = () => {
 
   const columns = [
     {
-      title: 'Employee', dataIndex: 'employee', key: 'employee',
+      title: t('employee'), dataIndex: 'employee', key: 'employee',
       render: (emp: any) => {
         const name = typeof emp === 'object' ? (emp?.name || `${emp?.firstName ?? ''} ${emp?.lastName ?? ''}`) : emp;
         return (
@@ -71,7 +74,7 @@ const AttendanceList: React.FC = () => {
       },
     },
     {
-      title: 'Department', dataIndex: 'department', key: 'department',
+      title: t('department'), dataIndex: 'department', key: 'department',
       filters: [...new Set(records.map((r: any) => typeof r.department === 'object' ? r.department?.name : r.department).filter(Boolean))].map((d: any) => ({ text: d, value: d })),
       onFilter: (value: any, record: any) => {
         const dept = typeof record.department === 'object' ? record.department?.name : record.department;
@@ -79,11 +82,11 @@ const AttendanceList: React.FC = () => {
       },
       render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : (d || '-')}</Tag>,
     },
-    { title: 'Check In', dataIndex: 'checkIn', key: 'checkIn', render: (t: string) => t || '-' },
-    { title: 'Check Out', dataIndex: 'checkOut', key: 'checkOut', render: (t: string) => t || '-' },
-    { title: 'Work Hours', dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
+    { title: t('check_in'), dataIndex: 'checkIn', key: 'checkIn', render: (v: string) => v || '-' },
+    { title: t('check_out'), dataIndex: 'checkOut', key: 'checkOut', render: (v: string) => v || '-' },
+    { title: t('work_hours'), dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       filters: [
         { text: 'Present', value: 'present' },
         { text: 'Absent', value: 'absent' },
@@ -100,10 +103,10 @@ const AttendanceList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Attendance</Title>
-          <Text type="secondary">View and manage employee attendance</Text>
+          <Title level={4} className="!mb-1">{t('attendance')}</Title>
+          <Text type="secondary">{t('track_attendance')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Mark Attendance</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>{t('mark_attendance')}</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -139,7 +142,7 @@ const AttendanceList: React.FC = () => {
         <Table columns={columns} dataSource={records} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
       </Card>
 
-      <Modal title="Mark Attendance" open={modalOpen} onCancel={() => setModalOpen(false)} onOk={() => form.submit()} confirmLoading={markMutation.isPending} destroyOnClose>
+      <Drawer title={t('mark_attendance')} open={modalOpen} onClose={() => setModalOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={markMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleMark}>
           <Form.Item name="employee" label="Employee" rules={[{ required: true }]}>
             <Select placeholder="Select employee" showSearch optionFilterProp="label"
@@ -156,7 +159,7 @@ const AttendanceList: React.FC = () => {
             <Select options={['present', 'absent', 'late', 'half_day', 'on_leave'].map(s => ({ value: s, label: s }))} />
           </Form.Item>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

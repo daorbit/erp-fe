@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Tabs, Modal, Form, Input, InputNumber, Typography, Row, Col, Space, Avatar, Popconfirm } from 'antd';
+import { Card, Table, Tag, Button, Tabs, Drawer, Form, Input, InputNumber, Typography, Row, Col, Space, Avatar, Popconfirm } from 'antd';
 import { App } from 'antd';
 import { Clock, CheckCircle2, XCircle, Plus, Calendar } from 'lucide-react';
 import { useLeaveList, useLeaveTypeList, useLeaveBalance, useApproveLeave, useRejectLeave, useCreateLeaveType } from '@/hooks/queries/useLeaves';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -14,6 +15,7 @@ const statusColor: Record<string, string> = {
 };
 
 const LeaveList: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('requests');
   const [typeModalOpen, setTypeModalOpen] = useState(false);
   const [form] = Form.useForm();
@@ -58,7 +60,7 @@ const LeaveList: React.FC = () => {
 
   const requestColumns = [
     {
-      title: 'Employee', dataIndex: 'employeeName', key: 'employeeName',
+      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
@@ -70,17 +72,17 @@ const LeaveList: React.FC = () => {
       ),
     },
     {
-      title: 'Leave Type', dataIndex: 'leaveType', key: 'leaveType',
+      title: t('leave_type'), dataIndex: 'leaveType', key: 'leaveType',
       filters: leaveTypes.map((lt: any) => ({ text: lt.name, value: lt.name })),
       onFilter: (value: any, record: any) => record.leaveType === value,
       render: (v: string) => <Tag color="blue">{v}</Tag>,
     },
-    { title: 'From', dataIndex: 'startDate', key: 'startDate' },
-    { title: 'To', dataIndex: 'endDate', key: 'endDate' },
-    { title: 'Days', dataIndex: 'days', key: 'days' },
-    { title: 'Reason', dataIndex: 'reason', key: 'reason', ellipsis: true },
+    { title: t('from_date'), dataIndex: 'startDate', key: 'startDate' },
+    { title: t('to_date'), dataIndex: 'endDate', key: 'endDate' },
+    { title: t('total_days'), dataIndex: 'days', key: 'days' },
+    { title: t('reason'), dataIndex: 'reason', key: 'reason', ellipsis: true },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       filters: [
         { text: 'Pending', value: 'pending' },
         { text: 'Approved', value: 'approved' },
@@ -91,7 +93,7 @@ const LeaveList: React.FC = () => {
       render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag>,
     },
     {
-      title: 'Actions', key: 'actions',
+      title: t('actions'), key: 'actions',
       render: (_: any, r: any) => r.status === 'pending' ? (
         <Space>
           <Popconfirm title="Approve this leave?" onConfirm={() => handleApprove(r._id || r.id)}>
@@ -106,7 +108,7 @@ const LeaveList: React.FC = () => {
   ];
 
   const typeColumns = [
-    { title: 'Name', dataIndex: 'name', key: 'name' },
+    { title: t('name'), dataIndex: 'name', key: 'name' },
     { title: 'Code', dataIndex: 'code', key: 'code', render: (v: string) => <Tag>{v}</Tag> },
     { title: 'Max Days/Year', dataIndex: 'maxDaysPerYear', key: 'maxDaysPerYear' },
     { title: 'Carry Forward', dataIndex: 'carryForward', key: 'carryForward', render: (v: boolean) => <Tag color={v ? 'green' : 'default'}>{v ? 'Yes' : 'No'}</Tag> },
@@ -115,7 +117,7 @@ const LeaveList: React.FC = () => {
 
   const balanceColumns = [
     {
-      title: 'Employee', dataIndex: 'employeeName', key: 'employeeName',
+      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
@@ -123,16 +125,16 @@ const LeaveList: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Leave Type', dataIndex: 'leaveType', key: 'leaveType' },
-    { title: 'Total', dataIndex: 'total', key: 'total' },
+    { title: t('leave_type'), dataIndex: 'leaveType', key: 'leaveType' },
+    { title: t('total'), dataIndex: 'total', key: 'total' },
     { title: 'Used', dataIndex: 'used', key: 'used' },
-    { title: 'Balance', dataIndex: 'balance', key: 'balance', render: (v: number) => <Tag color={v > 0 ? 'green' : 'red'}>{v}</Tag> },
+    { title: t('balance'), dataIndex: 'balance', key: 'balance', render: (v: number) => <Tag color={v > 0 ? 'green' : 'red'}>{v}</Tag> },
   ];
 
   const tabItems = [
     {
       key: 'requests',
-      label: 'Leave Requests',
+      label: t('leave_requests'),
       children: (
         <div className="space-y-4">
           <Row gutter={[16, 16]}>
@@ -182,13 +184,13 @@ const LeaveList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Leave Management</Title>
-          <Text type="secondary">View and manage leave requests, types, and balances</Text>
+          <Title level={4} className="!mb-1">{t('leave_management')}</Title>
+          <Text type="secondary">{t('manage_leaves')}</Text>
         </div>
       </div>
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
 
-      <Modal title="Add Leave Type" open={typeModalOpen} onCancel={() => setTypeModalOpen(false)} footer={null} width={500}>
+      <Drawer title={t('add') + ' ' + t('leave_type')} open={typeModalOpen} onClose={() => setTypeModalOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setTypeModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createTypeMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleCreateType}>
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>
             <Input placeholder="e.g. Sick Leave" />
@@ -196,15 +198,11 @@ const LeaveList: React.FC = () => {
           <Form.Item name="code" label="Code" rules={[{ required: true }]}>
             <Input placeholder="e.g. SL" />
           </Form.Item>
-          <Form.Item name="maxDaysPerYear" label="Max Days Per Year" rules={[{ required: true }]}>
-            <InputNumber min={1} className="w-full" placeholder="e.g. 12" />
+          <Form.Item name="defaultDays" label="Default Days Per Year" rules={[{ required: true }]}>
+            <InputNumber min={0} className="w-full" placeholder="e.g. 12" />
           </Form.Item>
-          <div className="flex justify-end gap-3">
-            <Button onClick={() => setTypeModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={createTypeMutation.isPending}>Create</Button>
-          </div>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

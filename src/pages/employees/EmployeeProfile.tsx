@@ -4,12 +4,14 @@ import { Mail, Phone, MapPin, Calendar, Briefcase, Building2, ArrowLeft } from '
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEmployee, useEmployeeAttendance, useEmployeeLeaves, useEmployeePayslips } from '@/hooks/queries/useEmployees';
 import { Button } from 'antd';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
 const statusColor: Record<string, string> = { active: 'green', inactive: 'red', on_leave: 'orange', probation: 'blue', terminated: 'red' };
 
 const EmployeeProfile: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: empData, isLoading } = useEmployee(id!);
@@ -31,29 +33,29 @@ const EmployeeProfile: React.FC = () => {
   const desigName = typeof emp.designation === 'object' ? emp.designation?.title : emp.designation;
 
   const attendanceColumns = [
-    { title: 'Date', dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
-    { title: 'Check In', dataIndex: 'checkIn', key: 'checkIn' },
-    { title: 'Check Out', dataIndex: 'checkOut', key: 'checkOut' },
-    { title: 'Work Hours', dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'present' ? 'green' : s === 'absent' ? 'red' : 'orange'}>{s}</Tag> },
+    { title: t('date'), dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
+    { title: t('check_in'), dataIndex: 'checkIn', key: 'checkIn' },
+    { title: t('check_out'), dataIndex: 'checkOut', key: 'checkOut' },
+    { title: t('work_hours'), dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'present' ? 'green' : s === 'absent' ? 'red' : 'orange'}>{s}</Tag> },
   ];
 
   const leaveColumns = [
-    { title: 'Type', dataIndex: 'leaveType', key: 'leaveType', render: (t: string) => <Tag>{t}</Tag> },
-    { title: 'From', dataIndex: 'fromDate', key: 'fromDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
-    { title: 'To', dataIndex: 'toDate', key: 'toDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
-    { title: 'Days', dataIndex: 'days', key: 'days' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'approved' ? 'green' : s === 'rejected' ? 'red' : 'orange'}>{s}</Tag> },
-    { title: 'Reason', dataIndex: 'reason', key: 'reason' },
+    { title: t('type'), dataIndex: 'leaveType', key: 'leaveType', render: (t: string) => <Tag>{t}</Tag> },
+    { title: t('from_date'), dataIndex: 'fromDate', key: 'fromDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
+    { title: t('to_date'), dataIndex: 'toDate', key: 'toDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
+    { title: t('total_days'), dataIndex: 'days', key: 'days' },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'approved' ? 'green' : s === 'rejected' ? 'red' : 'orange'}>{s}</Tag> },
+    { title: t('reason'), dataIndex: 'reason', key: 'reason' },
   ];
 
   const payslipColumns = [
     { title: 'Month', dataIndex: 'month', key: 'month' },
     { title: 'Basic', dataIndex: 'basic', key: 'basic', render: (v: number) => v ? `₹${v.toLocaleString()}` : '-' },
     { title: 'Allowances', dataIndex: 'allowances', key: 'allowances', render: (v: number) => v ? `₹${v.toLocaleString()}` : '-' },
-    { title: 'Deductions', dataIndex: 'deductions', key: 'deductions', render: (v: number) => v ? `₹${v.toLocaleString()}` : '-' },
-    { title: 'Net Pay', dataIndex: 'netPay', key: 'netPay', render: (v: number) => v ? `₹${v.toLocaleString()}` : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'paid' ? 'green' : 'orange'}>{s}</Tag> },
+    { title: t('deductions'), dataIndex: 'deductions', key: 'deductions', render: (v: number) => v ? `₹${v.toLocaleString()}` : '-' },
+    { title: t('net_pay'), dataIndex: 'netPay', key: 'netPay', render: (v: number) => v ? `₹${v.toLocaleString()}` : '-' },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'paid' ? 'green' : 'orange'}>{s}</Tag> },
   ];
 
   return (

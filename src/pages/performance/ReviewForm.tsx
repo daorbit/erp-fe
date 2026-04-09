@@ -4,11 +4,13 @@ import { App } from 'antd';
 import { ArrowLeft, Send, Save } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReview, useSubmitReview, useUpdateReview } from '@/hooks/queries/usePerformance';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const ReviewForm: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -52,7 +54,7 @@ const ReviewForm: React.FC = () => {
         <div className="flex items-center gap-3">
           <Button type="text" icon={<ArrowLeft size={16} />} onClick={() => navigate(-1)} />
           <div>
-            <Title level={4} className="!mb-1">Performance Review</Title>
+            <Title level={4} className="!mb-1">{t('review_form')}</Title>
             <Text type="secondary">{review.employeeName} - {review.period}</Text>
           </div>
         </div>
@@ -64,8 +66,8 @@ const ReviewForm: React.FC = () => {
       {/* Employee Info */}
       <Card bordered={false}>
         <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }}>
-          <Descriptions.Item label="Employee">{review.employeeName}</Descriptions.Item>
-          <Descriptions.Item label="Department">{review.department}</Descriptions.Item>
+          <Descriptions.Item label={t('employee')}>{review.employeeName}</Descriptions.Item>
+          <Descriptions.Item label={t('department')}>{review.department}</Descriptions.Item>
           <Descriptions.Item label="Type"><Tag>{review.type}</Tag></Descriptions.Item>
           <Descriptions.Item label="Period">{review.period}</Descriptions.Item>
           <Descriptions.Item label="Reviewer">{review.reviewerName}</Descriptions.Item>
@@ -118,9 +120,9 @@ const ReviewForm: React.FC = () => {
 
         {/* Actions */}
         <div className="flex justify-end gap-3">
-          <Button onClick={() => navigate(-1)}>Cancel</Button>
-          <Button icon={<Save size={16} />} htmlType="submit" loading={updateMutation.isPending}>Save Draft</Button>
-          <Button type="primary" icon={<Send size={16} />} onClick={handleSubmit} loading={submitMutation.isPending}>Submit Review</Button>
+          <Button onClick={() => navigate(-1)}>{t('cancel')}</Button>
+          <Button icon={<Save size={16} />} htmlType="submit" loading={updateMutation.isPending}>{t('save')}</Button>
+          <Button type="primary" icon={<Send size={16} />} onClick={handleSubmit} loading={submitMutation.isPending}>{t('submit')}</Button>
         </div>
       </Form>
     </div>

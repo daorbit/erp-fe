@@ -3,12 +3,14 @@ import { Card, Table, Tag, Button, Typography, Row, Col, Spin, Space, App } from
 import { LogIn, LogOut, Clock, CheckCircle2, XCircle, CalendarDays } from 'lucide-react';
 import { useMyAttendance, useCheckIn, useCheckOut, useAttendanceSummary } from '@/hooks/queries/useAttendance';
 import dayjs from 'dayjs';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
 const statusColor: Record<string, string> = { present: 'green', absent: 'red', late: 'orange', half_day: 'blue', on_leave: 'purple' };
 
 const MyAttendance: React.FC = () => {
+  const { t } = useTranslation();
   const { message } = App.useApp();
   const [checkedIn, setCheckedIn] = useState(false);
 
@@ -54,18 +56,18 @@ const MyAttendance: React.FC = () => {
   ];
 
   const columns = [
-    { title: 'Date', dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
-    { title: 'Check In', dataIndex: 'checkIn', key: 'checkIn', render: (t: string) => t || '-' },
-    { title: 'Check Out', dataIndex: 'checkOut', key: 'checkOut', render: (t: string) => t || '-' },
-    { title: 'Work Hours', dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag> },
+    { title: t('date'), dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
+    { title: t('check_in'), dataIndex: 'checkIn', key: 'checkIn', render: (v: string) => v || '-' },
+    { title: t('check_out'), dataIndex: 'checkOut', key: 'checkOut', render: (v: string) => v || '-' },
+    { title: t('work_hours'), dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag> },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <Title level={4} className="!mb-1">My Attendance</Title>
-        <Text type="secondary">Track your daily attendance and work hours</Text>
+        <Title level={4} className="!mb-1">{t('my_attendance')}</Title>
+        <Text type="secondary">{t('track_attendance')}</Text>
       </div>
 
       {/* Check In / Out */}
@@ -77,12 +79,12 @@ const MyAttendance: React.FC = () => {
             <Button type="primary" size="large" icon={<LogIn size={20} />} onClick={handleCheckIn}
               disabled={isCheckedIn} loading={checkInMutation.isPending}
               className="h-14 px-8 text-base">
-              Check In
+              {t('check_in_btn')}
             </Button>
             <Button size="large" icon={<LogOut size={20} />} onClick={handleCheckOut}
               disabled={!isCheckedIn || isCheckedOut} loading={checkOutMutation.isPending}
               className="h-14 px-8 text-base" danger>
-              Check Out
+              {t('check_out_btn')}
             </Button>
           </Space>
           {todayRecord?.checkIn && (

@@ -8,6 +8,7 @@ import { getAntdTheme, colorPalettes, type ThemeColor } from '../config/theme';
 function AntdConfigWrapper({ children }: { children: React.ReactNode }) {
   const themeMode = useAppSelector((s) => s.ui.themeMode);
   const themeColor = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
+  const fontFamily = useAppSelector((s) => s.ui.fontFamily);
   const isDark = themeMode === 'dark';
   const palette = colorPalettes[themeColor] || colorPalettes.green;
   const themeConfig = getAntdTheme(palette.primary, isDark);
@@ -17,6 +18,11 @@ function AntdConfigWrapper({ children }: { children: React.ReactNode }) {
       theme={{
         ...themeConfig,
         algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        token: {
+          ...themeConfig.token,
+          fontFamily: fontFamily || "'Inter', sans-serif",
+        },
+        cssVar: true,
       }}
     >
       <AntApp>

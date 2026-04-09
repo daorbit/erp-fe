@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Tabs, Modal, Form, Input, InputNumber, Select, Typography, Row, Col, Space, DatePicker, Avatar, Popconfirm } from 'antd';
+import { Card, Table, Tag, Button, Tabs, Drawer, Form, Input, InputNumber, Select, Typography, Row, Col, Space, DatePicker, Avatar, Popconfirm } from 'antd';
 import { App } from 'antd';
 import { IndianRupee, CheckCircle2, CreditCard, Plus, Download } from 'lucide-react';
 import { usePayslipList, useSalaryStructureList, useCreateSalaryStructure, useApprovePayslip, useMarkPayslipPaid } from '@/hooks/queries/usePayroll';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -18,6 +19,7 @@ const statusColor: Record<string, string> = {
 };
 
 const PayrollList: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('payslips');
   const [structureModalOpen, setStructureModalOpen] = useState(false);
   const [form] = Form.useForm();
@@ -44,7 +46,7 @@ const PayrollList: React.FC = () => {
 
   const payslipColumns = [
     {
-      title: 'Employee', dataIndex: 'employeeName', key: 'employeeName',
+      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
@@ -57,11 +59,11 @@ const PayrollList: React.FC = () => {
     },
     { title: 'Month', dataIndex: 'month', key: 'month' },
     { title: 'Basic', dataIndex: 'basicPay', key: 'basicPay', render: (v: number) => formatINR(v || 0) },
-    { title: 'Gross', dataIndex: 'grossPay', key: 'grossPay', render: (v: number) => formatINR(v || 0) },
-    { title: 'Deductions', dataIndex: 'totalDeductions', key: 'totalDeductions', render: (v: number) => formatINR(v || 0) },
-    { title: 'Net Pay', dataIndex: 'netPay', key: 'netPay', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
+    { title: t('gross'), dataIndex: 'grossPay', key: 'grossPay', render: (v: number) => formatINR(v || 0) },
+    { title: t('deductions'), dataIndex: 'totalDeductions', key: 'totalDeductions', render: (v: number) => formatINR(v || 0) },
+    { title: t('net_pay'), dataIndex: 'netPay', key: 'netPay', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       filters: [
         { text: 'Draft', value: 'draft' },
         { text: 'Generated', value: 'generated' },
@@ -73,7 +75,7 @@ const PayrollList: React.FC = () => {
       render: (s: string) => <Tag color={statusColor[s]}>{s}</Tag>,
     },
     {
-      title: 'Actions', key: 'actions',
+      title: t('actions'), key: 'actions',
       render: (_: any, r: any) => (
         <Space>
           {r.status === 'generated' && (
@@ -86,7 +88,7 @@ const PayrollList: React.FC = () => {
               <Button size="small" type="link" className="!text-green-600"><CreditCard size={16} /></Button>
             </Popconfirm>
           )}
-          <Button size="small" type="link" href={`/payroll/payslip/${r._id || r.id}`}>View</Button>
+          <Button size="small" type="link" href={`/payroll/payslip/${r._id || r.id}`}>{t('view')}</Button>
         </Space>
       ),
     },
@@ -94,7 +96,7 @@ const PayrollList: React.FC = () => {
 
   const structureColumns = [
     {
-      title: 'Employee', dataIndex: 'employeeName', key: 'employeeName',
+      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
@@ -106,11 +108,23 @@ const PayrollList: React.FC = () => {
     { title: 'HRA', dataIndex: 'hra', key: 'hra', render: (v: number) => formatINR(v || 0) },
     { title: 'DA', dataIndex: 'da', key: 'da', render: (v: number) => formatINR(v || 0) },
     { title: 'Special Allowance', dataIndex: 'specialAllowance', key: 'specialAllowance', render: (v: number) => formatINR(v || 0) },
-    { title: 'Gross', dataIndex: 'gross', key: 'gross', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
+    { title: t('gross'), dataIndex: 'gross', key: 'gross', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
   ];
 
   const handleCreateStructure = (values: any) => {
-    createStructureMutation.mutate(values, {
+    const payload: any = {
+      employee: values.employeeId,
+      basicSalary: values.basic,
+      allowances: {
+        hra: values.hra || 0,
+        da: values.da || 0,
+        special: values.specialAllowance || 0,
+      },
+      effectiveFrom: values.effectiveFrom?.format?.('YYYY-MM-DD') ?? values.effectiveFrom,
+    };
+    // Remove undefined values
+    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+    createStructureMutation.mutate(payload, {
       onSuccess: () => {
         message.success('Salary structure created');
         setStructureModalOpen(false);
@@ -163,14 +177,14 @@ const PayrollList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Payroll</Title>
-          <Text type="secondary">Manage employee payroll and salary structures</Text>
+          <Title level={4} className="!mb-1">{t('payroll')}</Title>
+          <Text type="secondary">{t('manage_payroll')}</Text>
         </div>
-        <Button icon={<Download size={16} />}>Export</Button>
+        <Button icon={<Download size={16} />}>{t('export')}</Button>
       </div>
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
 
-      <Modal title="Add Salary Structure" open={structureModalOpen} onCancel={() => setStructureModalOpen(false)} footer={null} width={600}>
+      <Drawer title={t('add') + ' ' + t('salary')} open={structureModalOpen} onClose={() => setStructureModalOpen(false)} width={560} destroyOnClose extra={<Space><Button onClick={() => setStructureModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createStructureMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleCreateStructure}>
           <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
             <Input placeholder="Employee ID" />
@@ -191,12 +205,11 @@ const PayrollList: React.FC = () => {
               <InputNumber min={0} className="w-full" prefix="₹" />
             </Form.Item>
           </div>
-          <div className="flex justify-end gap-3">
-            <Button onClick={() => setStructureModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={createStructureMutation.isPending}>Create</Button>
-          </div>
+          <Form.Item name="effectiveFrom" label="Effective From" rules={[{ required: true }]}>
+            <DatePicker className="w-full" />
+          </Form.Item>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

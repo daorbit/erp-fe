@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Input, Modal, Form, Select, Upload, Tabs, Typography, Space, Popconfirm } from 'antd';
+import { Card, Table, Tag, Button, Input, Drawer, Form, Select, Upload, Tabs, Typography, Space, Popconfirm } from 'antd';
 import { App } from 'antd';
 import { Plus, Search, Download, Trash2, Upload as UploadIcon, FileText } from 'lucide-react';
 import { useDocumentList, useUploadDocument, useDeleteDocument } from '@/hooks/queries/useDocuments';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -11,6 +12,7 @@ const categoryColor: Record<string, string> = {
 };
 
 const DocumentList: React.FC = () => {
+  const { t } = useTranslation();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -69,11 +71,11 @@ const DocumentList: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Category', dataIndex: 'category', key: 'category', render: (c: string) => <Tag color={categoryColor[c] ?? 'default'}>{c}</Tag> },
+    { title: t('category'), dataIndex: 'category', key: 'category', render: (c: string) => <Tag color={categoryColor[c] ?? 'default'}>{c}</Tag> },
     { title: 'Uploaded By', dataIndex: 'uploadedBy', key: 'uploadedBy', render: (u: any) => typeof u === 'string' ? u : u?.name ?? '-' },
-    { title: 'Date', dataIndex: 'createdAt', key: 'createdAt', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
+    { title: t('date'), dataIndex: 'createdAt', key: 'createdAt', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
     {
-      title: 'Actions', key: 'actions', width: 120,
+      title: t('actions'), key: 'actions', width: 120,
       render: (_: any, r: any) => (
         <Space>
           {r.fileUrl && <Button type="text" size="small" icon={<Download size={16} />} href={r.fileUrl} target="_blank" />}
@@ -89,32 +91,42 @@ const DocumentList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Documents</Title>
-          <Text type="secondary">Manage employee documents and policies</Text>
+          <Title level={4} className="!mb-1">{t('documents')}</Title>
+          <Text type="secondary">{t('manage_documents')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setUploadOpen(true)}>Upload Document</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => setUploadOpen(true)}>{t('upload_document')}</Button>
       </div>
 
       <Card bordered={false}>
         <Tabs activeKey={activeTab} onChange={setActiveTab} items={[
           { key: 'all', label: 'All Documents' },
           { key: 'policy', label: 'Policies' },
-          { key: 'contract', label: 'Contracts' },
-          { key: 'identity', label: 'My Documents' },
+          { key: 'certificate', label: 'Certificates' },
+          { key: 'id_proof', label: 'ID Proofs' },
         ]} />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <Input prefix={<Search size={16} />} placeholder="Search documents..." value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
+          <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
         </div>
         <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" />
       </Card>
 
-      <Modal title="Upload Document" open={uploadOpen} onCancel={() => setUploadOpen(false)} footer={null} width={500}>
+      <Drawer title="Upload Document" open={uploadOpen} onClose={() => setUploadOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setUploadOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={uploadMutation.isPending} onClick={() => form.submit()}>{t('upload_document')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleUpload}>
           <Form.Item name="title" label="Document Title" rules={[{ required: true }]}>
             <Input placeholder="Enter document title" />
           </Form.Item>
           <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Select placeholder="Select category" options={['policy', 'contract', 'identity', 'certificate', 'other'].map(c => ({ value: c, label: c }))} />
+            <Select placeholder="Select category" options={[
+              { value: 'policy', label: 'Policy' },
+              { value: 'template', label: 'Template' },
+              { value: 'letter', label: 'Letter' },
+              { value: 'certificate', label: 'Certificate' },
+              { value: 'id_proof', label: 'ID Proof' },
+              { value: 'address_proof', label: 'Address Proof' },
+              { value: 'educational', label: 'Educational' },
+              { value: 'experience', label: 'Experience' },
+              { value: 'other', label: 'Other' },
+            ]} />
           </Form.Item>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={2} placeholder="Brief description" />
@@ -127,12 +139,8 @@ const DocumentList: React.FC = () => {
               </div>
             </Upload.Dragger>
           </Form.Item>
-          <div className="flex justify-end gap-3">
-            <Button onClick={() => setUploadOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={uploadMutation.isPending}>Upload</Button>
-          </div>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

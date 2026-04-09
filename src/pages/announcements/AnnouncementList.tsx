@@ -3,6 +3,7 @@ import { Card, Tag, Button, Input, Drawer, Form, Select, Row, Col, Typography, S
 import { App } from 'antd';
 import { Plus, Search, Pin, Megaphone, Eye } from 'lucide-react';
 import { useAnnouncementList, useCreateAnnouncement, useMarkAnnouncementRead } from '@/hooks/queries/useAnnouncements';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -15,6 +16,7 @@ const priorityColor: Record<string, string> = {
 };
 
 const AnnouncementList: React.FC = () => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const { message } = App.useApp();
@@ -35,7 +37,8 @@ const AnnouncementList: React.FC = () => {
 
   const handleCreate = async (values: any) => {
     try {
-      await createMutation.mutateAsync(values);
+      const { isPinned, ...payload } = values;
+      await createMutation.mutateAsync(payload);
       message.success('Announcement created');
       form.resetFields();
       setDrawerOpen(false);
@@ -81,14 +84,14 @@ const AnnouncementList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Announcements</Title>
-          <Text type="secondary">Company-wide announcements and updates</Text>
+          <Title level={4} className="!mb-1">{t('announcements')}</Title>
+          <Text type="secondary">{t('manage_announcements')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>New Announcement</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_announcement')}</Button>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Input prefix={<Search size={16} />} placeholder="Search announcements..." value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
+        <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
       </div>
 
       {isLoading ? (
@@ -114,8 +117,8 @@ const AnnouncementList: React.FC = () => {
 
       <Drawer title="New Announcement" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={
         <div className="flex justify-end gap-3">
-          <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>Publish</Button>
+          <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
+          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
         </div>
       }>
         <Form form={form} layout="vertical" onFinish={handleCreate}>

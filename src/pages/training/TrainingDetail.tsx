@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Tag, Button, Table, Tabs, Modal, Form, Input, Select, Row, Col, Typography, Space, Descriptions, Avatar, Progress } from 'antd';
+import { Card, Tag, Button, Table, Tabs, Drawer, Form, Input, Select, Row, Col, Typography, Space, Descriptions, Avatar, Progress } from 'antd';
 import { App } from 'antd';
 import { ArrowLeft, Users, Clock, CalendarDays, UserPlus, BookOpen } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTraining, useEnrollTraining } from '@/hooks/queries/useTraining';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -12,6 +13,7 @@ const statusColor: Record<string, string> = {
 };
 
 const TrainingDetail: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { message } = App.useApp();
@@ -37,7 +39,7 @@ const TrainingDetail: React.FC = () => {
 
   const participantColumns = [
     {
-      title: 'Employee', dataIndex: 'name', key: 'name',
+      title: t('employee'), dataIndex: 'name', key: 'name',
       render: (_: any, r: any) => (
         <div className="flex items-center gap-3">
           <Avatar className="bg-blue-600">{(r.name ?? r.employeeName ?? 'U').split(' ').map((n: string) => n[0]).join('')}</Avatar>
@@ -48,10 +50,10 @@ const TrainingDetail: React.FC = () => {
         </div>
       ),
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => d ? <Tag>{d}</Tag> : '-' },
+    { title: t('department'), dataIndex: 'department', key: 'department', render: (d: string) => d ? <Tag>{d}</Tag> : '-' },
     { title: 'Enrolled Date', dataIndex: 'enrolledDate', key: 'enrolledDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       render: (s: string) => <Tag color={s === 'completed' ? 'green' : s === 'dropped' ? 'red' : 'blue'}>{s ?? 'enrolled'}</Tag>,
     },
     {
@@ -80,7 +82,7 @@ const TrainingDetail: React.FC = () => {
           <div>
             <Title level={4} className="!mb-1">{program.title ?? 'Training Detail'}</Title>
             <Space>
-              <Text type="secondary">Training Program</Text>
+              <Text type="secondary">{t('training')}</Text>
               {program.status && <Tag color={statusColor[program.status] ?? 'default'}>{program.status}</Tag>}
             </Space>
           </div>
@@ -136,7 +138,7 @@ const TrainingDetail: React.FC = () => {
         ]} />
       </Card>
 
-      <Modal title="Enroll Employee" open={enrollOpen} onCancel={() => setEnrollOpen(false)} footer={null}>
+      <Drawer title="Enroll Employee" open={enrollOpen} onClose={() => setEnrollOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setEnrollOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={enrollMutation.isPending} onClick={() => enrollForm.submit()}>{t('submit')}</Button></Space>}>
         <Form form={enrollForm} layout="vertical" onFinish={handleEnroll}>
           <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
             <Input placeholder="Enter employee ID" />
@@ -144,12 +146,8 @@ const TrainingDetail: React.FC = () => {
           <Form.Item name="employeeName" label="Employee Name">
             <Input placeholder="Enter employee name" />
           </Form.Item>
-          <div className="flex justify-end gap-3">
-            <Button onClick={() => setEnrollOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={enrollMutation.isPending}>Enroll</Button>
-          </div>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

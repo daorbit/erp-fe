@@ -3,6 +3,7 @@ import { Card, Tag, Button, Input, Select, Drawer, Form, Progress, Row, Col, Typ
 import { App } from 'antd';
 import { Plus, Search, BookOpen, CheckCircle2, Users, CalendarDays, Clock } from 'lucide-react';
 import { useTrainingList, useCreateTraining } from '@/hooks/queries/useTraining';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +24,7 @@ const categoryColor: Record<string, string> = {
 };
 
 const TrainingList: React.FC = () => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
@@ -47,7 +49,13 @@ const TrainingList: React.FC = () => {
 
   const handleCreate = async (values: any) => {
     try {
-      await createMutation.mutateAsync(values);
+      const payload: any = {
+        ...values,
+        startDate: values.startDate ? new Date(values.startDate).toISOString() : undefined,
+        endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
+      };
+      Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+      await createMutation.mutateAsync(payload);
       message.success('Training program created');
       form.resetFields();
       setDrawerOpen(false);
@@ -60,8 +68,8 @@ const TrainingList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Training Programs</Title>
-          <Text type="secondary">Manage employee training and development</Text>
+          <Title level={4} className="!mb-1">{t('training')}</Title>
+          <Text type="secondary">{t('manage_training')}</Text>
         </div>
         <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>Create Program</Button>
       </div>
@@ -86,7 +94,7 @@ const TrainingList: React.FC = () => {
 
       <Card bordered={false}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <Input prefix={<Search size={16} />} placeholder="Search programs..." value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
+          <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
           <Select placeholder="Filter by status" allowClear className="min-w-[150px]" value={statusFilter} onChange={setStatusFilter}
             options={['active', 'completed', 'upcoming', 'draft', 'cancelled'].map(s => ({ value: s, label: s }))} />
         </div>
@@ -129,8 +137,8 @@ const TrainingList: React.FC = () => {
 
       <Drawer title="Create Training Program" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={
         <div className="flex justify-end gap-3">
-          <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>Create</Button>
+          <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
+          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
         </div>
       }>
         <Form form={form} layout="vertical" onFinish={handleCreate}>
@@ -138,7 +146,14 @@ const TrainingList: React.FC = () => {
             <Input placeholder="Enter program title" />
           </Form.Item>
           <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Select placeholder="Select category" options={['technical', 'soft_skills', 'compliance', 'leadership', 'onboarding'].map(c => ({ value: c, label: c }))} />
+            <Select placeholder="Select category" options={[
+              { value: 'technical', label: 'Technical' },
+              { value: 'soft_skills', label: 'Soft Skills' },
+              { value: 'compliance', label: 'Compliance' },
+              { value: 'leadership', label: 'Leadership' },
+              { value: 'safety', label: 'Safety' },
+              { value: 'other', label: 'Other' },
+            ]} />
           </Form.Item>
           <Form.Item name="trainer" label="Trainer">
             <Input placeholder="Trainer name" />

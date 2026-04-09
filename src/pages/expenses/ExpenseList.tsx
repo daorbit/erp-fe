@@ -3,6 +3,7 @@ import { Card, Table, Tag, Button, Input, Drawer, Form, Select, Tabs, Row, Col, 
 import { App } from 'antd';
 import { Plus, Search, IndianRupee, Clock, CheckCircle2, Wallet } from 'lucide-react';
 import { useExpenseList, useCreateExpense, useApproveExpense, useRejectExpense } from '@/hooks/queries/useExpenses';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -13,6 +14,7 @@ const statusColor: Record<string, string> = {
 };
 
 const ExpenseList: React.FC = () => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -43,7 +45,11 @@ const ExpenseList: React.FC = () => {
 
   const handleCreate = async (values: any) => {
     try {
-      await createMutation.mutateAsync(values);
+      const payload: any = {
+        ...values,
+        date: values.date ? new Date(values.date).toISOString() : undefined,
+      };
+      await createMutation.mutateAsync(payload);
       message.success('Expense claim created');
       form.resetFields();
       setDrawerOpen(false);
@@ -73,16 +79,16 @@ const ExpenseList: React.FC = () => {
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', render: (t: string) => <Text strong>{t}</Text> },
     {
-      title: 'Category', dataIndex: 'category', key: 'category',
-      filters: ['travel', 'food', 'accommodation', 'transport', 'office_supplies', 'other'].map(c => ({ text: c, value: c })),
+      title: t('category'), dataIndex: 'category', key: 'category',
+      filters: ['travel', 'meals', 'accommodation', 'transportation', 'office_supplies', 'training', 'medical', 'other'].map(c => ({ text: c, value: c })),
       onFilter: (value: any, record: any) => record.category === value,
       render: (c: string) => <Tag>{c}</Tag>,
     },
-    { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a: number) => <Text strong>{formatINR(a ?? 0)}</Text> },
-    { title: 'Date', dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
-    { title: 'Employee', dataIndex: 'employeeName', key: 'employeeName', responsive: ['lg'] as any },
+    { title: t('amount'), dataIndex: 'amount', key: 'amount', render: (a: number) => <Text strong>{formatINR(a ?? 0)}</Text> },
+    { title: t('date'), dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
+    { title: t('employee'), dataIndex: 'employeeName', key: 'employeeName', responsive: ['lg'] as any },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
+      title: t('status'), dataIndex: 'status', key: 'status',
       filters: [
         { text: 'Pending', value: 'pending' },
         { text: 'Approved', value: 'approved' },
@@ -94,16 +100,16 @@ const ExpenseList: React.FC = () => {
       render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
     },
     {
-      title: 'Actions', key: 'actions', width: 180,
+      title: t('actions'), key: 'actions', width: 180,
       render: (_: any, r: any) => (
         <Space>
           {r.status === 'pending' && (
             <>
               <Popconfirm title="Approve this expense?" onConfirm={() => handleApprove(r._id ?? r.id)}>
-                <Button type="link" size="small">Approve</Button>
+                <Button type="link" size="small">{t('approve')}</Button>
               </Popconfirm>
               <Popconfirm title="Reject this expense?" onConfirm={() => handleReject(r._id ?? r.id)}>
-                <Button type="link" size="small" danger>Reject</Button>
+                <Button type="link" size="small" danger>{t('reject')}</Button>
               </Popconfirm>
             </>
           )}
@@ -116,10 +122,10 @@ const ExpenseList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Expenses</Title>
-          <Text type="secondary">Track and manage expense claims</Text>
+          <Title level={4} className="!mb-1">{t('expenses')}</Title>
+          <Text type="secondary">{t('manage_expenses')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>New Expense</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_expense')}</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -147,15 +153,15 @@ const ExpenseList: React.FC = () => {
           { key: 'pending', label: 'Pending Approvals' },
         ]} />
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center mb-4">
-          <Input prefix={<Search size={16} />} placeholder="Search expenses..." value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
+          <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
         </div>
         <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" />
       </Card>
 
       <Drawer title="New Expense Claim" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={
         <div className="flex justify-end gap-3">
-          <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>Submit</Button>
+          <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
+          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
         </div>
       }>
         <Form form={form} layout="vertical" onFinish={handleCreate}>
@@ -164,7 +170,16 @@ const ExpenseList: React.FC = () => {
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-              <Select placeholder="Category" options={['travel', 'food', 'accommodation', 'transport', 'office_supplies', 'other'].map(c => ({ value: c, label: c }))} />
+              <Select placeholder="Category" options={[
+                { value: 'travel', label: 'Travel' },
+                { value: 'meals', label: 'Meals' },
+                { value: 'accommodation', label: 'Accommodation' },
+                { value: 'transportation', label: 'Transportation' },
+                { value: 'office_supplies', label: 'Office Supplies' },
+                { value: 'training', label: 'Training' },
+                { value: 'medical', label: 'Medical' },
+                { value: 'other', label: 'Other' },
+              ]} />
             </Form.Item>
             <Form.Item name="amount" label="Amount (INR)" rules={[{ required: true }]}>
               <InputNumber className="w-full" min={1} placeholder="0" prefix="₹" />

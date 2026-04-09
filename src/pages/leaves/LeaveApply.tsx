@@ -3,12 +3,14 @@ import { Card, Form, Input, Select, DatePicker, Button, Upload, Typography, Row,
 import { App } from 'antd';
 import { Upload as UploadIcon, Send } from 'lucide-react';
 import { useApplyLeave, useLeaveBalance, useLeaveTypeList } from '@/hooks/queries/useLeaves';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
 const LeaveApply: React.FC = () => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const applyMutation = useApplyLeave();
@@ -37,8 +39,8 @@ const LeaveApply: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <Title level={4} className="!mb-1">Apply for Leave</Title>
-        <Text type="secondary">Submit a new leave request</Text>
+        <Title level={4} className="!mb-1">{t('apply_leave')}</Title>
+        <Text type="secondary">{t('manage_leaves')}</Text>
       </div>
 
       <Row gutter={[24, 24]}>
@@ -61,7 +63,7 @@ const LeaveApply: React.FC = () => {
               </Form.Item>
               <div className="flex justify-end">
                 <Button type="primary" htmlType="submit" loading={applyMutation.isPending} icon={<Send size={16} />}>
-                  Submit Application
+                  {t('submit')}
                 </Button>
               </div>
             </Form>

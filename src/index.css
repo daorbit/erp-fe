@@ -1,88 +1,311 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&family=Lato:wght@300;400;700;900&family=Montserrat:wght@300;400;500;600;700;800&family=Source+Sans+3:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&display=swap');
-
 :root {
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --bg-primary: #f0f2f5;
+  --bg-card: #ffffff;
+  --border-color: #e8ecf1;
+  --text-primary: #1a1a2e;
+  --text-secondary: #64748b;
 }
 
 body {
-  font-family: var(--font-family);
   margin: 0;
-  background: #ffffff;
+  background: var(--bg-primary);
+  font-family: var(--font-family) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--text-primary);
+}
+
+/* Force font-family on ALL elements including antd CSS-in-JS */
+*, *::before, *::after, [class*="ant-"] {
+  font-family: var(--font-family) !important;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c4c9d2; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+.dark ::-webkit-scrollbar-thumb { background: #374151; }
+
+.sidebar-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+.sidebar-scrollbar-hidden::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   PRODUCTION TABLE UI
+   ══════════════════════════════════════════════════════════════ */
+
+.ant-table-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ant-table {
+  background: var(--bg-card) !important;
+  border-radius: 12px !important;
+}
+
+/* Header */
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > td {
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #8492a6 !important;
+  background: #f8fafc !important;
+  border-bottom: 2px solid #edf2f7 !important;
+  padding: 10px 16px !important;
+  white-space: nowrap;
+}
+
+/* Body */
+.ant-table-tbody > tr > td {
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  color: #334155 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: background 0.15s ease;
+}
+
+/* Hover */
+.ant-table-tbody > tr:hover > td {
+  background: #f8fafc !important;
+}
+
+/* Striped rows */
+.ant-table-tbody > tr:nth-child(even) > td {
+  background: #fafbfc;
+}
+.ant-table-tbody > tr:nth-child(even):hover > td {
+  background: #f1f5f9 !important;
+}
+
+/* Last row no border */
+.ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+/* Pagination */
+.ant-table-pagination {
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Filter dropdowns */
+.ant-table-filter-trigger {
+  color: #94a3b8 !important;
+}
+.ant-table-filter-trigger:hover,
+.ant-table-filter-trigger.active {
+  color: var(--theme-primary, #047857) !important;
+}
+
+/* Sorter */
+.ant-table-column-sorter {
+  color: #94a3b8 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CARDS
+   ══════════════════════════════════════════════════════════════ */
+
+.ant-card {
+  border-radius: 12px !important;
+  border: 1px solid #e8ecf1 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px rgba(0,0,0,0.02) !important;
+  transition: box-shadow 0.2s ease;
+}
+.ant-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+}
+.ant-card-head {
+  border-bottom: 1px solid #f1f5f9 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  min-height: 48px !important;
+  padding: 0 20px !important;
+}
+.ant-card-body {
+  padding: 20px !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DRAWER
+   ══════════════════════════════════════════════════════════════ */
+
+.ant-drawer-header {
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 16px 24px !important;
+}
+.ant-drawer-title {
+  font-weight: 600 !important;
+  font-size: 16px !important;
+}
+.ant-drawer-body {
+  padding: 24px !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TAGS
+   ══════════════════════════════════════════════════════════════ */
+
+.ant-tag {
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 1px 8px !important;
+  line-height: 20px !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUTTONS
+   ══════════════════════════════════════════════════════════════ */
+
+.ant-btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+.ant-btn-primary {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INPUTS
+   ══════════════════════════════════════════════════════════════ */
+
+.ant-input,
+.ant-select-selector,
+.ant-picker,
+.ant-input-number {
+  border-radius: 8px !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════════════════════ */
+
+.ant-tabs-tab {
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE
+   ══════════════════════════════════════════════════════════════ */
+
+.dark {
+  --bg-primary: #0c0e14;
+  --bg-card: #151820;
+  --border-color: #252a36;
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
 }
 
 .dark body {
-  background: #111318;
+  background: var(--bg-primary);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: #374151;
-}
-
-.sidebar-scrollbar-hidden {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.sidebar-scrollbar-hidden::-webkit-scrollbar {
-  display: none;
-}
-
-/* Ant Design dark mode overrides */
 .dark .ant-layout {
-  background: #111318;
+  background: var(--bg-primary) !important;
 }
+
+/* Dark cards */
 .dark .ant-card {
-  background: #1a1d23;
-  border-color: #2d3140;
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
 }
+.dark .ant-card:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+}
+.dark .ant-card-head {
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark tables */
 .dark .ant-table {
-  background: #1a1d23;
+  background: var(--bg-card) !important;
 }
-.dark .ant-table-thead > tr > th {
-  background: #22262e !important;
-  color: #e5e7eb !important;
-  border-color: #2d3140 !important;
+.dark .ant-table-thead > tr > th,
+.dark .ant-table-thead > tr > td {
+  background: #1a1e28 !important;
+  color: #8492a6 !important;
+  border-color: var(--border-color) !important;
 }
 .dark .ant-table-tbody > tr > td {
-  border-color: #2d3140 !important;
-  color: #d1d5db;
+  border-color: #1e2330 !important;
+  color: #c8cdd5 !important;
 }
 .dark .ant-table-tbody > tr:hover > td {
-  background: #22262e !important;
+  background: #1a1e28 !important;
 }
+.dark .ant-table-tbody > tr:nth-child(even) > td {
+  background: #171b24;
+}
+.dark .ant-table-tbody > tr:nth-child(even):hover > td {
+  background: #1a1e28 !important;
+}
+.dark .ant-table-pagination {
+  border-color: var(--border-color) !important;
+}
+
+/* Dark drawer/modal */
+.dark .ant-drawer-content,
 .dark .ant-modal-content {
-  background: #1a1d23;
+  background: var(--bg-card) !important;
 }
+.dark .ant-drawer-header,
 .dark .ant-modal-header {
-  background: #1a1d23;
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
 }
+
+/* Dark inputs */
 .dark .ant-input,
 .dark .ant-select-selector,
-.dark .ant-picker {
-  background: #22262e !important;
-  border-color: #2d3140 !important;
-  color: #e5e7eb !important;
+.dark .ant-picker,
+.dark .ant-input-number,
+.dark .ant-input-number-input {
+  background: #1a1e28 !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
+
+/* Dark tabs */
 .dark .ant-tabs-tab {
-  color: #9ca3af !important;
+  color: var(--text-secondary) !important;
 }
+
+/* Dark menu */
 .dark .ant-menu-dark {
-  background: transparent;
+  background: transparent !important;
+}
+
+/* Dark tags */
+.dark .ant-tag {
+  border-color: #2d3748 !important;
+}
+
+/* Dark dropdown */
+.dark .ant-dropdown-menu {
+  background: var(--bg-card) !important;
+}
+.dark .ant-dropdown-menu-item:hover {
+  background: #1a1e28 !important;
+}
+
+/* Dark popover */
+.dark .ant-popover-inner {
+  background: var(--bg-card) !important;
 }

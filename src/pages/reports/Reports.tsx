@@ -8,6 +8,7 @@ import {
   useEmployeeReport, useAttendanceReport, useLeaveReport, usePayrollReport,
   useRecruitmentReport, useExpenseReport, useHeadcountReport, useTurnoverReport,
 } from '@/hooks/queries/useReports';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
 } from 'recharts';
@@ -126,6 +127,7 @@ const ReportView: React.FC<{ reportKey: string; chartType: 'bar' | 'line' | 'pie
 };
 
 const Reports: React.FC = () => {
+  const { t } = useTranslation();
   const [activeReport, setActiveReport] = useState<string | null>(null);
 
   const activeDef = reportDefs.find(r => r.key === activeReport);
@@ -145,8 +147,8 @@ const Reports: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <Title level={4} className="!mb-1">Reports</Title>
-        <Text type="secondary">Generate and view HR reports</Text>
+        <Title level={4} className="!mb-1">{t('reports')}</Title>
+        <Text type="secondary">{t('reports_analytics')}</Text>
       </div>
 
       <Row gutter={[16, 16]}>

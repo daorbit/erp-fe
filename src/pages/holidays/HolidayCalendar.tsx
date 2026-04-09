@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Modal, Form, Input, Select, Row, Col, Typography, Space, Popconfirm } from 'antd';
+import { Card, Table, Tag, Button, Drawer, Form, Input, Select, Row, Col, Typography, Space, Popconfirm } from 'antd';
 import { App } from 'antd';
 import { Plus, CalendarDays, Globe, Star, Clock, Trash2 } from 'lucide-react';
 import { useHolidayList, useCreateHoliday, useDeleteHoliday } from '@/hooks/queries/useHolidays';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -11,6 +12,7 @@ const typeColor: Record<string, string> = {
 };
 
 const HolidayCalendar: React.FC = () => {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [year, setYear] = useState(new Date().getFullYear());
   const { message } = App.useApp();
@@ -54,13 +56,13 @@ const HolidayCalendar: React.FC = () => {
   };
 
   const columns = [
-    { title: 'Name', dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
-    { title: 'Date', dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-' },
+    { title: t('name'), dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
+    { title: t('date'), dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-' },
     { title: 'Day', dataIndex: 'date', key: 'day', render: (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { weekday: 'long' }) : '-' },
-    { title: 'Type', dataIndex: 'type', key: 'type', render: (t: string) => <Tag color={typeColor[t] ?? 'default'}>{t}</Tag> },
-    { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
+    { title: t('type'), dataIndex: 'type', key: 'type', render: (t: string) => <Tag color={typeColor[t] ?? 'default'}>{t}</Tag> },
+    { title: t('description'), dataIndex: 'description', key: 'description', ellipsis: true },
     {
-      title: 'Actions', key: 'actions', width: 80,
+      title: t('actions'), key: 'actions', width: 80,
       render: (_: any, r: any) => (
         <Popconfirm title="Delete this holiday?" onConfirm={() => handleDelete(r._id ?? r.id)} okText="Yes" cancelText="No">
           <Button type="text" size="small" danger icon={<Trash2 size={16} />} />
@@ -73,12 +75,12 @@ const HolidayCalendar: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">Holiday Calendar</Title>
-          <Text type="secondary">Manage company holidays and observances</Text>
+          <Title level={4} className="!mb-1">{t('holidays')}</Title>
+          <Text type="secondary">{t('manage_holidays')}</Text>
         </div>
         <Space>
           <Select value={year} onChange={setYear} options={[2024, 2025, 2026, 2027].map(y => ({ value: y, label: String(y) }))} />
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>Add Holiday</Button>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>{t('add_holiday')}</Button>
         </Space>
       </div>
 
@@ -104,7 +106,7 @@ const HolidayCalendar: React.FC = () => {
         <Table columns={columns} dataSource={holidays} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 15 }} size="middle" />
       </Card>
 
-      <Modal title="Add Holiday" open={modalOpen} onCancel={() => setModalOpen(false)} footer={null} width={500}>
+      <Drawer title="Add Holiday" open={modalOpen} onClose={() => setModalOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('add')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item name="name" label="Holiday Name" rules={[{ required: true }]}>
             <Input placeholder="Enter holiday name" />
@@ -114,18 +116,19 @@ const HolidayCalendar: React.FC = () => {
               <Input type="date" />
             </Form.Item>
             <Form.Item name="type" label="Type" rules={[{ required: true }]}>
-              <Select placeholder="Select type" options={['public', 'optional', 'restricted', 'company'].map(t => ({ value: t, label: t }))} />
+              <Select placeholder="Select type" options={[
+                { value: 'public', label: 'Public' },
+                { value: 'religious', label: 'Religious' },
+                { value: 'company_specific', label: 'Company Specific' },
+                { value: 'optional', label: 'Optional' },
+              ]} />
             </Form.Item>
           </div>
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={2} placeholder="Brief description" />
           </Form.Item>
-          <div className="flex justify-end gap-3">
-            <Button onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={createMutation.isPending}>Add</Button>
-          </div>
         </Form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };

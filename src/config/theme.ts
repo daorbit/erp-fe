@@ -20,7 +20,7 @@ export const fontFamilies = [
   { label: 'Open Sans', value: "'Open Sans', sans-serif" },
   { label: 'Lato', value: "'Lato', sans-serif" },
   { label: 'Montserrat', value: "'Montserrat', sans-serif" },
-  { label: 'Source Sans Pro', value: "'Source Sans Pro', sans-serif" },
+  { label: 'Source Sans 3', value: "'Source Sans 3', sans-serif" },
   { label: 'Raleway', value: "'Raleway', sans-serif" },
 ];
 

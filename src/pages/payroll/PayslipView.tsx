@@ -3,6 +3,7 @@ import { Card, Table, Tag, Button, Typography, Row, Col, Divider, Spin, Descript
 import { Printer, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePayslip } from '@/hooks/queries/usePayroll';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
@@ -10,6 +11,7 @@ const formatINR = (amount: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
 const PayslipView: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: payslipData, isLoading } = usePayslip(id || '');
@@ -39,11 +41,11 @@ const PayslipView: React.FC = () => {
         <div className="flex items-center gap-3">
           <Button type="text" icon={<ArrowLeft size={16} />} onClick={() => navigate(-1)} />
           <div>
-            <Title level={4} className="!mb-1">Payslip</Title>
+            <Title level={4} className="!mb-1">{t('payroll')}</Title>
             <Text type="secondary">{payslip.month} - {payslip.employeeName}</Text>
           </div>
         </div>
-        <Button icon={<Printer size={16} />} onClick={() => window.print()}>Print</Button>
+        <Button icon={<Printer size={16} />} onClick={() => window.print()}>{t('print')}</Button>
       </div>
 
       <Card bordered={false} className="print:shadow-none">
@@ -78,7 +80,7 @@ const PayslipView: React.FC = () => {
             </Card>
           </Col>
           <Col xs={24} md={12}>
-            <Card title="Deductions" bordered size="small" className="h-full">
+            <Card title={t('deductions')} bordered size="small" className="h-full">
               <Table columns={deductionColumns} dataSource={deductions} pagination={false} size="small" rowKey="name" />
               <Divider />
               <div className="flex justify-between font-semibold">
@@ -93,7 +95,7 @@ const PayslipView: React.FC = () => {
 
         {/* Net Pay */}
         <div className="flex items-center justify-between p-4 rounded-lg bg-blue-50 dark:bg-blue-950">
-          <Title level={4} className="!mb-0">Net Pay</Title>
+          <Title level={4} className="!mb-0">{t('net_pay')}</Title>
           <Title level={3} className="!mb-0 !text-blue-600">{formatINR(payslip.netPay || 0)}</Title>
         </div>
       </Card>
