@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { Card, Statistic, Table, Avatar, Tag, Progress, Typography, Row, Col, List } from 'antd';
 import {
