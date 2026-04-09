@@ -27,7 +27,7 @@ export function getAntdTheme(primaryColor: string, isDark: boolean): ThemeConfig
       fontFamily: 'inherit',
       colorBgContainer: isDark ? '#1a1d23' : '#ffffff',
       colorBgElevated: isDark ? '#22262e' : '#ffffff',
-      colorBgLayout: isDark ? '#111318' : '#f5f5f5',
+      colorBgLayout: isDark ? '#111318' : '#ffffff',
       colorText: isDark ? '#e5e7eb' : '#1f2937',
       colorTextSecondary: isDark ? '#9ca3af' : '#6b7280',
       colorBorder: isDark ? '#2d3140' : '#e5e7eb',
@@ -35,9 +35,9 @@ export function getAntdTheme(primaryColor: string, isDark: boolean): ThemeConfig
     },
     components: {
       Layout: {
-        siderBg: isDark ? '#111318' : '#0f172a',
+        siderBg: isDark ? '#111318' : '#ffffff',
         headerBg: isDark ? '#1a1d23' : '#ffffff',
-        bodyBg: isDark ? '#111318' : '#f8fafc',
+        bodyBg: isDark ? '#111318' : '#ffffff',
       },
       Menu: {
         darkItemBg: 'transparent',

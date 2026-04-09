@@ -50,6 +50,8 @@ function buildMenuItems(items: NavItem[]): MenuProps['items'] {
 
 export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
   const collapsed = useSelector((state: any) => state.ui?.sidebarCollapsed ?? false);
+  const themeMode = useSelector((state: any) => state.ui?.themeMode ?? 'light');
+  const isDark = themeMode === 'dark';
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -77,7 +79,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   const siderContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`flex items-center h-[64px] border-b border-white/[0.06] shrink-0 ${collapsed ? 'justify-center px-0' : 'px-5 gap-3'}`}>
+      <div className={`flex items-center h-[64px] ${collapsed ? 'justify-center px-0' : 'px-5 gap-3'} shrink-0 ${isDark ? 'border-b border-white/[0.06]' : 'border-b border-slate-200'}`}>
         <img
           src="/logo.png"
           alt="Logo"
@@ -86,10 +88,10 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         />
         {!collapsed && (
           <div className="min-w-0">
-            <span className="block text-white text-[16px] font-bold leading-tight truncate">
+            <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[16px] font-bold leading-tight truncate`}>
               Sheeraj Codeworks
             </span>
-            <span className="block text-white/40 text-[11px] font-medium">
+            <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px] font-medium`}>
               HR Management
             </span>
           </div>
@@ -100,7 +102,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
         <Menu
           mode="inline"
-          theme="dark"
+          theme={isDark ? 'dark' : 'light'}
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
           items={menuItems}
@@ -112,20 +114,20 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
 
       {/* User Card */}
       {!collapsed ? (
-        <div className="shrink-0 p-3 border-t border-white/[0.06]">
-          <div className="flex items-center gap-2.5 bg-white/[0.04] rounded-xl p-3">
+        <div className={`shrink-0 p-3 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
+          <div className={`flex items-center gap-2.5 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-100'}`}>
             <Avatar size={36} icon={<UserOutlined />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
-              <span className="block text-white text-[13px] font-semibold truncate">Admin User</span>
-              <span className="block text-white/40 text-[11px]">Super Admin</span>
+              <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>Admin User</span>
+              <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>Super Admin</span>
             </div>
-            <button className="text-white/30 hover:text-white/60 transition-colors">
+            <button className={`transition-colors ${isDark ? 'text-white/30 hover:text-white/60' : 'text-slate-500 hover:text-slate-700'}`}>
               <LogoutOutlined style={{ fontSize: 14 }} />
             </button>
           </div>
         </div>
       ) : (
-        <div className="shrink-0 py-4 flex justify-center border-t border-white/[0.06]">
+        <div className={`shrink-0 py-4 flex justify-center ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
           <Tooltip title="Admin User" placement="right">
             <Avatar size={36} icon={<UserOutlined />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
           </Tooltip>
@@ -143,8 +145,9 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         collapsedWidth={72}
         className="!fixed inset-y-0 left-0 z-40 hidden md:!block"
         style={{
-          background: 'var(--sider-bg, #0f172a)',
+          background: isDark ? 'var(--sider-bg, #0f172a)' : '#ffffff',
           overflow: 'hidden',
+          borderRight: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e5e7eb',
         }}
         trigger={null}
       >
@@ -158,7 +161,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         placement="left"
         width={270}
         closable={false}
-        styles={{ body: { padding: 0, background: '#0f172a' } }}
+        styles={{ body: { padding: 0, background: isDark ? '#0f172a' : '#ffffff' } }}
         className="md:hidden"
       >
         {siderContent}
