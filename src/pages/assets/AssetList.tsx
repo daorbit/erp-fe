@@ -1,17 +1,42 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useAssetList, useCreateAsset, useAssignAsset, useReturnAsset } from '@/hooks/queries/useAssets';
 import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Drawer, Form,
-  Select, Row, Col, Statistic, DatePicker, Dropdown, Tooltip, InputNumber, Modal,
-} from 'antd';
-import {
-  Plus, Search, Eye, Edit2, MoreHorizontal, SlidersHorizontal,
+  Plus, Eye, Edit2, MoreHorizontal,
   Laptop, Monitor, Smartphone, Package, Key, UserPlus, RotateCcw,
-  HardDrive, Armchair, CheckCircle2, AlertTriangle, Wrench, Archive,
+  HardDrive, Armchair, CheckCircle2, Wrench, Archive,
 } from 'lucide-react';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormSheet from '@/components/shared/FormSheet';
+import FormDialog from '@/components/shared/FormDialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
+import { formatDate, formatINR, getInitials } from '@/lib/formatters';
+import DatePicker from '@/components/shared/DatePicker';
+import SearchableSelect from '@/components/shared/SearchableSelect';
 
-const { Title, Text } = Typography;
-
+// ---------- types ----------
 interface Asset {
   key: string;
   name: string;
@@ -29,6 +54,7 @@ interface Asset {
   location: string;
 }
 
+// ---------- mock data ----------
 const assets: Asset[] = [
   { key: '1', name: 'MacBook Pro 16"', assetTag: 'AST-2026-001', category: 'Laptop', brand: 'Apple', model: 'MacBook Pro M3 Max', serialNo: 'C02ZN1ABCD01', assignedTo: 'Rahul Sharma', condition: 'Excellent', status: 'Assigned', purchaseDate: '2025-11-15', purchasePrice: 289900, warrantyExpiry: '2027-11-15', location: 'Bangalore Office' },
   { key: '2', name: 'Dell UltraSharp 27" Monitor', assetTag: 'AST-2026-002', category: 'Monitor', brand: 'Dell', model: 'U2723QE', serialNo: 'DL27U2723Q001', assignedTo: 'Rahul Sharma', condition: 'Good', status: 'Assigned', purchaseDate: '2025-12-01', purchasePrice: 42500, warrantyExpiry: '2028-12-01', location: 'Bangalore Office' },
@@ -45,362 +71,491 @@ const assets: Asset[] = [
   { key: '13', name: 'Canon EOS R50', assetTag: 'AST-2026-013', category: 'Peripheral', brand: 'Canon', model: 'EOS R50', serialNo: 'CN-R50-013', assignedTo: null, condition: 'Poor', status: 'Retired', purchaseDate: '2022-06-15', purchasePrice: 65000, warrantyExpiry: '2024-06-15', location: 'Storage' },
 ];
 
-const conditionColors: Record<string, string> = {
-  Excellent: 'green',
-  Good: 'blue',
-  Fair: 'orange',
-  Poor: 'red',
-};
-
-const statusColors: Record<string, string> = {
-  Assigned: 'blue',
-  Available: 'green',
-  'In Repair': 'orange',
-  Retired: 'default',
-};
-
+// ---------- helpers ----------
 const categoryIcons: Record<string, React.ReactNode> = {
-  Laptop: <Laptop size={16} />,
-  Monitor: <Monitor size={16} />,
-  Mobile: <Smartphone size={16} />,
-  Furniture: <Armchair size={16} />,
-  Software: <Key size={16} />,
-  Peripheral: <HardDrive size={16} />,
+  Laptop: <Laptop className="h-4 w-4" />,
+  Monitor: <Monitor className="h-4 w-4" />,
+  Mobile: <Smartphone className="h-4 w-4" />,
+  Furniture: <Armchair className="h-4 w-4" />,
+  Software: <Key className="h-4 w-4" />,
+  Peripheral: <HardDrive className="h-4 w-4" />,
 };
 
+const CATEGORIES = ['Laptop', 'Monitor', 'Mobile', 'Furniture', 'Software', 'Peripheral'];
+const STATUSES = ['Assigned', 'Available', 'In Repair', 'Retired'];
+const CONDITIONS = ['Excellent', 'Good', 'Fair', 'Poor'];
+const LOCATIONS = ['Bangalore Office', 'Mumbai Office', 'Delhi Office', 'Cloud', 'Storage'];
+const EMPLOYEES = [
+  { value: 'Rahul Sharma', label: 'Rahul Sharma' },
+  { value: 'Priya Singh', label: 'Priya Singh' },
+  { value: 'Amit Patel', label: 'Amit Patel' },
+  { value: 'Sneha Gupta', label: 'Sneha Gupta' },
+  { value: 'Vikram Joshi', label: 'Vikram Joshi' },
+  { value: 'Ananya Reddy', label: 'Ananya Reddy' },
+];
+
+// ---------- component ----------
 const AssetList: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [selectedAssetKey, setSelectedAssetKey] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [conditionFilter, setConditionFilter] = useState<string | null>(null);
-  const [form] = Form.useForm();
-  const [assignForm] = Form.useForm();
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [conditionFilter, setConditionFilter] = useState<string>('all');
 
-  const totalAssets = assets.length;
-  const assignedCount = assets.filter(a => a.status === 'Assigned').length;
-  const availableCount = assets.filter(a => a.status === 'Available').length;
-  const repairCount = assets.filter(a => a.status === 'In Repair').length;
+  // API integration
+  const { data: assetData, isLoading } = useAssetList();
+  const createMutation = useCreateAsset();
+  const assignMutation = useAssignAsset();
+  const returnMutation = useReturnAsset();
+  const allAssets: Asset[] = assetData?.data ?? assets;
 
-  const filteredAssets = assets.filter(a => {
-    if (searchText && !a.name.toLowerCase().includes(searchText.toLowerCase()) && !a.assetTag.toLowerCase().includes(searchText.toLowerCase()) && !(a.assignedTo && a.assignedTo.toLowerCase().includes(searchText.toLowerCase()))) return false;
-    if (categoryFilter && a.category !== categoryFilter) return false;
-    if (statusFilter && a.status !== statusFilter) return false;
-    if (conditionFilter && a.condition !== conditionFilter) return false;
-    return true;
+  // form state
+  const [formData, setFormData] = useState({
+    name: '', category: '', brand: '', model: '', serialNo: '',
+    purchaseDate: undefined as Date | undefined,
+    purchasePrice: '',
+    warrantyExpiry: undefined as Date | undefined,
+    condition: '', location: '', notes: '',
   });
+  const [assignData, setAssignData] = useState({ employee: '', notes: '' });
 
-  const getActionItems = (record: Asset) => {
-    const items: any[] = [{ key: 'view', icon: <Eye size={16} />, label: 'View Details' }];
-    items.push({ key: 'edit', icon: <Edit2 size={16} />, label: 'Edit' });
-    if (record.status === 'Available') {
-      items.push({ key: 'assign', icon: <UserPlus size={16} />, label: 'Assign' });
-    }
-    if (record.status === 'Assigned') {
-      items.push({ key: 'return', icon: <RotateCcw size={16} />, label: 'Return' });
-    }
-    return items;
-  };
+  // computed
+  const totalAssets = allAssets.length;
+  const assignedCount = allAssets.filter(a => a.status === 'Assigned').length;
+  const availableCount = allAssets.filter(a => a.status === 'Available').length;
+  const repairCount = allAssets.filter(a => a.status === 'In Repair').length;
 
-  const columns = [
+  const filteredAssets = useMemo(() => {
+    return allAssets.filter(a => {
+      if (searchText) {
+        const q = searchText.toLowerCase();
+        if (
+          !a.name.toLowerCase().includes(q) &&
+          !a.assetTag.toLowerCase().includes(q) &&
+          !(a.assignedTo && a.assignedTo.toLowerCase().includes(q))
+        ) return false;
+      }
+      if (categoryFilter !== 'all' && a.category !== categoryFilter) return false;
+      if (statusFilter !== 'all' && a.status !== statusFilter) return false;
+      if (conditionFilter !== 'all' && a.condition !== conditionFilter) return false;
+      return true;
+    });
+  }, [allAssets, searchText, categoryFilter, statusFilter, conditionFilter]);
+
+  const stats = [
+    { title: 'Total Assets', value: totalAssets, icon: <Package className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-950' },
+    { title: 'Assigned', value: assignedCount, icon: <CheckCircle2 className="h-5 w-5" />, color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-950' },
+    { title: 'Available', value: availableCount, icon: <Archive className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-100 dark:bg-amber-950' },
+    { title: 'In Repair', value: repairCount, icon: <Wrench className="h-5 w-5" />, color: 'text-red-600', bgColor: 'bg-red-100 dark:bg-red-950' },
+  ];
+
+  // columns
+  const columns: ColumnDef<Asset>[] = [
     {
-      title: 'Asset', dataIndex: 'name', key: 'name',
-      render: (text: string, record: Asset) => (
-        <Space>
-          <div style={{
-            width: 40, height: 40, borderRadius: 8, background: '#f1f5f9',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a56db',
-          }}>
-            {categoryIcons[record.category] || <Package size={16} />}
+      accessorKey: 'name',
+      header: 'Asset',
+      cell: ({ row }) => {
+        const asset = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-blue-600 dark:bg-slate-800">
+              {categoryIcons[asset.category] || <Package className="h-4 w-4" />}
+            </div>
+            <div className="min-w-0">
+              <p className="font-medium truncate">{asset.name}</p>
+              <p className="text-xs text-muted-foreground truncate">{asset.brand} {asset.model}</p>
+            </div>
           </div>
-          <div>
-            <Text strong>{text}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.brand} {record.model}</Text>
-          </div>
-        </Space>
-      ),
-    },
-    { title: 'Asset Tag', dataIndex: 'assetTag', key: 'assetTag', render: (t: string) => <Text code>{t}</Text> },
-    {
-      title: 'Category', dataIndex: 'category', key: 'category',
-      render: (cat: string) => <Tag>{cat}</Tag>,
-    },
-    { title: 'Serial No', dataIndex: 'serialNo', key: 'serialNo', render: (s: string) => <Text type="secondary" style={{ fontSize: 12 }}>{s}</Text> },
-    {
-      title: 'Assigned To', dataIndex: 'assignedTo', key: 'assignedTo',
-      render: (emp: string | null) => emp ? (
-        <Space>
-          <Avatar size="small" style={{ backgroundColor: '#1a56db' }}>{emp[0]}</Avatar>
-          <Text>{emp}</Text>
-        </Space>
-      ) : <Tag>Unassigned</Tag>,
-    },
-    {
-      title: 'Condition', dataIndex: 'condition', key: 'condition',
-      render: (c: string) => <Tag color={conditionColors[c]}>{c}</Tag>,
-    },
-    {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (s: string) => <Tag color={statusColors[s]}>{s}</Tag>,
-    },
-    { title: 'Purchase Date', dataIndex: 'purchaseDate', key: 'purchaseDate' },
-    {
-      title: 'Warranty', dataIndex: 'warrantyExpiry', key: 'warrantyExpiry',
-      render: (date: string) => {
-        const expired = new Date(date) < new Date('2026-04-08');
-        return <Text type={expired ? 'danger' : 'secondary'}>{date}{expired ? ' (Expired)' : ''}</Text>;
+        );
       },
     },
     {
-      title: 'Actions', key: 'actions',
-      render: (_: any, record: Asset) => (
-        <Dropdown menu={{
-          items: getActionItems(record),
-          onClick: ({ key }) => {
-            if (key === 'assign') setIsAssignModalOpen(true);
-          },
-        }} trigger={['click']}>
-          <Button type="text" icon={<MoreHorizontal size={18} />} />
-        </Dropdown>
+      accessorKey: 'assetTag',
+      header: 'Asset Tag',
+      cell: ({ getValue }) => (
+        <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">{getValue<string>()}</code>
       ),
+    },
+    {
+      accessorKey: 'category',
+      header: 'Category',
+      cell: ({ getValue }) => <Badge variant="outline">{getValue<string>()}</Badge>,
+    },
+    {
+      accessorKey: 'serialNo',
+      header: 'Serial No',
+      cell: ({ getValue }) => (
+        <span className="text-xs text-muted-foreground">{getValue<string>()}</span>
+      ),
+    },
+    {
+      accessorKey: 'assignedTo',
+      header: 'Assigned To',
+      cell: ({ getValue }) => {
+        const emp = getValue<string | null>();
+        if (!emp) return <Badge variant="outline" className="text-muted-foreground">Unassigned</Badge>;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="text-[10px] bg-blue-600 text-white">{getInitials(emp)}</AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{emp}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'condition',
+      header: 'Condition',
+      cell: ({ getValue }) => {
+        const condition = getValue<string>();
+        const map: Record<string, string> = {
+          Excellent: 'active',
+          Good: 'assigned',
+          Fair: 'pending',
+          Poor: 'rejected',
+        };
+        return <StatusBadge status={map[condition] || condition} />;
+      },
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ getValue }) => {
+        const status = getValue<string>();
+        const map: Record<string, string> = {
+          Assigned: 'assigned',
+          Available: 'active',
+          'In Repair': 'in progress',
+          Retired: 'closed',
+        };
+        return <StatusBadge status={map[status] || status} />;
+      },
+    },
+    {
+      accessorKey: 'purchaseDate',
+      header: 'Purchase Date',
+      cell: ({ getValue }) => <span className="text-sm">{formatDate(getValue<string>())}</span>,
+    },
+    {
+      accessorKey: 'warrantyExpiry',
+      header: 'Warranty',
+      cell: ({ getValue }) => {
+        const date = getValue<string>();
+        const expired = new Date(date) < new Date('2026-04-08');
+        return (
+          <span className={expired ? 'text-sm text-red-600 font-medium' : 'text-sm text-muted-foreground'}>
+            {formatDate(date)}{expired ? ' (Expired)' : ''}
+          </span>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const asset = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Eye className="mr-2 h-4 w-4" /> View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Edit2 className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+              {asset.status === 'Available' && (
+                <DropdownMenuItem onClick={() => { setSelectedAssetKey(asset.key); setIsAssignDialogOpen(true); }}>
+                  <UserPlus className="mr-2 h-4 w-4" /> Assign
+                </DropdownMenuItem>
+              )}
+              {asset.status === 'Assigned' && (
+                <DropdownMenuItem onClick={() => {
+                  returnMutation.mutate({ id: asset.key }, {
+                    onSuccess: () => toast.success('Asset returned successfully'),
+                    onError: (err: any) => toast.error(err?.message || 'Failed to return asset'),
+                  });
+                }}>
+                  <RotateCcw className="mr-2 h-4 w-4" /> Return
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];
 
+  const handleAddAsset = () => {
+    createMutation.mutate(formData, {
+      onSuccess: () => {
+        toast.success('Asset added successfully');
+        setIsDrawerOpen(false);
+        setFormData({
+          name: '', category: '', brand: '', model: '', serialNo: '',
+          purchaseDate: undefined, purchasePrice: '', warrantyExpiry: undefined,
+          condition: '', location: '', notes: '',
+        });
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to add asset'),
+    });
+  };
+
+  const handleAssign = () => {
+    assignMutation.mutate({ id: selectedAssetKey || '', data: assignData }, {
+      onSuccess: () => {
+        toast.success('Asset assigned successfully');
+        setIsAssignDialogOpen(false);
+        setAssignData({ employee: '', notes: '' });
+        setSelectedAssetKey(null);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to assign asset'),
+    });
+  };
+
+  // filter content for DataTable
+  const filterContent = (
+    <div className="flex flex-wrap items-center gap-2">
+      <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Category" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Categories</SelectItem>
+          {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Statuses</SelectItem>
+          {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={conditionFilter} onValueChange={setConditionFilter}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Condition" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Conditions</SelectItem>
+          {CONDITIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Asset Management</Title>
-          <Text type="secondary">Track and manage company assets and equipment</Text>
-        </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsDrawerOpen(true)}>
-          Add Asset
-        </Button>
-      </div>
-
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {[
-          { title: 'Total Assets', value: totalAssets, icon: <Package size={20} />, color: '#1a56db' },
-          { title: 'Assigned', value: assignedCount, icon: <CheckCircle2 size={20} />, color: '#059669' },
-          { title: 'Available', value: availableCount, icon: <Archive size={20} />, color: '#d97706' },
-          { title: 'In Repair', value: repairCount, icon: <Wrench size={20} />, color: '#dc2626' },
-        ].map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }} wrap>
-          <Space wrap>
-            <Input
-              placeholder="Search assets..."
-              prefix={<Search size={16} />}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              style={{ width: 280 }}
-            />
-            <Select
-              placeholder="Category"
-              allowClear
-              style={{ width: 140 }}
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              options={[
-                { value: 'Laptop', label: 'Laptop' },
-                { value: 'Monitor', label: 'Monitor' },
-                { value: 'Mobile', label: 'Mobile' },
-                { value: 'Furniture', label: 'Furniture' },
-                { value: 'Software', label: 'Software' },
-                { value: 'Peripheral', label: 'Peripheral' },
-              ]}
-            />
-            <Select
-              placeholder="Status"
-              allowClear
-              style={{ width: 140 }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { value: 'Assigned', label: 'Assigned' },
-                { value: 'Available', label: 'Available' },
-                { value: 'In Repair', label: 'In Repair' },
-                { value: 'Retired', label: 'Retired' },
-              ]}
-            />
-            <Select
-              placeholder="Condition"
-              allowClear
-              style={{ width: 140 }}
-              value={conditionFilter}
-              onChange={setConditionFilter}
-              options={[
-                { value: 'Excellent', label: 'Excellent' },
-                { value: 'Good', label: 'Good' },
-                { value: 'Fair', label: 'Fair' },
-                { value: 'Poor', label: 'Poor' },
-              ]}
-            />
-          </Space>
-        </Space>
-
-        <Table
-          dataSource={filteredAssets}
-          columns={columns}
-          pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} assets` }}
-          scroll={{ x: 1400 }}
-        />
-      </Card>
-
-      <Drawer
-        title="Add New Asset"
-        open={isDrawerOpen}
-        onClose={() => { setIsDrawerOpen(false); form.resetFields(); }}
-        width={600}
-        extra={
-          <Space>
-            <Button onClick={() => { setIsDrawerOpen(false); form.resetFields(); }}>Cancel</Button>
-            <Button type="primary" onClick={() => { form.validateFields().then(() => { setIsDrawerOpen(false); form.resetFields(); }); }}>
-              Add Asset
-            </Button>
-          </Space>
+    <div className="space-y-6">
+      <PageHeader
+        title="Asset Management"
+        description="Track and manage company assets and equipment"
+        actions={
+          <Button onClick={() => setIsDrawerOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Add Asset
+          </Button>
         }
-      >
-        <Form form={form} layout="vertical">
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="name" label="Asset Name" rules={[{ required: true, message: 'Enter asset name' }]}>
-                <Input placeholder="e.g., MacBook Pro 16 inch" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="assetTag" label="Asset Tag">
-                <Input placeholder="Auto-generated" disabled defaultValue="AST-2026-014" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-                <Select placeholder="Select category" options={[
-                  { value: 'Laptop', label: 'Laptop' },
-                  { value: 'Monitor', label: 'Monitor' },
-                  { value: 'Mobile', label: 'Mobile' },
-                  { value: 'Furniture', label: 'Furniture' },
-                  { value: 'Software', label: 'Software' },
-                  { value: 'Peripheral', label: 'Peripheral' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="brand" label="Brand" rules={[{ required: true }]}>
-                <Input placeholder="e.g., Apple" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="model" label="Model" rules={[{ required: true }]}>
-                <Input placeholder="e.g., MacBook Pro M3 Max" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="serialNo" label="Serial Number" rules={[{ required: true }]}>
-                <Input placeholder="Enter serial number" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="purchaseDate" label="Purchase Date" rules={[{ required: true }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="purchasePrice" label="Purchase Price (INR)" rules={[{ required: true }]}>
-                <InputNumber
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                  min={0}
-                  formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="warrantyExpiry" label="Warranty Expiry">
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="condition" label="Condition" rules={[{ required: true }]}>
-                <Select placeholder="Select condition" options={[
-                  { value: 'Excellent', label: 'Excellent' },
-                  { value: 'Good', label: 'Good' },
-                  { value: 'Fair', label: 'Fair' },
-                  { value: 'Poor', label: 'Poor' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="location" label="Location">
-            <Select placeholder="Select location" options={[
-              { value: 'Bangalore Office', label: 'Bangalore Office' },
-              { value: 'Mumbai Office', label: 'Mumbai Office' },
-              { value: 'Delhi Office', label: 'Delhi Office' },
-              { value: 'Cloud', label: 'Cloud' },
-              { value: 'Storage', label: 'Storage' },
-            ]} />
-          </Form.Item>
-          <Form.Item name="notes" label="Notes">
-            <Input.TextArea rows={3} placeholder="Additional notes or specifications" />
-          </Form.Item>
-        </Form>
-      </Drawer>
+      />
 
-      <Modal
-        title="Assign Asset"
-        open={isAssignModalOpen}
-        onCancel={() => { setIsAssignModalOpen(false); assignForm.resetFields(); }}
-        onOk={() => { assignForm.validateFields().then(() => { setIsAssignModalOpen(false); assignForm.resetFields(); }); }}
-        okText="Assign"
+      <StatsGrid stats={stats} />
+
+      <DataTable
+        columns={columns}
+        data={filteredAssets}
+        searchPlaceholder="Search assets..."
+        onSearchChange={setSearchText}
+        filterContent={filterContent}
+        pagination={{
+          page: 1,
+          limit: 10,
+          total: filteredAssets.length,
+          totalPages: Math.ceil(filteredAssets.length / 10),
+        }}
+        onPaginationChange={() => {}}
+      />
+
+      {/* Add Asset Drawer */}
+      <FormSheet
+        open={isDrawerOpen}
+        onOpenChange={(open) => {
+          setIsDrawerOpen(open);
+          if (!open) setFormData({
+            name: '', category: '', brand: '', model: '', serialNo: '',
+            purchaseDate: undefined, purchasePrice: '', warrantyExpiry: undefined,
+            condition: '', location: '', notes: '',
+          });
+        }}
+        title="Add New Asset"
+        description="Enter the details for the new asset"
+        className="sm:max-w-xl"
       >
-        <Form form={assignForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="employee" label="Assign To" rules={[{ required: true, message: 'Select an employee' }]}>
-            <Select placeholder="Select employee" showSearch optionFilterProp="label" options={[
-              { value: 'Rahul Sharma', label: 'Rahul Sharma' },
-              { value: 'Priya Singh', label: 'Priya Singh' },
-              { value: 'Amit Patel', label: 'Amit Patel' },
-              { value: 'Sneha Gupta', label: 'Sneha Gupta' },
-              { value: 'Vikram Joshi', label: 'Vikram Joshi' },
-              { value: 'Ananya Reddy', label: 'Ananya Reddy' },
-            ]} />
-          </Form.Item>
-          <Form.Item name="notes" label="Notes">
-            <Input.TextArea rows={2} placeholder="Assignment notes (optional)" />
-          </Form.Item>
-        </Form>
-      </Modal>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Asset Name <span className="text-red-500">*</span></Label>
+              <Input
+                placeholder="e.g., MacBook Pro 16 inch"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Asset Tag</Label>
+              <Input placeholder="AST-2026-014" disabled />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Category <span className="text-red-500">*</span></Label>
+              <Select value={formData.category} onValueChange={v => setFormData({ ...formData, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Brand <span className="text-red-500">*</span></Label>
+              <Input
+                placeholder="e.g., Apple"
+                value={formData.brand}
+                onChange={e => setFormData({ ...formData, brand: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Model <span className="text-red-500">*</span></Label>
+              <Input
+                placeholder="e.g., MacBook Pro M3 Max"
+                value={formData.model}
+                onChange={e => setFormData({ ...formData, model: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Serial Number <span className="text-red-500">*</span></Label>
+              <Input
+                placeholder="Enter serial number"
+                value={formData.serialNo}
+                onChange={e => setFormData({ ...formData, serialNo: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Purchase Date <span className="text-red-500">*</span></Label>
+              <DatePicker
+                value={formData.purchaseDate}
+                onChange={d => setFormData({ ...formData, purchaseDate: d })}
+                placeholder="Select purchase date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Purchase Price (INR) <span className="text-red-500">*</span></Label>
+              <Input
+                type="number"
+                placeholder="0"
+                min={0}
+                value={formData.purchasePrice}
+                onChange={e => setFormData({ ...formData, purchasePrice: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Warranty Expiry</Label>
+              <DatePicker
+                value={formData.warrantyExpiry}
+                onChange={d => setFormData({ ...formData, warrantyExpiry: d })}
+                placeholder="Select expiry date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Condition <span className="text-red-500">*</span></Label>
+              <Select value={formData.condition} onValueChange={v => setFormData({ ...formData, condition: v })}>
+                <SelectTrigger><SelectValue placeholder="Select condition" /></SelectTrigger>
+                <SelectContent>
+                  {CONDITIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Location</Label>
+            <Select value={formData.location} onValueChange={v => setFormData({ ...formData, location: v })}>
+              <SelectTrigger><SelectValue placeholder="Select location" /></SelectTrigger>
+              <SelectContent>
+                {LOCATIONS.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Notes</Label>
+            <Textarea
+              rows={3}
+              placeholder="Additional notes or specifications"
+              value={formData.notes}
+              onChange={e => setFormData({ ...formData, notes: e.target.value })}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddAsset}>Add Asset</Button>
+          </div>
+        </div>
+      </FormSheet>
+
+      {/* Assign Asset Dialog */}
+      <FormDialog
+        open={isAssignDialogOpen}
+        onOpenChange={(open) => {
+          setIsAssignDialogOpen(open);
+          if (!open) setAssignData({ employee: '', notes: '' });
+        }}
+        title="Assign Asset"
+        description="Select an employee to assign this asset to"
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Assign To <span className="text-red-500">*</span></Label>
+            <SearchableSelect
+              options={EMPLOYEES}
+              value={assignData.employee}
+              onChange={v => setAssignData({ ...assignData, employee: v })}
+              placeholder="Select employee"
+              searchPlaceholder="Search employees..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Notes</Label>
+            <Textarea
+              rows={2}
+              placeholder="Assignment notes (optional)"
+              value={assignData.notes}
+              onChange={e => setAssignData({ ...assignData, notes: e.target.value })}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAssign}>Assign</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

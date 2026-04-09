@@ -1,17 +1,54 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useDocumentList, useUploadDocument, useDeleteDocument } from '@/hooks/queries/useDocuments';
 import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Modal, Form,
-  Select, Row, Col, Tabs, Upload, Checkbox, DatePicker, Tooltip, Dropdown,
-} from 'antd';
-import {
-  Plus, Search, Download, Eye, Trash2, MoreHorizontal, FileText, File,
-  FileSpreadsheet, FileImage, Grid3X3, List, SlidersHorizontal, Upload as UploadIcon,
+  Plus, Download, Eye, Trash2, MoreHorizontal, FileText, File,
+  FileSpreadsheet, FileImage, Grid3X3, List,
 } from 'lucide-react';
+import PageHeader from '@/components/shared/PageHeader';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import FormDialog from '@/components/shared/FormDialog';
+import FileUploadZone from '@/components/shared/FileUploadZone';
+import DatePicker from '@/components/shared/DatePicker';
+import SearchableSelect from '@/components/shared/SearchableSelect';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { toast } from 'sonner';
+import { formatDate, getInitials } from '@/lib/formatters';
 
-const { Title, Text } = Typography;
-const { Dragger } = Upload;
-
+// ---------- types ----------
 interface DocumentItem {
   key: string;
   title: string;
@@ -27,6 +64,7 @@ interface DocumentItem {
   tags: string[];
 }
 
+// ---------- mock data ----------
 const documents: DocumentItem[] = [
   { key: '1', title: 'Employee Handbook 2026', description: 'Company-wide employee handbook', category: 'Policy', employee: null, uploadedBy: 'Sneha Gupta', date: '2026-01-10', fileType: 'PDF', fileSize: '2.4 MB', expiryDate: null, isPublic: true, tags: ['handbook', 'policy'] },
   { key: '2', title: 'Leave Policy', description: 'Updated leave and attendance policy', category: 'Policy', employee: null, uploadedBy: 'Sneha Gupta', date: '2026-01-15', fileType: 'PDF', fileSize: '1.1 MB', expiryDate: null, isPublic: true, tags: ['leave', 'attendance'] },
@@ -40,304 +78,466 @@ const documents: DocumentItem[] = [
   { key: '10', title: 'IT Security Guidelines', description: 'Information security policy for all employees', category: 'Policy', employee: null, uploadedBy: 'Vikram Joshi', date: '2026-02-25', fileType: 'PDF', fileSize: '1.5 MB', expiryDate: null, isPublic: true, tags: ['security', 'it'] },
 ];
 
+// ---------- helpers ----------
 const getFileIcon = (fileType: string) => {
   switch (fileType) {
-    case 'PDF': return <FileText size={16} style={{ color: '#dc2626' }} />;
-    case 'DOCX': return <File size={16} style={{ color: '#2563eb' }} />;
-    case 'XLSX': return <FileSpreadsheet size={16} style={{ color: '#059669' }} />;
+    case 'PDF': return <FileText className="h-4 w-4 text-red-600" />;
+    case 'DOCX': return <File className="h-4 w-4 text-blue-600" />;
+    case 'XLSX': return <FileSpreadsheet className="h-4 w-4 text-green-600" />;
     case 'JPG':
-    case 'PNG': return <FileImage size={16} style={{ color: '#d97706' }} />;
-    default: return <File size={16} style={{ color: '#6b7280' }} />;
+    case 'PNG': return <FileImage className="h-4 w-4 text-amber-600" />;
+    default: return <File className="h-4 w-4 text-gray-500" />;
   }
 };
 
-const categoryColors: Record<string, string> = {
-  Policy: 'blue',
-  Template: 'purple',
-  Letter: 'cyan',
-  Certificate: 'green',
-  Form: 'orange',
+const getLargeFileIcon = (fileType: string) => {
+  switch (fileType) {
+    case 'PDF': return <FileText className="h-7 w-7 text-red-600" />;
+    case 'DOCX': return <File className="h-7 w-7 text-blue-600" />;
+    case 'XLSX': return <FileSpreadsheet className="h-7 w-7 text-green-600" />;
+    case 'JPG':
+    case 'PNG': return <FileImage className="h-7 w-7 text-amber-600" />;
+    default: return <File className="h-7 w-7 text-gray-500" />;
+  }
 };
 
+const categoryColorMap: Record<string, string> = {
+  Policy: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400',
+  Template: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-400',
+  Letter: 'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-950 dark:text-cyan-400',
+  Certificate: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400',
+  Form: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-400',
+};
+
+const CATEGORIES_LIST = ['Policy', 'Template', 'Letter', 'Certificate', 'Form'];
+const EMPLOYEES = [
+  { value: 'Rahul Sharma', label: 'Rahul Sharma' },
+  { value: 'Priya Singh', label: 'Priya Singh' },
+  { value: 'Amit Patel', label: 'Amit Patel' },
+  { value: 'Sneha Gupta', label: 'Sneha Gupta' },
+  { value: 'Vikram Joshi', label: 'Vikram Joshi' },
+  { value: 'Ananya Reddy', label: 'Ananya Reddy' },
+];
+
+// ---------- component ----------
 const DocumentList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [activeTab, setActiveTab] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [form] = Form.useForm();
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  const getFilteredDocs = () => {
-    let filtered = documents;
+  // API integration
+  const { data: documentData, isLoading } = useDocumentList();
+  const uploadMutation = useUploadDocument();
+  const deleteMutation = useDeleteDocument();
+  const allDocuments: DocumentItem[] = documentData?.data ?? documents;
+
+  // upload form state
+  const [formData, setFormData] = useState({
+    title: '', description: '', category: '', employee: '',
+    expiryDate: undefined as Date | undefined,
+    isPublic: false, tags: '',
+  });
+  const [, setSelectedFiles] = useState<File[]>([]);
+
+  const filteredDocs = useMemo(() => {
+    let filtered = allDocuments;
     if (activeTab === 'policies') filtered = filtered.filter(d => d.category === 'Policy');
     if (activeTab === 'my') filtered = filtered.filter(d => d.employee !== null);
-    if (categoryFilter) filtered = filtered.filter(d => d.category === categoryFilter);
+    if (categoryFilter !== 'all') filtered = filtered.filter(d => d.category === categoryFilter);
     if (searchText) {
+      const q = searchText.toLowerCase();
       filtered = filtered.filter(d =>
-        d.title.toLowerCase().includes(searchText.toLowerCase()) ||
-        d.category.toLowerCase().includes(searchText.toLowerCase()) ||
-        (d.employee && d.employee.toLowerCase().includes(searchText.toLowerCase()))
+        d.title.toLowerCase().includes(q) ||
+        d.category.toLowerCase().includes(q) ||
+        (d.employee && d.employee.toLowerCase().includes(q))
       );
     }
     return filtered;
-  };
+  }, [allDocuments, activeTab, categoryFilter, searchText]);
 
-  const filteredDocs = getFilteredDocs();
-
-  const columns = [
+  // columns
+  const columns: ColumnDef<DocumentItem>[] = [
     {
-      title: 'Document', dataIndex: 'title', key: 'title',
-      render: (text: string, record: DocumentItem) => (
-        <Space>
-          <div style={{
-            width: 40, height: 40, borderRadius: 8, background: '#f1f5f9',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {getFileIcon(record.fileType)}
+      accessorKey: 'title',
+      header: 'Document',
+      cell: ({ row }) => {
+        const doc = row.original;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+              {getFileIcon(doc.fileType)}
+            </div>
+            <div className="min-w-0">
+              <p className="font-medium truncate">{doc.title}</p>
+              <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
+            </div>
           </div>
-          <div>
-            <Text strong>{text}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.description}</Text>
+        );
+      },
+    },
+    {
+      accessorKey: 'category',
+      header: 'Category',
+      cell: ({ getValue }) => {
+        const cat = getValue<string>();
+        return (
+          <Badge variant="outline" className={categoryColorMap[cat] || ''}>
+            {cat}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'employee',
+      header: 'Employee',
+      cell: ({ getValue }) => {
+        const emp = getValue<string | null>();
+        if (!emp) return <span className="text-sm text-muted-foreground">--</span>;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="text-[10px] bg-blue-600 text-white">{getInitials(emp)}</AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{emp}</span>
           </div>
-        </Space>
+        );
+      },
+    },
+    {
+      accessorKey: 'uploadedBy',
+      header: 'Uploaded By',
+      cell: ({ getValue }) => <span className="text-sm">{getValue<string>()}</span>,
+    },
+    {
+      accessorKey: 'date',
+      header: 'Date',
+      cell: ({ getValue }) => <span className="text-sm">{formatDate(getValue<string>())}</span>,
+    },
+    {
+      accessorKey: 'fileType',
+      header: 'Type',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1.5">
+          {getFileIcon(row.original.fileType)}
+          <span className="text-sm text-muted-foreground">{row.original.fileType}</span>
+        </div>
       ),
     },
     {
-      title: 'Category', dataIndex: 'category', key: 'category',
-      render: (cat: string) => <Tag color={categoryColors[cat] || 'default'}>{cat}</Tag>,
+      accessorKey: 'fileSize',
+      header: 'Size',
+      cell: ({ getValue }) => <span className="text-sm text-muted-foreground">{getValue<string>()}</span>,
     },
     {
-      title: 'Employee', dataIndex: 'employee', key: 'employee',
-      render: (emp: string | null) => emp ? (
-        <Space>
-          <Avatar size="small" style={{ backgroundColor: '#1a56db' }}>{emp[0]}</Avatar>
-          <Text>{emp}</Text>
-        </Space>
-      ) : <Text type="secondary">--</Text>,
-    },
-    { title: 'Uploaded By', dataIndex: 'uploadedBy', key: 'uploadedBy' },
-    { title: 'Date', dataIndex: 'date', key: 'date' },
-    {
-      title: 'Type', dataIndex: 'fileType', key: 'fileType',
-      render: (type: string) => (
-        <Space size={4}>
-          {getFileIcon(type)}
-          <Text type="secondary">{type}</Text>
-        </Space>
-      ),
-    },
-    { title: 'Size', dataIndex: 'fileSize', key: 'fileSize', render: (s: string) => <Text type="secondary">{s}</Text> },
-    {
-      title: 'Expiry', dataIndex: 'expiryDate', key: 'expiryDate',
-      render: (date: string | null) => date ? <Text>{date}</Text> : <Text type="secondary">--</Text>,
+      accessorKey: 'expiryDate',
+      header: 'Expiry',
+      cell: ({ getValue }) => {
+        const date = getValue<string | null>();
+        return date
+          ? <span className="text-sm">{formatDate(date)}</span>
+          : <span className="text-sm text-muted-foreground">--</span>;
+      },
     },
     {
-      title: 'Actions', key: 'actions',
-      render: () => (
-        <Dropdown menu={{ items: [
-          { key: 'view', icon: <Eye size={16} />, label: 'View' },
-          { key: 'download', icon: <Download size={16} />, label: 'Download' },
-          { key: 'delete', icon: <Trash2 size={16} />, label: 'Delete', danger: true },
-        ]}} trigger={['click']}>
-          <Button type="text" icon={<MoreHorizontal size={18} />} />
-        </Dropdown>
+      id: 'actions',
+      header: 'Actions',
+      cell: () => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" /> View
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Download className="mr-2 h-4 w-4" /> Download
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-red-600 focus:text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
   const renderGridView = () => (
-    <Row gutter={[16, 16]}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {filteredDocs.map(doc => (
-        <Col xs={24} sm={12} lg={6} key={doc.key}>
-          <Card
-            bordered={false}
-            style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-            hoverable
-            actions={[
-              <Tooltip title="View" key="view"><Eye size={16} /></Tooltip>,
-              <Tooltip title="Download" key="download"><Download size={16} /></Tooltip>,
-              <Tooltip title="Delete" key="delete"><Trash2 size={16} /></Tooltip>,
-            ]}
-          >
-            <div style={{ textAlign: 'center', marginBottom: 12 }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: 12, background: '#f1f5f9',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 8px',
-              }}>
-                {React.cloneElement(getFileIcon(doc.fileType), { size: 28 })}
+        <Card key={doc.key} className="group hover:shadow-md transition-shadow cursor-pointer">
+          <CardContent className="p-4">
+            <div className="text-center mb-3">
+              <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+                {getLargeFileIcon(doc.fileType)}
               </div>
-              <Text strong style={{ display: 'block' }}>{doc.title}</Text>
-              <Tag color={categoryColors[doc.category] || 'default'} style={{ marginTop: 4 }}>{doc.category}</Tag>
+              <p className="font-medium text-sm truncate">{doc.title}</p>
+              <Badge variant="outline" className={`mt-1 text-xs ${categoryColorMap[doc.category] || ''}`}>
+                {doc.category}
+              </Badge>
             </div>
-            <div style={{ fontSize: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text type="secondary">Size</Text>
-                <Text>{doc.fileSize}</Text>
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Size</span>
+                <span>{doc.fileSize}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text type="secondary">Uploaded</Text>
-                <Text>{doc.date}</Text>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Uploaded</span>
+                <span>{formatDate(doc.date)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Text type="secondary">By</Text>
-                <Text>{doc.uploadedBy}</Text>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">By</span>
+                <span>{doc.uploadedBy}</span>
               </div>
             </div>
-          </Card>
-        </Col>
+            <div className="flex justify-center gap-1 mt-3 pt-3 border-t">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>View</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Download</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-600">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </CardContent>
+        </Card>
       ))}
-    </Row>
+      {filteredDocs.length === 0 && (
+        <div className="col-span-full text-center py-12 text-muted-foreground">
+          No documents found.
+        </div>
+      )}
+    </div>
+  );
+
+  const handleUpload = () => {
+    uploadMutation.mutate(formData, {
+      onSuccess: () => {
+        toast.success('Document uploaded successfully');
+        setIsModalOpen(false);
+        setFormData({ title: '', description: '', category: '', employee: '', expiryDate: undefined, isPublic: false, tags: '' });
+        setSelectedFiles([]);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to upload document'),
+    });
+  };
+
+  // filter + view toggle content for DataTable
+  const filterContent = (
+    <div className="flex items-center gap-2">
+      <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Category" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Categories</SelectItem>
+          {CATEGORIES_LIST.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <div className="flex items-center rounded-md border">
+        <Button
+          variant={viewMode === 'table' ? 'default' : 'ghost'}
+          size="icon"
+          className="h-9 w-9 rounded-r-none"
+          onClick={() => setViewMode('table')}
+        >
+          <List className="h-4 w-4" />
+        </Button>
+        <Button
+          variant={viewMode === 'grid' ? 'default' : 'ghost'}
+          size="icon"
+          className="h-9 w-9 rounded-l-none"
+          onClick={() => setViewMode('grid')}
+        >
+          <Grid3X3 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   );
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Document Management</Title>
-          <Text type="secondary">Manage company and employee documents securely</Text>
-        </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsModalOpen(true)}>
-          Upload Document
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Document Management"
+        description="Manage company and employee documents securely"
+        actions={
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Upload Document
+          </Button>
+        }
+      />
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            { key: 'all', label: 'All Documents' },
-            { key: 'policies', label: 'Company Policies' },
-            { key: 'my', label: 'My Documents' },
-          ]}
-        />
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="all">All Documents</TabsTrigger>
+          <TabsTrigger value="policies">Company Policies</TabsTrigger>
+          <TabsTrigger value="my">My Documents</TabsTrigger>
+        </TabsList>
 
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }} wrap>
-          <Space>
-            <Input
-              placeholder="Search documents..."
-              prefix={<Search size={16} />}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              style={{ width: 300 }}
+        <TabsContent value={activeTab} className="mt-4">
+          {viewMode === 'table' ? (
+            <DataTable
+              columns={columns}
+              data={filteredDocs}
+              searchPlaceholder="Search documents..."
+              onSearchChange={setSearchText}
+              filterContent={filterContent}
+              pagination={{
+                page: 1,
+                limit: 10,
+                total: filteredDocs.length,
+                totalPages: Math.ceil(filteredDocs.length / 10),
+              }}
+              onPaginationChange={() => {}}
             />
-            <Select
-              placeholder="Category"
-              allowClear
-              style={{ width: 160 }}
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              options={[
-                { value: 'Policy', label: 'Policy' },
-                { value: 'Template', label: 'Template' },
-                { value: 'Letter', label: 'Letter' },
-                { value: 'Certificate', label: 'Certificate' },
-                { value: 'Form', label: 'Form' },
-              ]}
-            />
-            <Button icon={<SlidersHorizontal size={16} />}>Filters</Button>
-          </Space>
-          <Space>
-            <Tooltip title="Table View">
-              <Button
-                type={viewMode === 'table' ? 'primary' : 'default'}
-                icon={<List size={16} />}
-                onClick={() => setViewMode('table')}
-              />
-            </Tooltip>
-            <Tooltip title="Grid View">
-              <Button
-                type={viewMode === 'grid' ? 'primary' : 'default'}
-                icon={<Grid3X3 size={16} />}
-                onClick={() => setViewMode('grid')}
-              />
-            </Tooltip>
-          </Space>
-        </Space>
+          ) : (
+            <div className="space-y-4">
+              {/* search + filters for grid view */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative w-full sm:max-w-xs">
+                  <Input
+                    placeholder="Search documents..."
+                    value={searchText}
+                    onChange={e => setSearchText(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  {filterContent}
+                </div>
+              </div>
+              {renderGridView()}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
-        {viewMode === 'table' ? (
-          <Table
-            dataSource={filteredDocs}
-            columns={columns}
-            pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} documents` }}
-          />
-        ) : (
-          renderGridView()
-        )}
-      </Card>
-
-      <Modal
-        title="Upload Document"
+      {/* Upload Document Dialog */}
+      <FormDialog
         open={isModalOpen}
-        onCancel={() => { setIsModalOpen(false); form.resetFields(); }}
-        onOk={() => { form.validateFields().then(() => { setIsModalOpen(false); form.resetFields(); }); }}
-        okText="Upload"
-        width={640}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setFormData({ title: '', description: '', category: '', employee: '', expiryDate: undefined, isPublic: false, tags: '' });
+            setSelectedFiles([]);
+          }
+        }}
+        title="Upload Document"
+        description="Add a new document to the system"
+        className="sm:max-w-2xl"
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Please enter document title' }]}>
-            <Input placeholder="Enter document title" />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={2} placeholder="Brief description of the document" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Select a category' }]}>
-                <Select placeholder="Select category" options={[
-                  { value: 'Policy', label: 'Policy' },
-                  { value: 'Template', label: 'Template' },
-                  { value: 'Letter', label: 'Letter' },
-                  { value: 'Certificate', label: 'Certificate' },
-                  { value: 'Form', label: 'Form' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="employee" label="Employee (optional)">
-                <Select placeholder="Select employee" allowClear options={[
-                  { value: 'Rahul Sharma', label: 'Rahul Sharma' },
-                  { value: 'Priya Singh', label: 'Priya Singh' },
-                  { value: 'Amit Patel', label: 'Amit Patel' },
-                  { value: 'Sneha Gupta', label: 'Sneha Gupta' },
-                  { value: 'Vikram Joshi', label: 'Vikram Joshi' },
-                  { value: 'Ananya Reddy', label: 'Ananya Reddy' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="file" label="Upload File" rules={[{ required: true, message: 'Please upload a file' }]}>
-            <Dragger
-              maxCount={1}
-              beforeUpload={() => false}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Title <span className="text-red-500">*</span></Label>
+            <Input
+              placeholder="Enter document title"
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea
+              rows={2}
+              placeholder="Brief description of the document"
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Category <span className="text-red-500">*</span></Label>
+              <Select value={formData.category} onValueChange={v => setFormData({ ...formData, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES_LIST.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Employee (optional)</Label>
+              <SearchableSelect
+                options={EMPLOYEES}
+                value={formData.employee}
+                onChange={v => setFormData({ ...formData, employee: v })}
+                placeholder="Select employee"
+                searchPlaceholder="Search employees..."
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Upload File <span className="text-red-500">*</span></Label>
+            <FileUploadZone
               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-            >
-              <p style={{ marginBottom: 8 }}>
-                <UploadIcon size={32} style={{ color: '#1a56db' }} />
-              </p>
-              <p><Text strong>Click or drag file to upload</Text></p>
-              <p><Text type="secondary" style={{ fontSize: 12 }}>PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10 MB)</Text></p>
-            </Dragger>
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="expiryDate" label="Expiry Date">
-                <DatePicker style={{ width: '100%' }} placeholder="Select expiry date" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="tags" label="Tags">
-                <Select mode="tags" placeholder="Add tags" style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="isPublic" valuePropName="checked">
-            <Checkbox>Make this document publicly accessible to all employees</Checkbox>
-          </Form.Item>
-        </Form>
-      </Modal>
+              maxSize={10 * 1024 * 1024}
+              onFilesSelected={setSelectedFiles}
+              label="Click or drag file to upload"
+              description="PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10 MB)"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Expiry Date</Label>
+              <DatePicker
+                value={formData.expiryDate}
+                onChange={d => setFormData({ ...formData, expiryDate: d })}
+                placeholder="Select expiry date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tags</Label>
+              <Input
+                placeholder="Comma-separated tags"
+                value={formData.tags}
+                onChange={e => setFormData({ ...formData, tags: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isPublic"
+              checked={formData.isPublic}
+              onCheckedChange={(checked) => setFormData({ ...formData, isPublic: checked === true })}
+            />
+            <Label htmlFor="isPublic" className="text-sm font-normal cursor-pointer">
+              Make this document publicly accessible to all employees
+            </Label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpload}>Upload</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

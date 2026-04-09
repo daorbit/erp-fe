@@ -1,14 +1,35 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { useAnnouncementList, useCreateAnnouncement, useMarkAnnouncementRead } from '@/hooks/queries/useAnnouncements';
 import {
-  Card, Button, Input, Space, Tag, Avatar, Typography, Drawer, Form,
-  Select, Row, Col, DatePicker, Upload, Switch, Badge,
-} from 'antd';
-import {
-  Plus, Search, Pin, Eye, Clock, SlidersHorizontal, Paperclip,
+  Plus,
+  Search,
+  Pin,
+  Eye,
+  Clock,
+  Paperclip,
 } from 'lucide-react';
-
-const { Title, Text, Paragraph } = Typography;
+import PageHeader from '@/components/shared/PageHeader';
+import FormSheet from '@/components/shared/FormSheet';
+import DatePicker from '@/components/shared/DatePicker';
+import FileUploadZone from '@/components/shared/FileUploadZone';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { AnnouncementCategory, AnnouncementPriority } from '@/types/enums';
 
 interface Announcement {
   key: string;
@@ -110,33 +131,54 @@ const announcements: Announcement[] = [
   },
 ];
 
-const priorityColors: Record<string, string> = {
-  Critical: 'red',
-  High: 'orange',
-  Normal: 'blue',
-  Low: 'default',
+const priorityColorMap: Record<string, string> = {
+  Critical: 'bg-red-100 text-red-700 border-red-200',
+  High: 'bg-orange-100 text-orange-700 border-orange-200',
+  Normal: 'bg-blue-100 text-blue-700 border-blue-200',
+  Low: 'bg-gray-100 text-gray-700 border-gray-200',
 };
 
-const categoryColors: Record<string, string> = {
-  General: 'blue',
-  Policy: 'purple',
-  Event: 'green',
-  Achievement: 'gold',
-  Urgent: 'red',
-  Maintenance: 'volcano',
+const categoryColorMap: Record<string, string> = {
+  General: 'bg-blue-100 text-blue-700 border-blue-200',
+  Policy: 'bg-purple-100 text-purple-700 border-purple-200',
+  Event: 'bg-green-100 text-green-700 border-green-200',
+  Achievement: 'bg-amber-100 text-amber-700 border-amber-200',
+  Urgent: 'bg-red-100 text-red-700 border-red-200',
+  Maintenance: 'bg-orange-100 text-orange-700 border-orange-200',
 };
 
 const AnnouncementList: React.FC = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
-  const [form] = Form.useForm();
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
 
-  const filteredAnnouncements = announcements
-    .filter(a => {
-      if (searchText && !a.title.toLowerCase().includes(searchText.toLowerCase()) && !a.content.toLowerCase().includes(searchText.toLowerCase())) return false;
+  // API integration
+  const { data: announcementData, isLoading } = useAnnouncementList();
+  const createMutation = useCreateAnnouncement();
+  const markReadMutation = useMarkAnnouncementRead();
+  const allAnnouncements: Announcement[] = announcementData?.data ?? announcements;
+
+  const [form, setForm] = useState({
+    title: '',
+    content: '',
+    category: '',
+    priority: '',
+    targetAudience: 'all',
+    publishDate: undefined as Date | undefined,
+    expiryDate: undefined as Date | undefined,
+    isPinned: false,
+  });
+
+  const filteredAnnouncements = allAnnouncements
+    .filter((a) => {
+      if (
+        searchText &&
+        !a.title.toLowerCase().includes(searchText.toLowerCase()) &&
+        !a.content.toLowerCase().includes(searchText.toLowerCase())
+      )
+        return false;
       if (categoryFilter && a.category !== categoryFilter) return false;
       if (priorityFilter && a.priority !== priorityFilter) return false;
       return true;
@@ -147,202 +189,325 @@ const AnnouncementList: React.FC = () => {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
+  const handlePublish = () => {
+    if (!form.title || !form.content || !form.category || !form.priority) return;
+    createMutation.mutate(form, {
+      onSuccess: () => {
+        toast.success('Announcement published successfully');
+        setIsSheetOpen(false);
+        setForm({
+          title: '',
+          content: '',
+          category: '',
+          priority: '',
+          targetAudience: 'all',
+          publishDate: undefined,
+          expiryDate: undefined,
+          isPinned: false,
+        });
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to publish announcement'),
+    });
+  };
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Announcements</Title>
-          <Text type="secondary">Company news, updates and announcements</Text>
+    <div className="space-y-6">
+      <PageHeader
+        title="Announcements"
+        description="Company news, updates and announcements"
+        actions={
+          <Button onClick={() => setIsSheetOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Announcement
+          </Button>
+        }
+      />
+
+      {/* Search + Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search announcements..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="pl-9"
+          />
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsDrawerOpen(true)}>
-          New Announcement
-        </Button>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="General">General</SelectItem>
+            <SelectItem value="Policy">Policy</SelectItem>
+            <SelectItem value="Event">Event</SelectItem>
+            <SelectItem value="Achievement">Achievement</SelectItem>
+            <SelectItem value="Urgent">Urgent</SelectItem>
+            <SelectItem value="Maintenance">Maintenance</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Priorities</SelectItem>
+            <SelectItem value="Critical">Critical</SelectItem>
+            <SelectItem value="High">High</SelectItem>
+            <SelectItem value="Normal">Normal</SelectItem>
+            <SelectItem value="Low">Low</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Input
-          placeholder="Search announcements..."
-          prefix={<Search size={16} />}
-          value={searchText}
-          onChange={e => setSearchText(e.target.value)}
-          style={{ width: 300 }}
-        />
-        <Select
-          placeholder="Category"
-          allowClear
-          style={{ width: 160 }}
-          value={categoryFilter}
-          onChange={setCategoryFilter}
-          options={[
-            { value: 'General', label: 'General' },
-            { value: 'Policy', label: 'Policy' },
-            { value: 'Event', label: 'Event' },
-            { value: 'Achievement', label: 'Achievement' },
-            { value: 'Urgent', label: 'Urgent' },
-            { value: 'Maintenance', label: 'Maintenance' },
-          ]}
-        />
-        <Select
-          placeholder="Priority"
-          allowClear
-          style={{ width: 140 }}
-          value={priorityFilter}
-          onChange={setPriorityFilter}
-          options={[
-            { value: 'Critical', label: 'Critical' },
-            { value: 'High', label: 'High' },
-            { value: 'Normal', label: 'Normal' },
-            { value: 'Low', label: 'Low' },
-          ]}
-        />
-      </Space>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {filteredAnnouncements.map(announcement => {
+      {/* Announcement Cards */}
+      <div className="flex flex-col gap-4">
+        {filteredAnnouncements.map((announcement) => {
           const isExpanded = expandedKey === announcement.key;
           return (
             <Card
               key={announcement.key}
-              bordered={false}
-              style={{
-                borderRadius: 12,
-                boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-                cursor: 'pointer',
-                borderLeft: announcement.isPinned ? '4px solid #1a56db' : undefined,
-              }}
-              onClick={() => setExpandedKey(isExpanded ? null : announcement.key)}
+              className={cn(
+                'cursor-pointer transition-shadow hover:shadow-md',
+                announcement.isPinned && 'border-l-4 border-l-primary',
+              )}
+              onClick={() =>
+                setExpandedKey(isExpanded ? null : announcement.key)
+              }
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ flex: 1 }}>
-                  <Space style={{ marginBottom: 8 }} wrap>
-                    {announcement.isPinned && (
-                      <Tag icon={<Pin size={12} style={{ marginRight: 4 }} />} color="blue">Pinned</Tag>
-                    )}
-                    <Tag color={categoryColors[announcement.category]}>{announcement.category}</Tag>
-                    <Tag color={priorityColors[announcement.priority]}>{announcement.priority}</Tag>
-                  </Space>
-                  <Title level={5} style={{ margin: '0 0 8px 0' }}>{announcement.title}</Title>
-                  {isExpanded ? (
-                    <Paragraph style={{ whiteSpace: 'pre-line', marginBottom: 12 }}>
-                      {announcement.content}
-                    </Paragraph>
-                  ) : (
-                    <Paragraph type="secondary" ellipsis={{ rows: 2 }} style={{ marginBottom: 12 }}>
-                      {announcement.content}
-                    </Paragraph>
+              <CardContent className="p-6">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  {announcement.isPinned && (
+                    <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+                      <Pin className="mr-1 h-3 w-3" />
+                      Pinned
+                    </Badge>
                   )}
-                  <Space split={<span style={{ color: '#d1d5db' }}>|</span>}>
-                    <Space size={8}>
-                      <Avatar size="small" style={{ backgroundColor: '#1a56db' }}>{announcement.postedBy[0]}</Avatar>
-                      <Text type="secondary" style={{ fontSize: 13 }}>{announcement.postedBy}</Text>
-                    </Space>
-                    <Space size={4}>
-                      <Clock size={14} style={{ color: '#9ca3af' }} />
-                      <Text type="secondary" style={{ fontSize: 13 }}>{announcement.date}</Text>
-                    </Space>
-                    <Space size={4}>
-                      <Eye size={14} style={{ color: '#9ca3af' }} />
-                      <Text type="secondary" style={{ fontSize: 13 }}>{announcement.readCount} views</Text>
-                    </Space>
-                    {announcement.attachments > 0 && (
-                      <Space size={4}>
-                        <Paperclip size={14} style={{ color: '#9ca3af' }} />
-                        <Text type="secondary" style={{ fontSize: 13 }}>{announcement.attachments} attachment{announcement.attachments > 1 ? 's' : ''}</Text>
-                      </Space>
-                    )}
-                  </Space>
+                  <Badge
+                    variant="outline"
+                    className={
+                      categoryColorMap[announcement.category] || ''
+                    }
+                  >
+                    {announcement.category}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={
+                      priorityColorMap[announcement.priority] || ''
+                    }
+                  >
+                    {announcement.priority}
+                  </Badge>
                 </div>
-              </div>
+
+                <h3 className="mb-2 text-lg font-semibold">
+                  {announcement.title}
+                </h3>
+
+                {isExpanded ? (
+                  <p className="mb-3 whitespace-pre-line text-sm">
+                    {announcement.content}
+                  </p>
+                ) : (
+                  <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
+                    {announcement.content}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Avatar className="h-5 w-5">
+                      <AvatarFallback className="bg-blue-600 text-white text-[10px]">
+                        {announcement.postedBy[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{announcement.postedBy}</span>
+                  </div>
+                  <span className="text-border">|</span>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{announcement.date}</span>
+                  </div>
+                  <span className="text-border">|</span>
+                  <div className="flex items-center gap-1">
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>{announcement.readCount} views</span>
+                  </div>
+                  {announcement.attachments > 0 && (
+                    <>
+                      <span className="text-border">|</span>
+                      <div className="flex items-center gap-1">
+                        <Paperclip className="h-3.5 w-3.5" />
+                        <span>
+                          {announcement.attachments} attachment
+                          {announcement.attachments > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CardContent>
             </Card>
           );
         })}
+
+        {filteredAnnouncements.length === 0 && (
+          <div className="py-12 text-center text-muted-foreground">
+            No announcements found.
+          </div>
+        )}
       </div>
 
-      <Drawer
+      {/* Create Announcement Sheet */}
+      <FormSheet
+        open={isSheetOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setIsSheetOpen(false);
+        }}
         title="New Announcement"
-        open={isDrawerOpen}
-        onClose={() => { setIsDrawerOpen(false); form.resetFields(); }}
-        width={600}
-        extra={
-          <Space>
-            <Button onClick={() => { setIsDrawerOpen(false); form.resetFields(); }}>Cancel</Button>
-            <Button type="primary" onClick={() => { form.validateFields().then(() => { setIsDrawerOpen(false); form.resetFields(); }); }}>
-              Publish
-            </Button>
-          </Space>
-        }
+        description="Compose and publish a company-wide announcement."
       >
-        <Form form={form} layout="vertical">
-          <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Please enter announcement title' }]}>
-            <Input placeholder="Enter announcement title" />
-          </Form.Item>
-          <Form.Item name="content" label="Content" rules={[{ required: true, message: 'Please enter content' }]}>
-            <Input.TextArea rows={8} placeholder="Write your announcement here..." />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-                <Select placeholder="Select category" options={[
-                  { value: 'General', label: 'General' },
-                  { value: 'Policy', label: 'Policy' },
-                  { value: 'Event', label: 'Event' },
-                  { value: 'Achievement', label: 'Achievement' },
-                  { value: 'Urgent', label: 'Urgent' },
-                  { value: 'Maintenance', label: 'Maintenance' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
-                <Select placeholder="Select priority" options={[
-                  { value: 'Critical', label: 'Critical' },
-                  { value: 'High', label: 'High' },
-                  { value: 'Normal', label: 'Normal' },
-                  { value: 'Low', label: 'Low' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="targetAudience" label="Target Audience">
-            <Select defaultValue="all" options={[
-              { value: 'all', label: 'All Employees' },
-              { value: 'department', label: 'Specific Departments' },
-              { value: 'specific', label: 'Specific Employees' },
-            ]} />
-          </Form.Item>
-          <Form.Item name="departments" label="Departments">
-            <Select mode="multiple" placeholder="Select departments" options={[
-              { value: 'Engineering', label: 'Engineering' },
-              { value: 'Marketing', label: 'Marketing' },
-              { value: 'Finance', label: 'Finance' },
-              { value: 'HR', label: 'HR' },
-              { value: 'Sales', label: 'Sales' },
-            ]} />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="publishDate" label="Publish Date">
-                <DatePicker style={{ width: '100%' }} placeholder="Select date" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="expiryDate" label="Expiry Date">
-                <DatePicker style={{ width: '100%' }} placeholder="Select date" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="attachments" label="Attachments">
-            <Upload.Dragger maxCount={5} beforeUpload={() => false}>
-              <p style={{ marginBottom: 4 }}><Paperclip size={24} style={{ color: '#1a56db' }} /></p>
-              <p><Text strong>Click or drag files to attach</Text></p>
-              <p><Text type="secondary" style={{ fontSize: 12 }}>Max 5 files, 10 MB each</Text></p>
-            </Upload.Dragger>
-          </Form.Item>
-          <Form.Item name="isPinned" label="Pin Announcement" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Drawer>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>
+              Title <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              placeholder="Enter announcement title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              Content <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              rows={8}
+              placeholder="Write your announcement here..."
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>
+                Category <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.category}
+                onValueChange={(val) => setForm({ ...form, category: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="General">General</SelectItem>
+                  <SelectItem value="Policy">Policy</SelectItem>
+                  <SelectItem value="Event">Event</SelectItem>
+                  <SelectItem value="Achievement">Achievement</SelectItem>
+                  <SelectItem value="Urgent">Urgent</SelectItem>
+                  <SelectItem value="Maintenance">Maintenance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Priority <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.priority}
+                onValueChange={(val) => setForm({ ...form, priority: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Critical">Critical</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Target Audience</Label>
+            <Select
+              value={form.targetAudience}
+              onValueChange={(val) =>
+                setForm({ ...form, targetAudience: val })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Employees</SelectItem>
+                <SelectItem value="department">Specific Departments</SelectItem>
+                <SelectItem value="specific">Specific Employees</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Publish Date</Label>
+              <DatePicker
+                value={form.publishDate}
+                onChange={(date) => setForm({ ...form, publishDate: date })}
+                placeholder="Select date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Expiry Date</Label>
+              <DatePicker
+                value={form.expiryDate}
+                onChange={(date) => setForm({ ...form, expiryDate: date })}
+                placeholder="Select date"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Attachments</Label>
+            <FileUploadZone
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              multiple
+              maxSize={10 * 1024 * 1024}
+              onFilesSelected={() => {}}
+              label="Click or drag files to attach"
+              description="Max 5 files, 10 MB each"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch
+              id="pin-announcement"
+              checked={form.isPinned}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, isPinned: checked })
+              }
+            />
+            <Label htmlFor="pin-announcement" className="cursor-pointer">
+              Pin Announcement
+            </Label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setIsSheetOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePublish}>Publish</Button>
+          </div>
+        </div>
+      </FormSheet>
     </div>
   );
 };

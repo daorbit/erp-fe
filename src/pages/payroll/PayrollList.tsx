@@ -1,11 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Modal, Form,
-  Select, Row, Col, Tabs, Statistic, DatePicker, InputNumber, Popconfirm,
-} from 'antd';
-import {
-  Search,
   Plus,
   IndianRupee,
   Users,
@@ -17,33 +12,88 @@ import {
   Download,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import type { StatsCardProps } from '@/components/shared/StatsCard';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormDialog from '@/components/shared/FormDialog';
+import DatePicker from '@/components/shared/DatePicker';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { formatINR, getInitials } from '@/lib/formatters';
+import {
+  usePayslipList,
+  useSalaryStructureList,
+  useCreateSalaryStructure,
+  useApprovePayslip,
+  useMarkPayslipPaid,
+  usePayrollSummary,
+} from '@/hooks/queries/usePayroll';
 
-const { Title, Text } = Typography;
+// ----- Types -----
 
-const formatINR = (amount: number) => {
-  return '₹' + amount.toLocaleString('en-IN');
-};
+interface Payslip {
+  key: string;
+  name: string;
+  empId: string;
+  department: string;
+  gross: number;
+  deductions: number;
+  net: number;
+  status: string;
+  paymentDate: string;
+}
 
-// Payslips mock data
-const payslips = [
-  { key: '1', name: 'Rahul Sharma', empId: 'EMP001', department: 'Engineering', gross: 125000, deductions: 27500, net: 97500, status: 'Paid', paymentDate: '01 Apr 2026' },
-  { key: '2', name: 'Priya Singh', empId: 'EMP002', department: 'Marketing', gross: 95000, deductions: 20900, net: 74100, status: 'Paid', paymentDate: '01 Apr 2026' },
-  { key: '3', name: 'Amit Patel', empId: 'EMP003', department: 'Finance', gross: 110000, deductions: 24200, net: 85800, status: 'Approved', paymentDate: '-' },
-  { key: '4', name: 'Sneha Gupta', empId: 'EMP004', department: 'HR', gross: 85000, deductions: 18700, net: 66300, status: 'Paid', paymentDate: '01 Apr 2026' },
-  { key: '5', name: 'Vikram Joshi', empId: 'EMP005', department: 'Sales', gross: 75000, deductions: 16500, net: 58500, status: 'Generated', paymentDate: '-' },
-  { key: '6', name: 'Ananya Reddy', empId: 'EMP006', department: 'Engineering', gross: 150000, deductions: 33000, net: 117000, status: 'Paid', paymentDate: '01 Apr 2026' },
-  { key: '7', name: 'Karan Mehta', empId: 'EMP007', department: 'Sales', gross: 65000, deductions: 14300, net: 50700, status: 'Paid', paymentDate: '01 Apr 2026' },
-  { key: '8', name: 'Deepika Nair', empId: 'EMP008', department: 'Engineering', gross: 130000, deductions: 28600, net: 101400, status: 'Draft', paymentDate: '-' },
-  { key: '9', name: 'Rajesh Kumar', empId: 'EMP009', department: 'Finance', gross: 90000, deductions: 19800, net: 70200, status: 'Paid', paymentDate: '01 Apr 2026' },
-  { key: '10', name: 'Meera Iyer', empId: 'EMP010', department: 'Marketing', gross: 80000, deductions: 17600, net: 62400, status: 'Generated', paymentDate: '-' },
-  { key: '11', name: 'Suresh Pillai', empId: 'EMP011', department: 'HR', gross: 70000, deductions: 15400, net: 54600, status: 'Approved', paymentDate: '-' },
-  { key: '12', name: 'Neha Deshmukh', empId: 'EMP012', department: 'Engineering', gross: 140000, deductions: 30800, net: 109200, status: 'Paid', paymentDate: '01 Apr 2026' },
-  { key: '13', name: 'Arjun Malhotra', empId: 'EMP013', department: 'Sales', gross: 55000, deductions: 12100, net: 42900, status: 'Generated', paymentDate: '-' },
-  { key: '14', name: 'Pooja Verma', empId: 'EMP014', department: 'Finance', gross: 25000, deductions: 5500, net: 19500, status: 'Draft', paymentDate: '-' },
+interface SalaryStructure {
+  key: string;
+  name: string;
+  basic: number;
+  hra: number;
+  da: number;
+  specialAllowance: number;
+  gross: number;
+  pf: number;
+  esi: number;
+  pt: number;
+  tds: number;
+  net: number;
+  ctc: number;
+  effectiveFrom: string;
+}
+
+// ----- Mock Data -----
+
+const payslips: Payslip[] = [
+  { key: '1', name: 'Rahul Sharma', empId: 'EMP001', department: 'Engineering', gross: 125000, deductions: 27500, net: 97500, status: 'paid', paymentDate: '01 Apr 2026' },
+  { key: '2', name: 'Priya Singh', empId: 'EMP002', department: 'Marketing', gross: 95000, deductions: 20900, net: 74100, status: 'paid', paymentDate: '01 Apr 2026' },
+  { key: '3', name: 'Amit Patel', empId: 'EMP003', department: 'Finance', gross: 110000, deductions: 24200, net: 85800, status: 'approved', paymentDate: '-' },
+  { key: '4', name: 'Sneha Gupta', empId: 'EMP004', department: 'HR', gross: 85000, deductions: 18700, net: 66300, status: 'paid', paymentDate: '01 Apr 2026' },
+  { key: '5', name: 'Vikram Joshi', empId: 'EMP005', department: 'Sales', gross: 75000, deductions: 16500, net: 58500, status: 'generated', paymentDate: '-' },
+  { key: '6', name: 'Ananya Reddy', empId: 'EMP006', department: 'Engineering', gross: 150000, deductions: 33000, net: 117000, status: 'paid', paymentDate: '01 Apr 2026' },
+  { key: '7', name: 'Karan Mehta', empId: 'EMP007', department: 'Sales', gross: 65000, deductions: 14300, net: 50700, status: 'paid', paymentDate: '01 Apr 2026' },
+  { key: '8', name: 'Deepika Nair', empId: 'EMP008', department: 'Engineering', gross: 130000, deductions: 28600, net: 101400, status: 'draft', paymentDate: '-' },
+  { key: '9', name: 'Rajesh Kumar', empId: 'EMP009', department: 'Finance', gross: 90000, deductions: 19800, net: 70200, status: 'paid', paymentDate: '01 Apr 2026' },
+  { key: '10', name: 'Meera Iyer', empId: 'EMP010', department: 'Marketing', gross: 80000, deductions: 17600, net: 62400, status: 'generated', paymentDate: '-' },
+  { key: '11', name: 'Suresh Pillai', empId: 'EMP011', department: 'HR', gross: 70000, deductions: 15400, net: 54600, status: 'approved', paymentDate: '-' },
+  { key: '12', name: 'Neha Deshmukh', empId: 'EMP012', department: 'Engineering', gross: 140000, deductions: 30800, net: 109200, status: 'paid', paymentDate: '01 Apr 2026' },
+  { key: '13', name: 'Arjun Malhotra', empId: 'EMP013', department: 'Sales', gross: 55000, deductions: 12100, net: 42900, status: 'generated', paymentDate: '-' },
+  { key: '14', name: 'Pooja Verma', empId: 'EMP014', department: 'Finance', gross: 25000, deductions: 5500, net: 19500, status: 'draft', paymentDate: '-' },
 ];
 
-// Salary Structure mock data
-const salaryStructures = [
+const salaryStructures: SalaryStructure[] = [
   { key: '1', name: 'Rahul Sharma', basic: 50000, hra: 25000, da: 12500, specialAllowance: 25000, gross: 125000, pf: 6000, esi: 0, pt: 200, tds: 21300, net: 97500, ctc: 1800000, effectiveFrom: '01 Jan 2026' },
   { key: '2', name: 'Priya Singh', basic: 38000, hra: 19000, da: 9500, specialAllowance: 19000, gross: 95000, pf: 4560, esi: 0, pt: 200, tds: 16140, net: 74100, ctc: 1368000, effectiveFrom: '01 Jan 2026' },
   { key: '3', name: 'Amit Patel', basic: 44000, hra: 22000, da: 11000, specialAllowance: 22000, gross: 110000, pf: 5280, esi: 0, pt: 200, tds: 18720, net: 85800, ctc: 1584000, effectiveFrom: '01 Jan 2026' },
@@ -54,294 +104,524 @@ const salaryStructures = [
   { key: '8', name: 'Deepika Nair', basic: 52000, hra: 26000, da: 13000, specialAllowance: 26000, gross: 130000, pf: 6240, esi: 0, pt: 200, tds: 22160, net: 101400, ctc: 1872000, effectiveFrom: '01 Jan 2026' },
 ];
 
+// ----- Component -----
+
 const PayrollList: React.FC = () => {
   const [activeTab, setActiveTab] = useState('payslips');
   const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState('all');
   const [isStructureModalOpen, setIsStructureModalOpen] = useState(false);
-  const [structureForm] = Form.useForm();
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
   const navigate = useNavigate();
 
-  const totalPayroll = payslips.reduce((sum, p) => sum + p.net, 0);
-  const paidCount = payslips.filter(p => p.status === 'Paid').length;
-  const pendingCount = payslips.filter(p => p.status === 'Approved' || p.status === 'Generated').length;
+  // Structure form state
+  const [structEmployee, setStructEmployee] = useState('');
+  const [structEffectiveDate, setStructEffectiveDate] = useState<Date | undefined>(undefined);
+  const [structBasic, setStructBasic] = useState('');
+  const [structHra, setStructHra] = useState('');
+  const [structDa, setStructDa] = useState('');
+  const [structSpecialAllowance, setStructSpecialAllowance] = useState('');
+  const [structPf, setStructPf] = useState('');
+  const [structEsi, setStructEsi] = useState('');
+  const [structPt, setStructPt] = useState('');
+  const [structTds, setStructTds] = useState('');
 
-  const statsCards = [
-    { title: 'Total Payroll Cost', value: formatINR(totalPayroll), icon: <IndianRupee size={20} />, color: '#1a56db' },
-    { title: 'Employees Processed', value: payslips.length, icon: <Users size={20} />, color: '#059669' },
-    { title: 'Pending Approval', value: pendingCount, icon: <Clock3 size={20} />, color: '#d97706' },
-    { title: 'Paid', value: paidCount, icon: <CheckCircle2 size={20} />, color: '#059669' },
+  // API hooks
+  const payslipParams = {
+    page: String(page),
+    limit: String(limit),
+    ...(searchText ? { search: searchText } : {}),
+    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+  };
+  const { data: payslipData, isLoading: isLoadingPayslips } = usePayslipList(payslipParams);
+  const { data: structureData, isLoading: isLoadingStructures } = useSalaryStructureList();
+  const { data: summaryData } = usePayrollSummary();
+  const createStructureMutation = useCreateSalaryStructure();
+  const approvePayslipMutation = useApprovePayslip();
+  const markPaidMutation = useMarkPayslipPaid();
+
+  const payslipsList: Payslip[] = payslipData?.data ?? payslips;
+  const structuresList: SalaryStructure[] = structureData?.data ?? salaryStructures;
+  const payslipPagination = payslipData?.pagination;
+
+  const totalPayroll = summaryData?.data?.totalPayroll ?? payslipsList.reduce((sum, p) => sum + p.net, 0);
+  const paidCount = summaryData?.data?.paidCount ?? payslipsList.filter(p => p.status === 'paid').length;
+  const pendingCount = summaryData?.data?.pendingCount ?? payslipsList.filter(p => p.status === 'approved' || p.status === 'generated').length;
+
+  const statsCards: StatsCardProps[] = [
+    { title: 'Total Payroll Cost', value: formatINR(totalPayroll), icon: <IndianRupee className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { title: 'Employees Processed', value: summaryData?.data?.employeeCount ?? payslipsList.length, icon: <Users className="h-5 w-5" />, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Pending Approval', value: pendingCount, icon: <Clock3 className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'Paid', value: paidCount, icon: <CheckCircle2 className="h-5 w-5" />, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
   ];
 
-  const statusColorMap: Record<string, string> = {
-    Draft: 'default',
-    Generated: 'blue',
-    Approved: 'orange',
-    Paid: 'green',
+  const filteredPayslips = useMemo(() => {
+    if (payslipData?.data) return payslipsList;
+    return payslips.filter(p => {
+      const matchesSearch = !searchText ||
+        p.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        p.empId.toLowerCase().includes(searchText.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchText, statusFilter, payslipData, payslipsList]);
+
+  const payslipColumns: ColumnDef<Payslip>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Employee',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{row.original.name}</div>
+            <div className="text-xs text-muted-foreground">{row.original.empId}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          {row.original.department}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'gross',
+      header: 'Gross',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.gross)}</span>,
+    },
+    {
+      accessorKey: 'deductions',
+      header: 'Deductions',
+      cell: ({ row }) => (
+        <span className="text-red-600 text-right block">{formatINR(row.original.deductions)}</span>
+      ),
+    },
+    {
+      accessorKey: 'net',
+      header: 'Net Pay',
+      cell: ({ row }) => (
+        <span className="font-semibold text-emerald-600 text-right block">
+          {formatINR(row.original.net)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      accessorKey: 'paymentDate',
+      header: 'Payment Date',
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => navigate(`/payroll/payslip/${row.original.key}`)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          {row.original.status === 'generated' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+              onClick={() => approvePayslipMutation.mutate(row.original.key, {
+                onSuccess: () => toast.success('Payslip approved'),
+                onError: (err: any) => toast.error(err?.message || 'Failed to approve'),
+              })}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          )}
+          {row.original.status === 'approved' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              onClick={() => markPaidMutation.mutate({ id: row.original.key }, {
+                onSuccess: () => toast.success('Marked as paid'),
+                onError: (err: any) => toast.error(err?.message || 'Failed to mark as paid'),
+              })}
+            >
+              <IndianRupee className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const structureColumns: ColumnDef<SalaryStructure>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Employee',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Avatar className="h-7 w-7">
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-medium">{row.original.name}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'basic',
+      header: 'Basic',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.basic)}</span>,
+    },
+    {
+      accessorKey: 'hra',
+      header: 'HRA',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.hra)}</span>,
+    },
+    {
+      accessorKey: 'da',
+      header: 'DA',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.da)}</span>,
+    },
+    {
+      accessorKey: 'specialAllowance',
+      header: 'Spl. Allowance',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.specialAllowance)}</span>,
+    },
+    {
+      accessorKey: 'gross',
+      header: 'Gross',
+      cell: ({ row }) => <span className="font-semibold text-right block">{formatINR(row.original.gross)}</span>,
+    },
+    {
+      accessorKey: 'pf',
+      header: 'PF',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.pf)}</span>,
+    },
+    {
+      accessorKey: 'esi',
+      header: 'ESI',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.esi)}</span>,
+    },
+    {
+      accessorKey: 'pt',
+      header: 'PT',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.pt)}</span>,
+    },
+    {
+      accessorKey: 'tds',
+      header: 'TDS',
+      cell: ({ row }) => <span className="text-right block">{formatINR(row.original.tds)}</span>,
+    },
+    {
+      accessorKey: 'net',
+      header: 'Net',
+      cell: ({ row }) => (
+        <span className="font-semibold text-emerald-600 text-right block">
+          {formatINR(row.original.net)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'ctc',
+      header: 'CTC (Annual)',
+      cell: ({ row }) => <span className="font-semibold text-right block">{formatINR(row.original.ctc)}</span>,
+    },
+    {
+      accessorKey: 'effectiveFrom',
+      header: 'Effective From',
+    },
+  ];
+
+  const resetStructureForm = () => {
+    setStructEmployee('');
+    setStructEffectiveDate(undefined);
+    setStructBasic('');
+    setStructHra('');
+    setStructDa('');
+    setStructSpecialAllowance('');
+    setStructPf('');
+    setStructEsi('');
+    setStructPt('');
+    setStructTds('');
   };
 
-  const filteredPayslips = payslips.filter(p => {
-    const matchesSearch = !searchText ||
-      p.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      p.empId.toLowerCase().includes(searchText.toLowerCase());
-    const matchesStatus = !statusFilter || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleAddStructure = () => {
+    if (!structEmployee || !structBasic || !structHra) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+    createStructureMutation.mutate(
+      {
+        employeeId: structEmployee,
+        effectiveFrom: structEffectiveDate?.toISOString(),
+        basic: Number(structBasic),
+        hra: Number(structHra),
+        da: Number(structDa) || 0,
+        specialAllowance: Number(structSpecialAllowance) || 0,
+        pf: Number(structPf) || 0,
+        esi: Number(structEsi) || 0,
+        pt: Number(structPt) || 0,
+        tds: Number(structTds) || 0,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Salary structure added successfully');
+          setIsStructureModalOpen(false);
+          resetStructureForm();
+        },
+        onError: (err: any) => toast.error(err?.message || 'Failed to add salary structure'),
+      }
+    );
+  };
 
-  const payslipColumns = [
-    {
-      title: 'Employee', dataIndex: 'name', key: 'name',
-      render: (text: string, record: any) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
-          <div>
-            <Text strong>{text}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.empId}</Text>
-          </div>
-        </Space>
-      ),
-    },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'Gross', dataIndex: 'gross', key: 'gross', render: (v: number) => <Text>{formatINR(v)}</Text>, align: 'right' as const },
-    { title: 'Deductions', dataIndex: 'deductions', key: 'deductions', render: (v: number) => <Text type="danger">{formatINR(v)}</Text>, align: 'right' as const },
-    { title: 'Net Pay', dataIndex: 'net', key: 'net', render: (v: number) => <Text strong style={{ color: '#059669' }}>{formatINR(v)}</Text>, align: 'right' as const },
-    {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: string) => <Tag color={statusColorMap[status]}>{status}</Tag>,
-    },
-    { title: 'Payment Date', dataIndex: 'paymentDate', key: 'paymentDate' },
-    {
-      title: 'Actions', key: 'actions',
-      render: (_: any, record: any) => (
-        <Space>
-          <Button type="text" size="small" icon={<Eye size={16} />} onClick={() => navigate(`/payroll/payslip/${record.key}`)} />
-          {record.status === 'Generated' && (
-            <Popconfirm title="Approve this payslip?" onConfirm={() => {}}>
-              <Button type="text" size="small" style={{ color: '#059669' }} icon={<Check size={16} />} />
-            </Popconfirm>
-          )}
-          {record.status === 'Approved' && (
-            <Popconfirm title="Mark as paid?" onConfirm={() => {}}>
-              <Button type="text" size="small" style={{ color: '#1a56db' }} icon={<IndianRupee size={16} />} />
-            </Popconfirm>
-          )}
-        </Space>
-      ),
-    },
-  ];
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Payroll Management"
+        description="Manage employee payroll and salary structures"
+        actions={
+          <>
+            <Input type="month" className="w-[180px]" defaultValue="2026-04" />
+            <Button variant="outline">
+              <FileText className="mr-2 h-4 w-4" />
+              Generate Payslips
+            </Button>
+            <Button>
+              <Download className="mr-2 h-4 w-4" />
+              Bulk Generate
+            </Button>
+          </>
+        }
+      />
 
-  const structureColumns = [
-    {
-      title: 'Employee', dataIndex: 'name', key: 'name',
-      fixed: 'left' as const,
-      render: (text: string) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }} size="small">{text[0]}</Avatar>
-          <Text strong>{text}</Text>
-        </Space>
-      ),
-    },
-    { title: 'Basic', dataIndex: 'basic', key: 'basic', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'HRA', dataIndex: 'hra', key: 'hra', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'DA', dataIndex: 'da', key: 'da', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'Spl. Allowance', dataIndex: 'specialAllowance', key: 'specialAllowance', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'Gross', dataIndex: 'gross', key: 'gross', render: (v: number) => <Text strong>{formatINR(v)}</Text>, align: 'right' as const },
-    { title: 'PF', dataIndex: 'pf', key: 'pf', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'ESI', dataIndex: 'esi', key: 'esi', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'PT', dataIndex: 'pt', key: 'pt', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'TDS', dataIndex: 'tds', key: 'tds', render: (v: number) => formatINR(v), align: 'right' as const },
-    { title: 'Net', dataIndex: 'net', key: 'net', render: (v: number) => <Text strong style={{ color: '#059669' }}>{formatINR(v)}</Text>, align: 'right' as const },
-    { title: 'CTC (Annual)', dataIndex: 'ctc', key: 'ctc', render: (v: number) => <Text strong>{formatINR(v)}</Text>, align: 'right' as const },
-    { title: 'Effective From', dataIndex: 'effectiveFrom', key: 'effectiveFrom' },
-  ];
+      <StatsGrid stats={statsCards} />
 
-  const tabItems = [
-    {
-      key: 'payslips',
-      label: 'Payslips',
-      children: (
-        <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-            <Space wrap>
-              <Input
-                placeholder="Search by name or ID..."
-                prefix={<Search size={16} />}
-                value={searchText}
-                onChange={e => setSearchText(e.target.value)}
-                style={{ width: 260 }}
-              />
-              <Select
-                placeholder="Status"
-                allowClear
-                style={{ width: 150 }}
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={[
-                  { value: 'Draft', label: 'Draft' },
-                  { value: 'Generated', label: 'Generated' },
-                  { value: 'Approved', label: 'Approved' },
-                  { value: 'Paid', label: 'Paid' },
-                ]}
-              />
-              <Select
-                placeholder="Department"
-                allowClear
-                style={{ width: 160 }}
-                options={[
-                  { value: 'Engineering', label: 'Engineering' },
-                  { value: 'Marketing', label: 'Marketing' },
-                  { value: 'Finance', label: 'Finance' },
-                  { value: 'HR', label: 'HR' },
-                  { value: 'Sales', label: 'Sales' },
-                ]}
-              />
-            </Space>
-          </Space>
-          <Table
-            dataSource={filteredPayslips}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="payslips">Payslips</TabsTrigger>
+          <TabsTrigger value="structure">Salary Structure</TabsTrigger>
+        </TabsList>
+
+        {/* Payslips Tab */}
+        <TabsContent value="payslips" className="mt-4">
+          <DataTable
             columns={payslipColumns}
-            pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} payslips` }}
+            data={filteredPayslips}
+            isLoading={isLoadingPayslips}
+            searchKey="name"
+            searchPlaceholder="Search by name or ID..."
+            onSearchChange={setSearchText}
+            pagination={payslipPagination ?? { page, limit, total: filteredPayslips.length, totalPages: Math.ceil(filteredPayslips.length / limit) }}
+            onPaginationChange={(newPage) => setPage(newPage)}
+            filterContent={
+              <div className="flex items-center gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="generated">Generated</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Engineering">Engineering</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Sales">Sales</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            }
           />
-        </Card>
-      ),
-    },
-    {
-      key: 'structure',
-      label: 'Salary Structure',
-      children: (
-        <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsStructureModalOpen(true)}>
+        </TabsContent>
+
+        {/* Salary Structure Tab */}
+        <TabsContent value="structure" className="mt-4">
+          <div className="flex justify-end mb-4">
+            <Button onClick={() => setIsStructureModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
               Add Structure
             </Button>
           </div>
-          <Table
-            dataSource={salaryStructures}
-            columns={structureColumns}
-            pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} records` }}
-            scroll={{ x: 1400 }}
-            size="middle"
-          />
-        </Card>
-      ),
-    },
-  ];
+          <div className="overflow-x-auto">
+            <DataTable
+              columns={structureColumns}
+              data={structuresList}
+              isLoading={isLoadingStructures}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
 
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Payroll Management</Title>
-          <Text type="secondary">Manage employee payroll and salary structures</Text>
-        </div>
-        <Space>
-          <DatePicker picker="month" style={{ width: 180 }} />
-          <Button icon={<FileText size={16} />}>Generate Payslips</Button>
-          <Button type="primary" icon={<Download size={16} />}>Bulk Generate</Button>
-        </Space>
-      </div>
-
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {statsCards.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: index === 0 ? 22 : 28, fontWeight: 700 }}
-                  formatter={(value) => <span>{value}</span>}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
-
-      <Modal
-        title="Add Salary Structure"
+      {/* Add Salary Structure Modal */}
+      <FormDialog
         open={isStructureModalOpen}
-        onCancel={() => { setIsStructureModalOpen(false); structureForm.resetFields(); }}
-        onOk={() => { structureForm.validateFields().then(() => { setIsStructureModalOpen(false); structureForm.resetFields(); }); }}
-        width={720}
+        onOpenChange={(open) => {
+          setIsStructureModalOpen(open);
+          if (!open) resetStructureForm();
+        }}
+        title="Add Salary Structure"
+        description="Define salary components for an employee"
+        className="max-w-2xl"
       >
-        <Form form={structureForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="employee" label="Employee" rules={[{ required: true }]}>
-                <Select
-                  placeholder="Select employee"
-                  showSearch
-                  optionFilterProp="label"
-                  options={payslips.map(e => ({ value: e.key, label: `${e.name} (${e.empId})` }))}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Employee *</Label>
+              <Select value={structEmployee} onValueChange={setStructEmployee}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {payslips.map(e => (
+                    <SelectItem key={e.key} value={e.key}>
+                      {e.name} ({e.empId})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Effective From *</Label>
+              <DatePicker
+                value={structEffectiveDate}
+                onChange={setStructEffectiveDate}
+                placeholder="Select date"
+              />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-3">Earnings</h4>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>Basic *</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structBasic}
+                  onChange={(e) => setStructBasic(e.target.value)}
                 />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="effectiveFrom" label="Effective From" rules={[{ required: true }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Text strong style={{ display: 'block', marginBottom: 12 }}>Earnings</Text>
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item name="basic" label="Basic" rules={[{ required: true }]}>
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="hra" label="HRA" rules={[{ required: true }]}>
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="da" label="DA">
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="specialAllowance" label="Special Allowance">
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Text strong style={{ display: 'block', marginBottom: 12 }}>Deductions</Text>
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item name="pf" label="PF">
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="esi" label="ESI">
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="pt" label="Professional Tax">
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="tds" label="TDS">
-                <InputNumber style={{ width: '100%' }} prefix="₹" min={0} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Modal>
+              </div>
+              <div className="space-y-2">
+                <Label>HRA *</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structHra}
+                  onChange={(e) => setStructHra(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>DA</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structDa}
+                  onChange={(e) => setStructDa(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Special Allowance</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structSpecialAllowance}
+                  onChange={(e) => setStructSpecialAllowance(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-3">Deductions</h4>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>PF</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structPf}
+                  onChange={(e) => setStructPf(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>ESI</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structEsi}
+                  onChange={(e) => setStructEsi(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Professional Tax</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structPt}
+                  onChange={(e) => setStructPt(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>TDS</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={structTds}
+                  onChange={(e) => setStructTds(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsStructureModalOpen(false);
+                resetStructureForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAddStructure}>Add Structure</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

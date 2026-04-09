@@ -1,24 +1,39 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import {
-  Card, Button, Typography, Row, Col, Table, Tag, Divider, Space,
-} from 'antd';
-import {
-  Printer,
-  Download,
-  ArrowLeft,
-  Building2,
-} from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Printer, Download, ArrowLeft, Building2 } from 'lucide-react';
 
-const { Title, Text } = Typography;
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
-const formatINR = (amount: number) => {
-  return '₹' + amount.toLocaleString('en-IN');
-};
+import { formatINR } from '@/lib/formatters';
+import { usePayslip } from '@/hooks/queries/usePayroll';
 
-// Mock payslip data keyed by ID
-const payslipData: Record<string, any> = {
+interface PayslipLineItem {
+  key: string;
+  component: string;
+  amount: number;
+}
+
+interface PayslipData {
+  employee: {
+    name: string;
+    empId: string;
+    department: string;
+    designation: string;
+    bankAccount: string;
+    bankName: string;
+    pan: string;
+    uan: string;
+  };
+  payPeriod: string;
+  earnings: PayslipLineItem[];
+  deductions: PayslipLineItem[];
+  payment: { mode: string; transactionId: string; date: string };
+}
+
+const payslipData: Record<string, PayslipData> = {
   '1': {
     employee: { name: 'Rahul Sharma', empId: 'EMP001', department: 'Engineering', designation: 'Senior Software Engineer', bankAccount: 'XXXX XXXX 4521', bankName: 'HDFC Bank', pan: 'ABCPS1234K', uan: '1001234567' },
     payPeriod: 'April 2026',
@@ -44,8 +59,7 @@ const payslipData: Record<string, any> = {
   },
 };
 
-// Default fallback payslip
-const defaultPayslip = {
+const defaultPayslip: PayslipData = {
   employee: { name: 'Priya Singh', empId: 'EMP002', department: 'Marketing', designation: 'Marketing Manager', bankAccount: 'XXXX XXXX 7832', bankName: 'ICICI Bank', pan: 'DEFPS5678L', uan: '1001234568' },
   payPeriod: 'April 2026',
   earnings: [
@@ -72,201 +86,169 @@ const defaultPayslip = {
 const PayslipView: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const data = (id && payslipData[id]) || defaultPayslip;
+  const { data: apiResponse, isLoading } = usePayslip(id || '');
+  const data: PayslipData = apiResponse?.data ?? ((id && payslipData[id]) || defaultPayslip);
 
-  const totalEarnings = data.earnings.reduce((sum: number, e: any) => sum + e.amount, 0);
-  const totalDeductions = data.deductions.reduce((sum: number, d: any) => sum + d.amount, 0);
+  const totalEarnings = data.earnings.reduce((sum, e) => sum + e.amount, 0);
+  const totalDeductions = data.deductions.reduce((sum, d) => sum + d.amount, 0);
   const netPay = totalEarnings - totalDeductions;
 
-  const earningColumns = [
-    { title: 'Earnings', dataIndex: 'component', key: 'component', render: (t: string) => <Text>{t}</Text> },
-    { title: 'Amount', dataIndex: 'amount', key: 'amount', align: 'right' as const, render: (v: number) => <Text>{formatINR(v)}</Text> },
-  ];
-
-  const deductionColumns = [
-    { title: 'Deductions', dataIndex: 'component', key: 'component', render: (t: string) => <Text>{t}</Text> },
-    { title: 'Amount', dataIndex: 'amount', key: 'amount', align: 'right' as const, render: (v: number) => <Text>{formatINR(v)}</Text> },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading payslip...</p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Space style={{ marginBottom: 4 }}>
-            <Button type="text" icon={<ArrowLeft size={18} />} onClick={() => navigate('/payroll')} />
-            <Title level={3} style={{ margin: 0 }}>Payslip</Title>
-          </Space>
-          <br />
-          <Text type="secondary">Pay period: {data.payPeriod}</Text>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/payroll')}>
+            <ArrowLeft size={18} />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Payslip</h1>
+            <p className="text-sm text-muted-foreground">Pay period: {data.payPeriod}</p>
+          </div>
         </div>
-        <Space>
-          <Button icon={<Printer size={16} />} onClick={() => window.print()}>Print</Button>
-          <Button type="primary" icon={<Download size={16} />}>Download PDF</Button>
-        </Space>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
+          <Button>
+            <Download className="mr-2 h-4 w-4" /> Download PDF
+          </Button>
+        </div>
       </div>
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', maxWidth: 900, margin: '0 auto' }}>
-        {/* Company Header */}
-        <div style={{
-          textAlign: 'center', padding: '20px 0', borderBottom: '2px solid #1a56db',
-          marginBottom: 24,
-        }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 12, background: '#1a56db15',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 12px', color: '#1a56db',
-          }}>
-            <Building2 size={28} />
+      {/* Payslip Document */}
+      <Card className="max-w-[900px] mx-auto">
+        <CardContent className="p-8">
+          {/* Company Header */}
+          <div className="text-center pb-5 border-b-2 border-primary mb-6">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Building2 size={28} />
+            </div>
+            <h2 className="text-xl font-bold text-primary">Sheeraj Codeworks Pvt. Ltd.</h2>
+            <p className="text-sm text-muted-foreground">123, Bandra Kurla Complex, Mumbai, Maharashtra - 400051</p>
+            <Badge className="mt-2 text-sm px-4 py-1">Payslip for {data.payPeriod}</Badge>
           </div>
-          <Title level={4} style={{ margin: 0, color: '#1a56db' }}>Sheeraj Codeworks Pvt. Ltd.</Title>
-          <Text type="secondary">123, Bandra Kurla Complex, Mumbai, Maharashtra - 400051</Text>
-          <br />
-          <Tag color="blue" style={{ marginTop: 8, fontSize: 13, padding: '2px 16px' }}>
-            Payslip for {data.payPeriod}
-          </Tag>
-        </div>
 
-        {/* Employee Details */}
-        <Card
-          size="small"
-          style={{ borderRadius: 8, marginBottom: 24, background: '#f9fafb' }}
-        >
-          <Row gutter={[16, 12]}>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Employee Name</Text>
-              <br />
-              <Text strong>{data.employee.name}</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Employee ID</Text>
-              <br />
-              <Text strong>{data.employee.empId}</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Department</Text>
-              <br />
-              <Text strong>{data.employee.department}</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Designation</Text>
-              <br />
-              <Text strong>{data.employee.designation}</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Bank Account</Text>
-              <br />
-              <Text strong>{data.employee.bankAccount}</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Bank Name</Text>
-              <br />
-              <Text strong>{data.employee.bankName}</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>PAN</Text>
-              <br />
-              <Text strong>{data.employee.pan}</Text>
-            </Col>
-            <Col xs={12} sm={6}>
-              <Text type="secondary" style={{ fontSize: 12 }}>UAN</Text>
-              <br />
-              <Text strong>{data.employee.uan}</Text>
-            </Col>
-          </Row>
-        </Card>
-
-        {/* Earnings & Deductions */}
-        <Row gutter={[24, 24]}>
-          <Col xs={24} md={12}>
-            <Table
-              dataSource={data.earnings}
-              columns={earningColumns}
-              pagination={false}
-              size="small"
-              bordered
-              summary={() => (
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0}>
-                    <Text strong>Total Earnings</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="right">
-                    <Text strong style={{ color: '#059669' }}>{formatINR(totalEarnings)}</Text>
-                  </Table.Summary.Cell>
-                </Table.Summary.Row>
-              )}
-            />
-          </Col>
-          <Col xs={24} md={12}>
-            <Table
-              dataSource={data.deductions}
-              columns={deductionColumns}
-              pagination={false}
-              size="small"
-              bordered
-              summary={() => (
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0}>
-                    <Text strong>Total Deductions</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="right">
-                    <Text strong style={{ color: '#dc2626' }}>{formatINR(totalDeductions)}</Text>
-                  </Table.Summary.Cell>
-                </Table.Summary.Row>
-              )}
-            />
-          </Col>
-        </Row>
-
-        {/* Net Pay */}
-        <div style={{
-          background: 'linear-gradient(135deg, #1a56db08, #059669 08)',
-          border: '2px solid #059669',
-          borderRadius: 12,
-          padding: '24px 32px',
-          marginTop: 24,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <div>
-            <Text type="secondary" style={{ fontSize: 14 }}>Net Pay</Text>
-            <br />
-            <Text style={{ fontSize: 11, color: '#6b7280' }}>Total Earnings - Total Deductions</Text>
+          {/* Employee Details */}
+          <div className="rounded-lg bg-muted/50 p-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-3">
+              {[
+                { label: 'Employee Name', value: data.employee.name },
+                { label: 'Employee ID', value: data.employee.empId },
+                { label: 'Department', value: data.employee.department },
+                { label: 'Designation', value: data.employee.designation },
+                { label: 'Bank Account', value: data.employee.bankAccount },
+                { label: 'Bank Name', value: data.employee.bankName },
+                { label: 'PAN', value: data.employee.pan },
+                { label: 'UAN', value: data.employee.uan },
+              ].map(item => (
+                <div key={item.label}>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <p className="text-sm font-semibold">{item.value}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <Title level={2} style={{ margin: 0, color: '#059669' }}>
-            {formatINR(netPay)}
-          </Title>
-        </div>
 
-        <Divider />
+          {/* Earnings & Deductions */}
+          <div className="grid gap-6 md:grid-cols-2 mb-6">
+            {/* Earnings Table */}
+            <div>
+              <table className="w-full text-sm border">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left p-2 font-semibold">Earnings</th>
+                    <th className="text-right p-2 font-semibold">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.earnings.map(e => (
+                    <tr key={e.key} className="border-b">
+                      <td className="p-2">{e.component}</td>
+                      <td className="p-2 text-right">{formatINR(e.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 font-semibold">
+                    <td className="p-2">Total Earnings</td>
+                    <td className="p-2 text-right text-green-600">{formatINR(totalEarnings)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
 
-        {/* Payment Details */}
-        <Card size="small" style={{ borderRadius: 8, background: '#f9fafb' }}>
-          <Row gutter={[16, 8]}>
-            <Col xs={24} sm={8}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Payment Mode</Text>
-              <br />
-              <Text strong>{data.payment.mode}</Text>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Transaction ID</Text>
-              <br />
-              <Text strong copyable>{data.payment.transactionId}</Text>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Text type="secondary" style={{ fontSize: 12 }}>Payment Date</Text>
-              <br />
-              <Text strong>{data.payment.date}</Text>
-            </Col>
-          </Row>
-        </Card>
+            {/* Deductions Table */}
+            <div>
+              <table className="w-full text-sm border">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left p-2 font-semibold">Deductions</th>
+                    <th className="text-right p-2 font-semibold">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.deductions.map(d => (
+                    <tr key={d.key} className="border-b">
+                      <td className="p-2">{d.component}</td>
+                      <td className="p-2 text-right">{formatINR(d.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 font-semibold">
+                    <td className="p-2">Total Deductions</td>
+                    <td className="p-2 text-right text-red-600">{formatINR(totalDeductions)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', marginTop: 24, padding: '16px 0', borderTop: '1px solid #e5e7eb' }}>
-          <Text type="secondary" style={{ fontSize: 11 }}>
-            This is a computer-generated payslip and does not require a signature. For any discrepancies, please contact the HR department.
-          </Text>
-        </div>
+          {/* Net Pay */}
+          <div className="rounded-xl border-2 border-green-600 bg-green-50 dark:bg-green-950/30 p-6 flex items-center justify-between mb-6">
+            <div>
+              <p className="text-sm text-muted-foreground">Net Pay</p>
+              <p className="text-[11px] text-muted-foreground">Total Earnings - Total Deductions</p>
+            </div>
+            <p className="text-3xl font-bold text-green-600">{formatINR(netPay)}</p>
+          </div>
+
+          <Separator className="my-6" />
+
+          {/* Payment Details */}
+          <div className="rounded-lg bg-muted/50 p-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Payment Mode</p>
+                <p className="text-sm font-semibold">{data.payment.mode}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Transaction ID</p>
+                <p className="text-sm font-semibold font-mono">{data.payment.transactionId}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Payment Date</p>
+                <p className="text-sm font-semibold">{data.payment.date}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center pt-4 border-t">
+            <p className="text-[11px] text-muted-foreground">
+              This is a computer-generated payslip and does not require a signature. For any discrepancies, please contact the HR department.
+            </p>
+          </div>
+        </CardContent>
       </Card>
     </div>
   );

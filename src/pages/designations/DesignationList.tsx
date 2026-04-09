@@ -1,26 +1,55 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import {
-  Card, Table, Button, Input, Space, Tag, Typography, Row, Col,
-  Dropdown, Badge, Statistic, Modal, Form, Select, message,
-} from 'antd';
+import { type ColumnDef } from '@tanstack/react-table';
+import { toast } from 'sonner';
 import {
   Plus,
-  Search,
-  Edit2,
-  Trash2,
-  MoreHorizontal,
   Award,
   Layers,
   BarChart3,
-  Upload,
-  ArrowUpRight,
+  Download,
+  MoreHorizontal,
   Eye,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormDialog from '@/components/shared/FormDialog';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useDesignationList, useCreateDesignation, useUpdateDesignation, useDeleteDesignation } from '@/hooks/queries/useDesignations';
 
-const { Title, Text } = Typography;
+interface Designation {
+  key: string;
+  title: string;
+  code: string;
+  department: string;
+  level: number;
+  band: string;
+  status: string;
+}
 
-const mockDesignations = [
+const mockDesignations: Designation[] = [
   { key: '1', title: 'Software Engineer', code: 'SE', department: 'Engineering', level: 1, band: 'L1', status: 'Active' },
   { key: '2', title: 'Senior Developer', code: 'SDE', department: 'Engineering', level: 2, band: 'L2', status: 'Active' },
   { key: '3', title: 'Team Lead', code: 'TL', department: 'Engineering', level: 3, band: 'L3', status: 'Active' },
@@ -39,259 +68,406 @@ const mockDesignations = [
   { key: '16', title: 'VP Operations', code: 'VPO', department: 'Operations', level: 5, band: 'L5', status: 'Active' },
 ];
 
-const departmentColors: Record<string, string> = {
-  Engineering: 'blue',
-  Marketing: 'magenta',
-  Finance: 'green',
-  HR: 'purple',
-  Sales: 'orange',
-  IT: 'cyan',
-  Operations: 'geekblue',
-  Legal: 'gold',
+const departmentColorMap: Record<string, string> = {
+  Engineering: 'bg-blue-100 text-blue-700 border-blue-200',
+  Marketing: 'bg-pink-100 text-pink-700 border-pink-200',
+  Finance: 'bg-green-100 text-green-700 border-green-200',
+  HR: 'bg-purple-100 text-purple-700 border-purple-200',
+  Sales: 'bg-orange-100 text-orange-700 border-orange-200',
+  IT: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  Operations: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  Legal: 'bg-yellow-100 text-yellow-700 border-yellow-200',
 };
 
-const bandColors: Record<string, string> = {
-  L1: 'default',
-  L2: 'blue',
-  L3: 'geekblue',
-  L4: 'purple',
-  L5: 'gold',
+const bandColorMap: Record<string, string> = {
+  L1: 'bg-gray-100 text-gray-700 border-gray-200',
+  L2: 'bg-blue-100 text-blue-700 border-blue-200',
+  L3: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  L4: 'bg-purple-100 text-purple-700 border-purple-200',
+  L5: 'bg-amber-100 text-amber-700 border-amber-200',
 };
+
+const departments = ['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'IT', 'Operations', 'Legal'];
 
 const DesignationList: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingDesignation, setEditingDesignation] = useState<any>(null);
-  const [searchText, setSearchText] = useState('');
-  const [filterDepartment, setFilterDepartment] = useState<string | undefined>(undefined);
-  const [form] = Form.useForm();
+  const [editingDesignation, setEditingDesignation] = useState<Designation | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingDesignation, setDeletingDesignation] = useState<Designation | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [search, setSearch] = useState('');
 
-  const filteredDesignations = mockDesignations.filter(d => {
-    const matchesSearch = !searchText ||
-      d.title.toLowerCase().includes(searchText.toLowerCase()) ||
-      d.code.toLowerCase().includes(searchText.toLowerCase());
-    const matchesDept = !filterDepartment || d.department === filterDepartment;
-    return matchesSearch && matchesDept;
+  const { data, isLoading } = useDesignationList({ page, limit, search: search || undefined });
+  const createMutation = useCreateDesignation();
+  const updateMutation = useUpdateDesignation();
+  const deleteMutation = useDeleteDesignation();
+
+  const designations: Designation[] = data?.data ?? mockDesignations;
+  const paginationData = data?.pagination;
+
+  const [form, setForm] = useState({
+    title: '',
+    code: '',
+    department: '',
+    level: '',
+    band: '',
+    description: '',
+    status: 'Active',
   });
 
-  const uniqueDepartments = [...new Set(mockDesignations.map(d => d.department))];
-  const activeCount = mockDesignations.filter(d => d.status === 'Active').length;
-  const maxLevel = Math.max(...mockDesignations.map(d => d.level));
+  const uniqueDepartments = [...new Set(designations.map((d) => d.department))];
+  const activeCount = designations.filter((d) => d.status === 'Active').length;
+  const maxLevel = designations.length ? Math.max(...designations.map((d) => d.level)) : 0;
 
   const stats = [
-    { title: 'Total Designations', value: mockDesignations.length, icon: <Award size={20} />, color: '#1a56db' },
-    { title: 'Active', value: activeCount, icon: <Layers size={20} />, color: '#059669' },
-    { title: 'Departments Covered', value: uniqueDepartments.length, icon: <BarChart3 size={20} />, color: '#7c3aed' },
-    { title: 'Max Levels', value: maxLevel, icon: <Layers size={20} />, color: '#d97706' },
+    { title: 'Total Designations', value: designations.length, icon: <Award className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { title: 'Active', value: activeCount, icon: <Layers className="h-5 w-5" />, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { title: 'Departments Covered', value: uniqueDepartments.length, icon: <BarChart3 className="h-5 w-5" />, color: 'text-violet-600', bgColor: 'bg-violet-100' },
+    { title: 'Max Levels', value: maxLevel, icon: <Layers className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-100' },
   ];
 
-  const columns = [
+  const columns: ColumnDef<Designation>[] = [
     {
-      title: 'Title', dataIndex: 'title', key: 'title',
-      render: (text: string, record: any) => (
+      accessorKey: 'title',
+      header: 'Title',
+      cell: ({ row }) => (
         <div>
-          <Text strong>{text}</Text><br />
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.code}</Text>
+          <p className="font-medium">{row.original.title}</p>
+          <p className="text-xs text-muted-foreground">{row.original.code}</p>
         </div>
       ),
     },
     {
-      title: 'Department', dataIndex: 'department', key: 'department',
-      render: (dept: string) => <Tag color={departmentColors[dept] || 'default'}>{dept}</Tag>,
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => {
+        const dept = row.original.department;
+        return (
+          <Badge variant="outline" className={departmentColorMap[dept] || ''}>
+            {dept}
+          </Badge>
+        );
+      },
     },
     {
-      title: 'Level', dataIndex: 'level', key: 'level',
-      sorter: (a: any, b: any) => a.level - b.level,
-      render: (level: number) => <Text strong>{level}</Text>,
+      accessorKey: 'level',
+      header: 'Level',
+      cell: ({ row }) => (
+        <span className="font-medium">{row.original.level}</span>
+      ),
     },
     {
-      title: 'Band', dataIndex: 'band', key: 'band',
-      render: (band: string) => <Tag color={bandColors[band] || 'default'}>{band}</Tag>,
+      accessorKey: 'band',
+      header: 'Band',
+      cell: ({ row }) => {
+        const band = row.original.band;
+        return (
+          <Badge variant="outline" className={bandColorMap[band] || ''}>
+            {band}
+          </Badge>
+        );
+      },
     },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: string) => <Badge status={status === 'Active' ? 'success' : 'error'} text={status} />,
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
-      title: 'Actions', key: 'actions', width: 80,
-      render: (_: any, record: any) => (
-        <Dropdown menu={{ items: [
-          { key: 'view', icon: <Eye size={16} />, label: 'View Details' },
-          {
-            key: 'edit', icon: <Edit2 size={16} />, label: 'Edit',
-            onClick: () => {
-              setEditingDesignation(record);
-              form.setFieldsValue(record);
-              setModalOpen(true);
-            },
-          },
-          { type: 'divider' as const },
-          { key: 'delete', icon: <Trash2 size={16} />, label: 'Delete', danger: true, onClick: () => message.success('Designation deleted (mock)') },
-        ]}} trigger={['click']}>
-          <Button type="text" icon={<MoreHorizontal size={18} />} />
-        </Dropdown>
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingDesignation(row.original);
+                setForm({
+                  title: row.original.title,
+                  code: row.original.code,
+                  department: row.original.department,
+                  level: String(row.original.level),
+                  band: row.original.band,
+                  description: '',
+                  status: row.original.status,
+                });
+                setModalOpen(true);
+              }}
+            >
+              <Edit2 className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => {
+                setDeletingDesignation(row.original);
+                setDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
   const handleSubmit = () => {
-    form.validateFields().then(() => {
-      if (editingDesignation) {
-        message.success('Designation updated successfully (mock)');
-      } else {
-        message.success('Designation created successfully (mock)');
-      }
-      setModalOpen(false);
-      setEditingDesignation(null);
-      form.resetFields();
+    if (!form.title || !form.code) return;
+    if (editingDesignation) {
+      updateMutation.mutate(
+        { id: editingDesignation.key, data: form },
+        {
+          onSuccess: () => {
+            toast.success('Designation updated successfully');
+            setModalOpen(false);
+            setEditingDesignation(null);
+            resetForm();
+          },
+          onError: (err: any) => toast.error(err?.message || 'Failed to update designation'),
+        }
+      );
+    } else {
+      createMutation.mutate(form, {
+        onSuccess: () => {
+          toast.success('Designation created successfully');
+          setModalOpen(false);
+          setEditingDesignation(null);
+          resetForm();
+        },
+        onError: (err: any) => toast.error(err?.message || 'Failed to create designation'),
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setForm({ title: '', code: '', department: '', level: '', band: '', description: '', status: 'Active' });
+  };
+
+  const handleDelete = () => {
+    if (!deletingDesignation) return;
+    deleteMutation.mutate(deletingDesignation.key, {
+      onSuccess: () => {
+        toast.success('Designation deleted successfully');
+        setDeleteDialogOpen(false);
+        setDeletingDesignation(null);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to delete designation'),
     });
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Designations</Title>
-          <Text type="secondary">Manage job titles, levels, and bands</Text>
-        </div>
-        <Space>
-          <Button icon={<Upload size={16} />}>Export</Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => { setEditingDesignation(null); form.resetFields(); setModalOpen(true); }}>
-            Add Designation
-          </Button>
-        </Space>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Designations"
+        description="Manage job titles, levels, and bands"
+        actions={
+          <>
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingDesignation(null);
+                resetForm();
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Designation
+            </Button>
+          </>
+        }
+      />
 
-      {/* Stats Row */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {stats.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-              <Text style={{ color: stat.color, fontSize: 12 }}>
-                <ArrowUpRight size={12} /> Updated today
-              </Text>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <StatsGrid stats={stats} />
 
-      {/* Designation Table */}
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }} wrap>
-          <Space wrap>
-            <Input
-              placeholder="Search designations..."
-              prefix={<Search size={16} />}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              style={{ width: 280 }}
-            />
-            <Select
-              placeholder="Department"
-              allowClear
-              value={filterDepartment}
-              onChange={setFilterDepartment}
-              style={{ width: 160 }}
-              options={uniqueDepartments.map(d => ({ value: d, label: d }))}
-            />
-          </Space>
-        </Space>
-        <Table
-          dataSource={filteredDesignations}
-          columns={columns}
-          pagination={{
-            pageSize: 10,
-            showTotal: (total) => `Total ${total} designations`,
-            showSizeChanger: true,
-          }}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        data={designations}
+        isLoading={isLoading}
+        searchKey="title"
+        searchPlaceholder="Search designations..."
+        onSearchChange={(val) => { setSearch(val); setPage(1); }}
+        pagination={paginationData ?? {
+          page,
+          limit,
+          total: designations.length,
+          totalPages: Math.ceil(designations.length / limit),
+        }}
+        onPaginationChange={(newPage) => setPage(newPage)}
+      />
 
-      {/* Add/Edit Designation Modal */}
-      <Modal
-        title={editingDesignation ? 'Edit Designation' : 'Add New Designation'}
+      {/* Add/Edit Designation Dialog */}
+      <FormDialog
         open={modalOpen}
-        onCancel={() => { setModalOpen(false); setEditingDesignation(null); form.resetFields(); }}
-        onOk={handleSubmit}
-        width={640}
-        okText={editingDesignation ? 'Update' : 'Create'}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setModalOpen(false);
+            setEditingDesignation(null);
+            resetForm();
+          }
+        }}
+        title={editingDesignation ? 'Edit Designation' : 'Add New Designation'}
+        description={
+          editingDesignation
+            ? 'Update designation details below.'
+            : 'Fill in the details to create a new designation.'
+        }
+        className="sm:max-w-[640px]"
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="title" label="Designation Title" rules={[{ required: true, message: 'Please enter designation title' }]}>
-                <Input placeholder="e.g. Software Engineer" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="code" label="Code" rules={[{ required: true, message: 'Please enter code' }]}>
-                <Input placeholder="e.g. SE" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="department" label="Department" rules={[{ required: true, message: 'Please select department' }]}>
-                <Select placeholder="Select department" options={[
-                  { value: 'Engineering', label: 'Engineering' },
-                  { value: 'Marketing', label: 'Marketing' },
-                  { value: 'Finance', label: 'Finance' },
-                  { value: 'HR', label: 'HR' },
-                  { value: 'Sales', label: 'Sales' },
-                  { value: 'IT', label: 'IT' },
-                  { value: 'Operations', label: 'Operations' },
-                  { value: 'Legal', label: 'Legal' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="level" label="Level" rules={[{ required: true, message: 'Select level' }]}>
-                <Select placeholder="Level" options={[
-                  { value: 1, label: '1' },
-                  { value: 2, label: '2' },
-                  { value: 3, label: '3' },
-                  { value: 4, label: '4' },
-                  { value: 5, label: '5' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="band" label="Band" rules={[{ required: true, message: 'Select band' }]}>
-                <Select placeholder="Band" options={[
-                  { value: 'L1', label: 'L1' },
-                  { value: 'L2', label: 'L2' },
-                  { value: 'L3', label: 'L3' },
-                  { value: 'L4', label: 'L4' },
-                  { value: 'L5', label: 'L5' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} placeholder="Enter designation description" />
-          </Form.Item>
-          <Form.Item name="status" label="Status" initialValue="Active">
-            <Select options={[
-              { value: 'Active', label: 'Active' },
-              { value: 'Inactive', label: 'Inactive' },
-            ]} />
-          </Form.Item>
-        </Form>
-      </Modal>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>
+                Designation Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="e.g. Software Engineer"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Code <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="e.g. SE"
+                value={form.code}
+                onChange={(e) => setForm({ ...form, code: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>
+                Department <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.department}
+                onValueChange={(val) => setForm({ ...form, department: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Level <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.level}
+                onValueChange={(val) => setForm({ ...form, level: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map((l) => (
+                    <SelectItem key={l} value={String(l)}>
+                      {l}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Band <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.band}
+                onValueChange={(val) => setForm({ ...form, band: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Band" />
+                </SelectTrigger>
+                <SelectContent>
+                  {['L1', 'L2', 'L3', 'L4', 'L5'].map((b) => (
+                    <SelectItem key={b} value={b}>
+                      {b}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea
+              rows={3}
+              placeholder="Enter designation description"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select
+              value={form.status}
+              onValueChange={(val) => setForm({ ...form, status: val })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setModalOpen(false);
+                setEditingDesignation(null);
+                resetForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>
+              {editingDesignation ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </div>
+      </FormDialog>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Designation"
+        description={`Are you sure you want to delete "${deletingDesignation?.title}"? This action cannot be undone.`}
+        onConfirm={handleDelete}
+        variant="destructive"
+      />
     </div>
   );
 };

@@ -1,25 +1,43 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useEmployeeList, useCreateEmployee } from '@/hooks/queries/useEmployees';
 import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Modal, Form,
-  Select, Row, Col, Dropdown, Badge, Tooltip,
-} from 'antd';
-import {
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  MoreHorizontal,
-  User,
-  Mail,
-  Phone,
+  Plus, Upload, Edit2, Trash2, MoreHorizontal, User, Mail, Phone,
   SlidersHorizontal,
-  Upload,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-const { Title, Text } = Typography;
+import PageHeader from '@/components/shared/PageHeader';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormDialog from '@/components/shared/FormDialog';
 
-const users = [
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+import { getInitials } from '@/lib/formatters';
+
+interface UserRecord {
+  key: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  department: string;
+  status: string;
+  joinDate: string;
+}
+
+const users: UserRecord[] = [
   { key: '1', name: 'Rahul Sharma', email: 'rahul@company.com', phone: '+91 9876543210', role: 'Employee', department: 'Engineering', status: 'Active', joinDate: '2024-01-15' },
   { key: '2', name: 'Priya Singh', email: 'priya@company.com', phone: '+91 9876543211', role: 'Manager', department: 'Marketing', status: 'Active', joinDate: '2023-06-20' },
   { key: '3', name: 'Amit Patel', email: 'amit@company.com', phone: '+91 9876543212', role: 'Employee', department: 'Finance', status: 'Inactive', joinDate: '2024-03-10' },
@@ -28,136 +46,191 @@ const users = [
   { key: '6', name: 'Ananya Reddy', email: 'ananya@company.com', phone: '+91 9876543215', role: 'Manager', department: 'Engineering', status: 'Active', joinDate: '2023-09-12' },
 ];
 
+const roleBadgeClass: Record<string, string> = {
+  'HR Admin': 'bg-purple-100 text-purple-700',
+  Manager: 'bg-blue-100 text-blue-700',
+  Employee: 'bg-gray-100 text-gray-700',
+};
+
 const UserManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [form] = Form.useForm();
 
-  const filteredUsers = users.filter(u =>
+  // API integration
+  const { data: employeeData, isLoading } = useEmployeeList();
+  const createMutation = useCreateEmployee();
+  const allUsers: UserRecord[] = employeeData?.data ?? users;
+
+  const filteredUsers = allUsers.filter(u =>
     u.name.toLowerCase().includes(searchText.toLowerCase()) ||
     u.email.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const columns = [
+  const columns: ColumnDef<UserRecord>[] = [
     {
-      title: 'Employee', dataIndex: 'name', key: 'name',
-      render: (text: string, record: any) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
+      accessorKey: 'name',
+      header: 'Employee',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <Text strong>{text}</Text><br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.email}</Text>
+            <p className="font-medium">{row.original.name}</p>
+            <p className="text-xs text-muted-foreground">{row.original.email}</p>
           </div>
-        </Space>
+        </div>
       ),
     },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
+    { accessorKey: 'phone', header: 'Phone' },
     {
-      title: 'Role', dataIndex: 'role', key: 'role',
-      render: (role: string) => {
-        const color = role === 'HR Admin' ? 'purple' : role === 'Manager' ? 'blue' : 'default';
-        return <Tag color={color}>{role}</Tag>;
-      },
+      accessorKey: 'role',
+      header: 'Role',
+      cell: ({ row }) => (
+        <Badge variant="outline" className={roleBadgeClass[row.original.role] || ''}>
+          {row.original.role}
+        </Badge>
+      ),
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag>{d}</Tag> },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: string) => <Badge status={status === 'Active' ? 'success' : 'error'} text={status} />,
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => <Badge variant="secondary">{row.original.department}</Badge>,
     },
-    { title: 'Join Date', dataIndex: 'joinDate', key: 'joinDate' },
     {
-      title: 'Actions', key: 'actions',
-      render: () => (
-        <Dropdown menu={{ items: [
-          { key: 'edit', icon: <Edit2 size={16} />, label: 'Edit' },
-          { key: 'delete', icon: <Trash2 size={16} />, label: 'Delete', danger: true },
-        ]}} trigger={['click']}>
-          <Button type="text" icon={<MoreHorizontal size={18} />} />
-        </Dropdown>
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    { accessorKey: 'joinDate', header: 'Join Date' },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: () => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Edit2 className="mr-2 h-4 w-4" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => toast.success('User deleted (mock)')}>
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>User Management</Title>
-          <Text type="secondary">Manage all employees and their access</Text>
-        </div>
-        <Space>
-          <Button icon={<Upload size={16} />}>Export</Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsModalOpen(true)}>
-            Add Employee
-          </Button>
-        </Space>
-      </div>
+  const handleCreate = (formData?: any) => {
+    createMutation.mutate(formData ?? {}, {
+      onSuccess: () => {
+        toast.success('Employee added successfully');
+        setIsModalOpen(false);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to add employee'),
+    });
+  };
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-          <Input
-            placeholder="Search employees..."
-            prefix={<Search size={16} />}
-            value={searchText}
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: 300 }}
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="User Management"
+        description="Manage all employees and their access"
+        actions={
+          <>
+            <Button variant="outline">
+              <Upload className="mr-2 h-4 w-4" /> Export
+            </Button>
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Add Employee
+            </Button>
+          </>
+        }
+      />
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <Input
+              placeholder="Search employees..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              className="max-w-sm"
+            />
+            <Button variant="outline" size="sm">
+              <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
+            </Button>
+          </div>
+          <DataTable
+            columns={columns}
+            data={filteredUsers}
+            pagination={{ page: 1, limit: 10, total: filteredUsers.length, totalPages: 1 }}
+            onPaginationChange={() => {}}
           />
-          <Button icon={<SlidersHorizontal size={16} />}>Filters</Button>
-        </Space>
-        <Table dataSource={filteredUsers} columns={columns} pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} employees` }} />
+        </CardContent>
       </Card>
 
-      <Modal
-        title="Add New Employee"
+      <FormDialog
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        onOk={() => { form.validateFields().then(() => setIsModalOpen(false)); }}
-        width={640}
+        onOpenChange={setIsModalOpen}
+        title="Add New Employee"
+        description="Fill in the details to add a new employee."
+        className="sm:max-w-xl"
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="name" label="Full Name" rules={[{ required: true }]}>
-                <Input prefix={<User size={16} />} placeholder="Enter full name" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-                <Input prefix={<Mail size={16} />} placeholder="Enter email" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="phone" label="Phone" rules={[{ required: true }]}>
-                <Input prefix={<Phone size={16} />} placeholder="Enter phone" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="department" label="Department" rules={[{ required: true }]}>
-                <Select placeholder="Select department" options={[
-                  { value: 'Engineering', label: 'Engineering' },
-                  { value: 'Marketing', label: 'Marketing' },
-                  { value: 'Finance', label: 'Finance' },
-                  { value: 'HR', label: 'HR' },
-                  { value: 'Sales', label: 'Sales' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="role" label="Role" rules={[{ required: true }]}>
-                <Select placeholder="Select role" options={[
-                  { value: 'Employee', label: 'Employee' },
-                  { value: 'Manager', label: 'Manager' },
-                  { value: 'HR Admin', label: 'HR Admin' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Modal>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Full Name *</Label>
+              <Input placeholder="Enter full name" />
+            </div>
+            <div className="space-y-2">
+              <Label>Email *</Label>
+              <Input type="email" placeholder="Enter email" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Phone *</Label>
+              <Input placeholder="Enter phone" />
+            </div>
+            <div className="space-y-2">
+              <Label>Department *</Label>
+              <Select>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectContent>
+                  {['Engineering', 'Marketing', 'Finance', 'HR', 'Sales'].map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Role *</Label>
+              <Select>
+                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Employee">Employee</SelectItem>
+                  <SelectItem value="Manager">Manager</SelectItem>
+                  <SelectItem value="HR Admin">HR Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreate}>Add Employee</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

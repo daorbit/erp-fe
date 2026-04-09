@@ -1,49 +1,22 @@
 import api from './api';
 
-export interface Designation {
-  id: string;
-  title: string;
-  code: string;
-  department: string;
-  departmentId: string;
-  level: number;
-  band: string;
-  description: string;
-  status: 'Active' | 'Inactive';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DesignationListParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  department?: string;
-  status?: string;
-}
-
-export interface DesignationListResponse {
-  data: Designation[];
-  total: number;
-  page: number;
-  limit: number;
-}
+const DESIGNATIONS_URL = '/designations';
 
 const designationService = {
-  getAll: (params?: DesignationListParams) =>
-    api.get<DesignationListResponse>('/designations', params as Record<string, string>),
+  getAll: (params?: Record<string, string>) =>
+    api.get<any>(DESIGNATIONS_URL, params),
 
   getById: (id: string) =>
-    api.get<Designation>(`/designations/${id}`),
+    api.get<any>(`${DESIGNATIONS_URL}/${id}`),
 
-  create: (data: Partial<Designation>) =>
-    api.post<Designation>('/designations', data),
+  create: (data: any) =>
+    api.post<any>(DESIGNATIONS_URL, data),
 
-  update: (id: string, data: Partial<Designation>) =>
-    api.put<Designation>(`/designations/${id}`, data),
+  update: (id: string, data: any) =>
+    api.put<any>(`${DESIGNATIONS_URL}/${id}`, data),
 
   delete: (id: string) =>
-    api.delete<void>(`/designations/${id}`),
+    api.delete<void>(`${DESIGNATIONS_URL}/${id}`),
 };
 
 export default designationService;

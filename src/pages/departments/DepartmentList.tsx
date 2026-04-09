@@ -1,27 +1,48 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Row, Col,
-  Dropdown, Badge, Statistic, Popconfirm, message,
-} from 'antd';
+import { type ColumnDef } from '@tanstack/react-table';
+import { toast } from 'sonner';
 import {
   Plus,
-  Search,
-  Edit2,
-  Trash2,
-  MoreHorizontal,
   Building2,
   Users,
   GitBranch,
-  Upload,
-  ArrowUpRight,
+  Download,
+  MoreHorizontal,
   Eye,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { getInitials } from '@/lib/formatters';
+import { useDepartmentList, useCreateDepartment, useUpdateDepartment, useDeleteDepartment } from '@/hooks/queries/useDepartments';
 import DepartmentForm from './DepartmentForm';
 
-const { Title, Text } = Typography;
+interface Department {
+  key: string;
+  name: string;
+  code: string;
+  description: string;
+  headOfDepartment: string;
+  employeeCount: number;
+  parentDepartment: string;
+  status: string;
+}
 
-const mockDepartments = [
+const mockDepartments: Department[] = [
   { key: '1', name: 'Engineering', code: 'ENG', description: 'Software development and technology', headOfDepartment: 'Ananya Reddy', employeeCount: 45, parentDepartment: 'Operations', status: 'Active' },
   { key: '2', name: 'Marketing', code: 'MKT', description: 'Brand, digital marketing, and communications', headOfDepartment: 'Meera Nair', employeeCount: 18, parentDepartment: 'Operations', status: 'Active' },
   { key: '3', name: 'Finance', code: 'FIN', description: 'Financial planning, accounting, and compliance', headOfDepartment: 'Suresh Iyer', employeeCount: 12, parentDepartment: '', status: 'Active' },
@@ -34,155 +55,230 @@ const mockDepartments = [
 
 const DepartmentList: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<any>(null);
-  const [searchText, setSearchText] = useState('');
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingDepartment, setDeletingDepartment] = useState<Department | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [search, setSearch] = useState('');
 
-  const filteredDepartments = mockDepartments.filter(d =>
-    d.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    d.code.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const { data, isLoading } = useDepartmentList({ page, limit, search: search || undefined });
+  const createMutation = useCreateDepartment();
+  const updateMutation = useUpdateDepartment();
+  const deleteMutation = useDeleteDepartment();
 
-  const totalEmployees = mockDepartments.reduce((sum, d) => sum + d.employeeCount, 0);
-  const activeDepts = mockDepartments.filter(d => d.status === 'Active').length;
-  const avgTeamSize = Math.round(totalEmployees / mockDepartments.length);
+  const departments: Department[] = data?.data ?? mockDepartments;
+  const paginationData = data?.pagination;
+
+  const totalEmployees = departments.reduce((sum, d) => sum + d.employeeCount, 0);
+  const activeDepts = departments.filter((d) => d.status === 'Active').length;
+  const avgTeamSize = departments.length ? Math.round(totalEmployees / departments.length) : 0;
 
   const stats = [
-    { title: 'Total Departments', value: mockDepartments.length, icon: <Building2 size={20} />, color: '#1a56db' },
-    { title: 'Active Departments', value: activeDepts, icon: <GitBranch size={20} />, color: '#059669' },
-    { title: 'Total Employees', value: totalEmployees, icon: <Users size={20} />, color: '#7c3aed' },
-    { title: 'Avg Team Size', value: avgTeamSize, icon: <Users size={20} />, color: '#d97706' },
+    { title: 'Total Departments', value: departments.length, icon: <Building2 className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { title: 'Active Departments', value: activeDepts, icon: <GitBranch className="h-5 w-5" />, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { title: 'Total Employees', value: totalEmployees, icon: <Users className="h-5 w-5" />, color: 'text-violet-600', bgColor: 'bg-violet-100' },
+    { title: 'Avg Team Size', value: avgTeamSize, icon: <Users className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-100' },
   ];
 
-  const columns = [
+  const columns: ColumnDef<Department>[] = [
     {
-      title: 'Department', dataIndex: 'name', key: 'name',
-      render: (text: string, record: any) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
+      accessorKey: 'name',
+      header: 'Department',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9 bg-blue-600">
+            <AvatarFallback className="bg-blue-600 text-white text-sm">
+              {row.original.name[0]}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <Text strong>{text}</Text><br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.code}</Text>
+            <p className="font-medium">{row.original.name}</p>
+            <p className="text-xs text-muted-foreground">{row.original.code}</p>
           </div>
-        </Space>
+        </div>
       ),
     },
     {
-      title: 'Head of Department', dataIndex: 'headOfDepartment', key: 'headOfDepartment',
-      render: (name: string) => name ? (
-        <Space>
-          <Avatar size="small" style={{ backgroundColor: '#1a56db' }}>{name[0]}</Avatar>
-          <Text>{name}</Text>
-        </Space>
-      ) : <Text type="secondary">-</Text>,
+      accessorKey: 'headOfDepartment',
+      header: 'Head of Department',
+      cell: ({ row }) => {
+        const name = row.original.headOfDepartment;
+        return name ? (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="bg-blue-600 text-white text-xs">
+                {name[0]}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{name}</span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      },
     },
     {
-      title: 'Employees', dataIndex: 'employeeCount', key: 'employeeCount',
-      sorter: (a: any, b: any) => a.employeeCount - b.employeeCount,
-      render: (count: number) => <Text strong>{count}</Text>,
+      accessorKey: 'employeeCount',
+      header: 'Employees',
+      cell: ({ row }) => (
+        <span className="font-medium">{row.original.employeeCount}</span>
+      ),
     },
     {
-      title: 'Parent Department', dataIndex: 'parentDepartment', key: 'parentDepartment',
-      render: (p: string) => p ? <Tag>{p}</Tag> : <Text type="secondary">-</Text>,
+      accessorKey: 'parentDepartment',
+      header: 'Parent Department',
+      cell: ({ row }) => {
+        const p = row.original.parentDepartment;
+        return p ? (
+          <Badge variant="outline">{p}</Badge>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        );
+      },
     },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: string) => <Badge status={status === 'Active' ? 'success' : 'error'} text={status} />,
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
-      title: 'Actions', key: 'actions', width: 80,
-      render: (_: any, record: any) => (
-        <Dropdown menu={{ items: [
-          { key: 'view', icon: <Eye size={16} />, label: 'View Details' },
-          { key: 'edit', icon: <Edit2 size={16} />, label: 'Edit', onClick: () => { setEditingDepartment(record); setModalOpen(true); } },
-          { type: 'divider' as const },
-          { key: 'delete', icon: <Trash2 size={16} />, label: 'Delete', danger: true, onClick: () => message.success('Department deleted (mock)') },
-        ]}} trigger={['click']}>
-          <Button type="text" icon={<MoreHorizontal size={18} />} />
-        </Dropdown>
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setEditingDepartment(row.original);
+                setModalOpen(true);
+              }}
+            >
+              <Edit2 className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => {
+                setDeletingDepartment(row.original);
+                setDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = (formData?: any) => {
     if (editingDepartment) {
-      message.success('Department updated successfully (mock)');
+      updateMutation.mutate(
+        { id: editingDepartment.key, data: formData ?? editingDepartment },
+        {
+          onSuccess: () => {
+            toast.success('Department updated successfully');
+            setModalOpen(false);
+            setEditingDepartment(null);
+          },
+          onError: (err: any) => toast.error(err?.message || 'Failed to update department'),
+        }
+      );
     } else {
-      message.success('Department created successfully (mock)');
+      createMutation.mutate(formData ?? {}, {
+        onSuccess: () => {
+          toast.success('Department created successfully');
+          setModalOpen(false);
+          setEditingDepartment(null);
+        },
+        onError: (err: any) => toast.error(err?.message || 'Failed to create department'),
+      });
     }
-    setModalOpen(false);
-    setEditingDepartment(null);
+  };
+
+  const handleDelete = () => {
+    if (!deletingDepartment) return;
+    deleteMutation.mutate(deletingDepartment.key, {
+      onSuccess: () => {
+        toast.success('Department deleted successfully');
+        setDeleteDialogOpen(false);
+        setDeletingDepartment(null);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to delete department'),
+    });
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Departments</Title>
-          <Text type="secondary">Manage organizational departments and teams</Text>
-        </div>
-        <Space>
-          <Button icon={<Upload size={16} />}>Export</Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => { setEditingDepartment(null); setModalOpen(true); }}>
-            Add Department
-          </Button>
-        </Space>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Departments"
+        description="Manage organizational departments and teams"
+        actions={
+          <>
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingDepartment(null);
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Department
+            </Button>
+          </>
+        }
+      />
 
-      {/* Stats Row */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {stats.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-              <Text style={{ color: stat.color, fontSize: 12 }}>
-                <ArrowUpRight size={12} /> Updated today
-              </Text>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <StatsGrid stats={stats} />
 
-      {/* Department Table */}
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-          <Input
-            placeholder="Search departments..."
-            prefix={<Search size={16} />}
-            value={searchText}
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: 300 }}
-          />
-        </Space>
-        <Table
-          dataSource={filteredDepartments}
-          columns={columns}
-          pagination={{
-            pageSize: 10,
-            showTotal: (total) => `Total ${total} departments`,
-          }}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        data={departments}
+        isLoading={isLoading}
+        searchKey="name"
+        searchPlaceholder="Search departments..."
+        onSearchChange={(val) => { setSearch(val); setPage(1); }}
+        pagination={paginationData ?? {
+          page,
+          limit,
+          total: departments.length,
+          totalPages: Math.ceil(departments.length / limit),
+        }}
+        onPaginationChange={(newPage) => setPage(newPage)}
+      />
 
-      {/* Add/Edit Department Modal */}
       <DepartmentForm
         open={modalOpen}
-        editingDepartment={editingDepartment}
-        onCancel={() => { setModalOpen(false); setEditingDepartment(null); }}
+        editingDepartment={editingDepartment as Record<string, string> | null}
+        onCancel={() => {
+          setModalOpen(false);
+          setEditingDepartment(null);
+        }}
         onSubmit={handleFormSubmit}
+      />
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Department"
+        description={`Are you sure you want to delete "${deletingDepartment?.name}"? This action cannot be undone.`}
+        onConfirm={handleDelete}
+        variant="destructive"
       />
     </div>
   );

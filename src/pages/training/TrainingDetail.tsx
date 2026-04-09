@@ -1,17 +1,28 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import {
-  Card, Table, Button, Typography, Avatar, Space, Tag, Row, Col,
-  Tabs, Modal, Select, Form, Descriptions, Progress, List, Badge,
-  message,
-} from 'antd';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useTraining, useEnrollTraining, useDropTraining } from '@/hooks/queries/useTraining';
+import { type ColumnDef } from '@tanstack/react-table';
 import {
   ArrowLeft, UserPlus, User, Users, Calendar, Clock, MapPin,
-  Monitor, DollarSign, BookOpen, Award, Download, FileText,
+  DollarSign, BookOpen, Award, Download, FileText, Monitor,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-const { Title, Text } = Typography;
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormDialog from '@/components/shared/FormDialog';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { getInitials } from '@/lib/formatters';
 
 type ParticipantStatus = 'Enrolled' | 'Completed' | 'Dropped';
 
@@ -26,12 +37,6 @@ interface Participant {
   certificate: boolean;
   attendance: number;
 }
-
-const participantStatusColors: Record<ParticipantStatus, string> = {
-  'Enrolled': 'blue',
-  'Completed': 'green',
-  'Dropped': 'red',
-};
 
 const participants: Participant[] = [
   { key: '1', name: 'Rahul Sharma', email: 'rahul@company.com', department: 'Engineering', status: 'Completed', enrolledDate: '2026-03-18', score: 92, certificate: true, attendance: 100 },
@@ -56,258 +61,287 @@ const materials = [
   { title: 'Recording - Day 2 Session', type: 'MP4', size: '980 MB' },
 ];
 
+const typeIconColor: Record<string, { bg: string; text: string }> = {
+  PDF: { bg: 'bg-red-100', text: 'text-red-600' },
+  DOCX: { bg: 'bg-blue-100', text: 'text-blue-600' },
+  MP4: { bg: 'bg-violet-100', text: 'text-violet-600' },
+  LINK: { bg: 'bg-green-100', text: 'text-green-600' },
+};
+
 const TrainingDetail: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
-  const [enrollForm] = Form.useForm();
 
-  const handleEnroll = () => {
-    enrollForm.validateFields().then(() => {
-      message.success('Employee enrolled successfully');
-      setEnrollModalOpen(false);
-      enrollForm.resetFields();
-    }).catch(() => {});
-  };
+  // API integration
+  const { data: trainingData, isLoading } = useTraining(id || '');
+  const enrollMutation = useEnrollTraining();
+  const dropMutation = useDropTraining();
+  const trainingDetail = trainingData?.data;
+  const participantsList: Participant[] = trainingDetail?.participants ?? participants;
+  const materialsList = trainingDetail?.materials ?? materials;
 
-  const participantColumns = [
+  const infoCards = [
+    { label: 'Trainer', value: 'Rajesh Krishnan', sub: 'External Trainer', icon: <User size={18} />, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { label: 'Duration', value: '3 Days', sub: 'Apr 15 - Apr 17, 2026', icon: <Clock size={18} />, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { label: 'Location', value: 'Bangalore', sub: 'Training Hall A', icon: <MapPin size={18} />, color: 'text-green-600', bg: 'bg-green-100' },
+    { label: 'Participants', value: '24 / 30', sub: '80% enrolled', icon: <Users size={18} />, color: 'text-violet-600', bg: 'bg-violet-100' },
+    { label: 'Cost', value: '1,50,000', sub: 'Total budget', icon: <DollarSign size={18} />, color: 'text-red-600', bg: 'bg-red-100' },
+    { label: 'Avg. Score', value: '87.6%', sub: 'Completed only', icon: <Award size={18} />, color: 'text-cyan-600', bg: 'bg-cyan-100' },
+  ];
+
+  const participantColumns: ColumnDef<Participant>[] = [
     {
-      title: 'Participant', dataIndex: 'name', key: 'name',
-      render: (text: string, record: Participant) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
+      accessorKey: 'name',
+      header: 'Participant',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <Text strong>{text}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.email}</Text>
+            <p className="font-medium text-sm">{row.original.name}</p>
+            <p className="text-xs text-muted-foreground">{row.original.email}</p>
           </div>
-        </Space>
+        </div>
       ),
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'Enrolled', dataIndex: 'enrolledDate', key: 'enrolledDate', render: (d: string) => <Text type="secondary" style={{ fontSize: 13 }}>{d}</Text> },
     {
-      title: 'Attendance', dataIndex: 'attendance', key: 'attendance',
-      render: (val: number) => <Progress percent={val} size="small" strokeColor={val >= 90 ? '#059669' : val >= 70 ? '#1a56db' : '#dc2626'} style={{ width: 100 }} />,
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => <Badge variant="outline" className="bg-blue-100 text-blue-700">{row.original.department}</Badge>,
     },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (s: ParticipantStatus) => <Tag color={participantStatusColors[s]}>{s}</Tag>,
+      accessorKey: 'enrolledDate',
+      header: 'Enrolled',
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.enrolledDate}</span>,
     },
     {
-      title: 'Score', dataIndex: 'score', key: 'score',
-      render: (val: number | null) => val !== null ? (
-        <Tag color={val >= 90 ? 'green' : val >= 75 ? 'blue' : val >= 60 ? 'gold' : 'red'}>{val}%</Tag>
-      ) : <Text type="secondary">-</Text>,
+      accessorKey: 'attendance',
+      header: 'Attendance',
+      cell: ({ row }) => {
+        const val = row.original.attendance;
+        return (
+          <div className="w-24">
+            <Progress value={val} className="h-2" />
+            <span className="text-xs text-muted-foreground">{val}%</span>
+          </div>
+        );
+      },
     },
     {
-      title: 'Certificate', dataIndex: 'certificate', key: 'certificate',
-      render: (val: boolean) => val ? (
-        <Button type="link" size="small" icon={<Download size={14} />}>Download</Button>
-      ) : <Text type="secondary">-</Text>,
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      accessorKey: 'score',
+      header: 'Score',
+      cell: ({ row }) => {
+        const val = row.original.score;
+        if (val === null) return <span className="text-muted-foreground">-</span>;
+        const colorClass = val >= 90 ? 'bg-green-100 text-green-700' : val >= 75 ? 'bg-blue-100 text-blue-700' : val >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+        return <Badge variant="outline" className={colorClass}>{val}%</Badge>;
+      },
+    },
+    {
+      accessorKey: 'certificate',
+      header: 'Certificate',
+      cell: ({ row }) => row.original.certificate ? (
+        <Button variant="link" size="sm" className="gap-1 px-0"><Download size={14} /> Download</Button>
+      ) : <span className="text-muted-foreground">-</span>,
     },
   ];
 
-  const overviewTab = (
-    <div>
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24 }}>
-        <Title level={5}>Program Description</Title>
-        <Text>
-          Deep dive into advanced React patterns, performance optimization, and state management strategies
-          including server components and concurrent features. This workshop covers:
-        </Text>
-        <ul style={{ marginTop: 12, paddingLeft: 20 }}>
-          <li><Text>Advanced component patterns (Compound, Render Props, HOC)</Text></li>
-          <li><Text>React Server Components and Streaming SSR</Text></li>
-          <li><Text>State management with Zustand, Jotai, and React Query</Text></li>
-          <li><Text>Performance profiling and optimization techniques</Text></li>
-          <li><Text>Testing strategies for complex React applications</Text></li>
-          <li><Text>Micro-frontend architecture patterns</Text></li>
-        </ul>
-        <div style={{ marginTop: 16 }}>
-          <Text strong>Prerequisites: </Text>
-          <Text>Minimum 2 years experience with React, familiarity with TypeScript, understanding of REST APIs.</Text>
-        </div>
-      </Card>
-
-      <Card
-        bordered={false}
-        style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-        title={<Space><FileText size={18} style={{ color: '#1a56db' }} /><span>Training Materials</span></Space>}
-      >
-        <List
-          dataSource={materials}
-          renderItem={(item) => (
-            <List.Item
-              actions={[
-                item.type !== 'LINK' ? (
-                  <Button type="link" icon={<Download size={14} />}>Download</Button>
-                ) : (
-                  <Button type="link" icon={<Monitor size={14} />}>Open</Button>
-                ),
-              ]}
-            >
-              <List.Item.Meta
-                avatar={
-                  <Avatar
-                    style={{
-                      backgroundColor: item.type === 'PDF' ? '#dc262615' : item.type === 'DOCX' ? '#1a56db15' : item.type === 'MP4' ? '#7c3aed15' : '#05966915',
-                    }}
-                    icon={
-                      <FileText
-                        size={18}
-                        style={{
-                          color: item.type === 'PDF' ? '#dc2626' : item.type === 'DOCX' ? '#1a56db' : item.type === 'MP4' ? '#7c3aed' : '#059669',
-                        }}
-                      />
-                    }
-                  />
-                }
-                title={<Text>{item.title}</Text>}
-                description={
-                  <Space>
-                    <Tag>{item.type}</Tag>
-                    {item.size !== '-' && <Text type="secondary" style={{ fontSize: 12 }}>{item.size}</Text>}
-                  </Space>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      </Card>
-    </div>
-  );
-
-  const participantsTab = (
-    <div>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Space>
-          <Badge count={participants.filter(p => p.status === 'Enrolled').length} style={{ backgroundColor: '#1a56db' }}>
-            <Tag>Enrolled</Tag>
-          </Badge>
-          <Badge count={participants.filter(p => p.status === 'Completed').length} style={{ backgroundColor: '#059669' }}>
-            <Tag>Completed</Tag>
-          </Badge>
-          <Badge count={participants.filter(p => p.status === 'Dropped').length} style={{ backgroundColor: '#dc2626' }}>
-            <Tag>Dropped</Tag>
-          </Badge>
-        </Space>
-        <Button type="primary" icon={<UserPlus size={16} />} onClick={() => setEnrollModalOpen(true)}>
-          Enroll Employee
-        </Button>
-      </div>
-      <Table
-        dataSource={participants}
-        columns={participantColumns}
-        pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} participants` }}
-      />
-    </div>
-  );
+  const handleEnroll = () => {
+    enrollMutation.mutate({ id: id || '', data: {} }, {
+      onSuccess: () => {
+        toast.success('Employee enrolled successfully');
+        setEnrollModalOpen(false);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to enroll employee'),
+    });
+  };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Space align="center">
-          <Button type="text" icon={<ArrowLeft size={18} />} onClick={() => navigate('/training')} />
-          <div>
-            <Space>
-              <Title level={3} style={{ margin: 0 }}>React Advanced Workshop</Title>
-              <Tag color="blue">Technical</Tag>
-              <Tag color="blue">Planned</Tag>
-              <Tag color="purple">Offline</Tag>
-            </Space>
-            <br />
-            <Text type="secondary" style={{ marginLeft: 0 }}>3-day intensive hands-on workshop</Text>
-          </div>
-        </Space>
-        <Space>
-          <Button icon={<Award size={16} />}>Issue Certificates</Button>
-          <Button type="primary" icon={<UserPlus size={16} />} onClick={() => setEnrollModalOpen(true)}>
-            Enroll Employee
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/training')}>
+            <ArrowLeft size={18} />
           </Button>
-        </Space>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold">React Advanced Workshop</h1>
+              <Badge variant="outline" className="bg-blue-100 text-blue-700">Technical</Badge>
+              <StatusBadge status="Planned" />
+              <Badge variant="outline" className="bg-purple-100 text-purple-700">Offline</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">3-day intensive hands-on workshop</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline"><Award className="mr-2 h-4 w-4" /> Issue Certificates</Button>
+          <Button onClick={() => setEnrollModalOpen(true)}><UserPlus className="mr-2 h-4 w-4" /> Enroll Employee</Button>
+        </div>
       </div>
 
       {/* Info Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {[
-          { label: 'Trainer', value: 'Rajesh Krishnan', sub: 'External Trainer', icon: <User size={18} />, color: '#1a56db' },
-          { label: 'Duration', value: '3 Days', sub: 'Apr 15 - Apr 17, 2026', icon: <Clock size={18} />, color: '#d97706' },
-          { label: 'Location', value: 'Bangalore', sub: 'Training Hall A', icon: <MapPin size={18} />, color: '#059669' },
-          { label: 'Participants', value: '24 / 30', sub: '80% enrolled', icon: <Users size={18} />, color: '#7c3aed' },
-          { label: 'Cost', value: '1,50,000', sub: 'Total budget', icon: <DollarSign size={18} />, color: '#dc2626' },
-          { label: 'Avg. Score', value: '87.6%', sub: 'Completed only', icon: <Award size={18} />, color: '#0891b2' },
-        ].map((item, index) => (
-          <Col xs={24} sm={12} lg={4} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }} styles={{ body: { padding: '16px' } }}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10,
-                  background: `${item.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: item.color, flexShrink: 0,
-                }}>
-                  {item.icon}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {infoCards.map((item, index) => (
+          <Card key={index}>
+            <CardContent className="p-4">
+              <div className="flex gap-3 items-start">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${item.bg}`}>
+                  <div className={item.color}>{item.icon}</div>
                 </div>
-                <div>
-                  <Text type="secondary" style={{ fontSize: 11 }}>{item.label}</Text>
-                  <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>{item.value}</div>
-                  <Text type="secondary" style={{ fontSize: 11 }}>{item.sub}</Text>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground">{item.label}</p>
+                  <p className="font-bold leading-tight">{item.value}</p>
+                  <p className="text-[11px] text-muted-foreground">{item.sub}</p>
                 </div>
               </div>
-            </Card>
-          </Col>
+            </CardContent>
+          </Card>
         ))}
-      </Row>
+      </div>
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Tabs
-          defaultActiveKey="overview"
-          items={[
-            {
-              key: 'overview',
-              label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><BookOpen size={16} /> Overview</span>,
-              children: overviewTab,
-            },
-            {
-              key: 'participants',
-              label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Users size={16} /> Participants ({participants.length})</span>,
-              children: participantsTab,
-            },
-          ]}
-        />
+      {/* Tabs */}
+      <Card>
+        <CardContent className="p-6">
+          <Tabs defaultValue="overview">
+            <TabsList>
+              <TabsTrigger value="overview" className="gap-1.5"><BookOpen size={16} /> Overview</TabsTrigger>
+              <TabsTrigger value="participants" className="gap-1.5"><Users size={16} /> Participants ({participants.length})</TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="mt-6 space-y-6">
+              <Card>
+                <CardHeader><CardTitle className="text-base">Program Description</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm">
+                    Deep dive into advanced React patterns, performance optimization, and state management strategies
+                    including server components and concurrent features. This workshop covers:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li>Advanced component patterns (Compound, Render Props, HOC)</li>
+                    <li>React Server Components and Streaming SSR</li>
+                    <li>State management with Zustand, Jotai, and React Query</li>
+                    <li>Performance profiling and optimization techniques</li>
+                    <li>Testing strategies for complex React applications</li>
+                    <li>Micro-frontend architecture patterns</li>
+                  </ul>
+                  <p className="text-sm">
+                    <span className="font-semibold">Prerequisites: </span>
+                    Minimum 2 years experience with React, familiarity with TypeScript, understanding of REST APIs.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText size={18} className="text-primary" /> Training Materials
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="divide-y">
+                    {materials.map((item, idx) => {
+                      const colors = typeIconColor[item.type] || { bg: 'bg-gray-100', text: 'text-gray-600' };
+                      return (
+                        <div key={idx} className="flex items-center justify-between py-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${colors.bg}`}>
+                              <FileText size={18} className={colors.text} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{item.title}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <Badge variant="secondary" className="text-[10px]">{item.type}</Badge>
+                                {item.size !== '-' && <span className="text-xs text-muted-foreground">{item.size}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <Button variant="link" size="sm" className="gap-1">
+                            {item.type !== 'LINK' ? <><Download size={14} /> Download</> : <><Monitor size={14} /> Open</>}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Participants Tab */}
+            <TabsContent value="participants" className="mt-6 space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="bg-blue-100 text-blue-700">Enrolled</Badge>
+                    <Badge>{participants.filter(p => p.status === 'Enrolled').length}</Badge>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="bg-green-100 text-green-700">Completed</Badge>
+                    <Badge>{participants.filter(p => p.status === 'Completed').length}</Badge>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="bg-red-100 text-red-700">Dropped</Badge>
+                    <Badge>{participants.filter(p => p.status === 'Dropped').length}</Badge>
+                  </div>
+                </div>
+                <Button onClick={() => setEnrollModalOpen(true)}>
+                  <UserPlus className="mr-2 h-4 w-4" /> Enroll Employee
+                </Button>
+              </div>
+              <DataTable
+                columns={participantColumns}
+                data={participantsList}
+                pagination={{ page: 1, limit: 10, total: participants.length, totalPages: 1 }}
+                onPaginationChange={() => {}}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
       </Card>
 
-      <Modal
-        title="Enroll Employee"
+      {/* Enroll Modal */}
+      <FormDialog
         open={enrollModalOpen}
-        onCancel={() => setEnrollModalOpen(false)}
-        onOk={handleEnroll}
-        width={480}
+        onOpenChange={setEnrollModalOpen}
+        title="Enroll Employee"
+        description="Select employees to enroll in this training program."
       >
-        <Form form={enrollForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="employees" label="Select Employees" rules={[{ required: true }]}>
-            <Select
-              mode="multiple"
-              placeholder="Search and select employees"
-              options={[
-                { value: 'rohit', label: 'Rohit Jain - Engineering' },
-                { value: 'neha', label: 'Neha Kulkarni - Engineering' },
-                { value: 'arun', label: 'Arun Kumar - Engineering' },
-                { value: 'meera', label: 'Meera Nair - Marketing' },
-                { value: 'karthik', label: 'Karthik Menon - Sales' },
-                { value: 'divya', label: 'Divya Sharma - Finance' },
-                { value: 'pooja', label: 'Pooja Iyer - Design' },
-              ]}
-              filterOption={(input, option) =>
-                (option?.label as string ?? '').toLowerCase().includes(input.toLowerCase())
-              }
-            />
-          </Form.Item>
-          <Form.Item name="notes" label="Notes (Optional)">
-            <Input.TextArea rows={2} placeholder="Any special requirements or notes" />
-          </Form.Item>
-        </Form>
-      </Modal>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Select Employees *</Label>
+            <Select>
+              <SelectTrigger><SelectValue placeholder="Search and select employees" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rohit">Rohit Jain - Engineering</SelectItem>
+                <SelectItem value="neha">Neha Kulkarni - Engineering</SelectItem>
+                <SelectItem value="arun">Arun Kumar - Engineering</SelectItem>
+                <SelectItem value="meera">Meera Nair - Marketing</SelectItem>
+                <SelectItem value="karthik">Karthik Menon - Sales</SelectItem>
+                <SelectItem value="divya">Divya Sharma - Finance</SelectItem>
+                <SelectItem value="pooja">Pooja Iyer - Design</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Notes (Optional)</Label>
+            <Textarea rows={2} placeholder="Any special requirements or notes" />
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setEnrollModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleEnroll}>Enroll</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

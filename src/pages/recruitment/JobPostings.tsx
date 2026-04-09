@@ -1,18 +1,36 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
 import {
-  Card, Table, Button, Input, Space, Tag, Typography, Drawer, Form,
-  Select, Row, Col, Statistic, Tabs, DatePicker, InputNumber, Dropdown,
-  Badge, message,
-} from 'antd';
-import {
-  Plus, Search, Briefcase, Users, CalendarCheck, UserCheck,
+  Plus, Briefcase, Users, CalendarCheck, UserCheck,
   MoreHorizontal, Edit2, Eye, XCircle, MapPin, Clock,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  useJobList,
+  useCreateJob,
+  useUpdateJob,
+} from '@/hooks/queries/useRecruitment';
 
-const { Title, Text } = Typography;
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormSheet from '@/components/shared/FormSheet';
+import DatePicker from '@/components/shared/DatePicker';
 
-type JobStatus = 'Draft' | 'Open' | 'On Hold' | 'Closed' | 'Filled';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+type JobStatus = 'draft' | 'open' | 'on_hold' | 'closed' | 'filled';
 
 interface JobPosting {
   key: string;
@@ -33,29 +51,22 @@ interface JobPosting {
 }
 
 const jobPostings: JobPosting[] = [
-  { key: '1', title: 'Senior React Developer', department: 'Engineering', location: 'Bangalore', employmentType: 'Full-time', experienceMin: 4, experienceMax: 8, salaryMin: 1500000, salaryMax: 2500000, applications: 42, vacancies: 3, status: 'Open', deadline: '2026-05-15', skills: ['React', 'TypeScript', 'Node.js'], postedDate: '2026-03-20' },
-  { key: '2', title: 'DevOps Engineer', department: 'Engineering', location: 'Hyderabad', employmentType: 'Full-time', experienceMin: 3, experienceMax: 6, salaryMin: 1200000, salaryMax: 2000000, applications: 28, vacancies: 2, status: 'Open', deadline: '2026-05-10', skills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD'], postedDate: '2026-03-18' },
-  { key: '3', title: 'Marketing Manager', department: 'Marketing', location: 'Mumbai', employmentType: 'Full-time', experienceMin: 5, experienceMax: 10, salaryMin: 1800000, salaryMax: 3000000, applications: 15, vacancies: 1, status: 'Open', deadline: '2026-04-30', skills: ['Digital Marketing', 'SEO', 'Content Strategy'], postedDate: '2026-03-15' },
-  { key: '4', title: 'Data Analyst Intern', department: 'Analytics', location: 'Pune', employmentType: 'Internship', experienceMin: 0, experienceMax: 1, salaryMin: 300000, salaryMax: 500000, applications: 65, vacancies: 5, status: 'Open', deadline: '2026-04-25', skills: ['Python', 'SQL', 'Excel', 'Power BI'], postedDate: '2026-03-10' },
-  { key: '5', title: 'HR Business Partner', department: 'HR', location: 'Delhi NCR', employmentType: 'Full-time', experienceMin: 6, experienceMax: 12, salaryMin: 2000000, salaryMax: 3500000, applications: 8, vacancies: 1, status: 'On Hold', deadline: '2026-05-20', skills: ['HRBP', 'Employee Relations', 'Talent Management'], postedDate: '2026-03-05' },
-  { key: '6', title: 'UI/UX Designer', department: 'Design', location: 'Bangalore', employmentType: 'Contract', experienceMin: 2, experienceMax: 5, salaryMin: 900000, salaryMax: 1600000, applications: 34, vacancies: 2, status: 'Closed', deadline: '2026-03-30', skills: ['Figma', 'Adobe XD', 'Prototyping'], postedDate: '2026-02-20' },
-  { key: '7', title: 'Finance Controller', department: 'Finance', location: 'Mumbai', employmentType: 'Full-time', experienceMin: 8, experienceMax: 15, salaryMin: 3000000, salaryMax: 5000000, applications: 5, vacancies: 1, status: 'Filled', deadline: '2026-03-15', skills: ['CA', 'Financial Planning', 'Compliance'], postedDate: '2026-01-25' },
-  { key: '8', title: 'Sales Executive', department: 'Sales', location: 'Chennai', employmentType: 'Full-time', experienceMin: 1, experienceMax: 4, salaryMin: 600000, salaryMax: 1000000, applications: 0, vacancies: 4, status: 'Draft', deadline: '2026-05-30', skills: ['B2B Sales', 'CRM', 'Negotiation'], postedDate: '2026-04-05' },
+  { key: '1', title: 'Senior React Developer', department: 'Engineering', location: 'Bangalore', employmentType: 'full_time', experienceMin: 4, experienceMax: 8, salaryMin: 1500000, salaryMax: 2500000, applications: 42, vacancies: 3, status: 'open', deadline: '2026-05-15', skills: ['React', 'TypeScript', 'Node.js'], postedDate: '2026-03-20' },
+  { key: '2', title: 'DevOps Engineer', department: 'Engineering', location: 'Hyderabad', employmentType: 'full_time', experienceMin: 3, experienceMax: 6, salaryMin: 1200000, salaryMax: 2000000, applications: 28, vacancies: 2, status: 'open', deadline: '2026-05-10', skills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD'], postedDate: '2026-03-18' },
+  { key: '3', title: 'Marketing Manager', department: 'Marketing', location: 'Mumbai', employmentType: 'full_time', experienceMin: 5, experienceMax: 10, salaryMin: 1800000, salaryMax: 3000000, applications: 15, vacancies: 1, status: 'open', deadline: '2026-04-30', skills: ['Digital Marketing', 'SEO', 'Content Strategy'], postedDate: '2026-03-15' },
+  { key: '4', title: 'Data Analyst Intern', department: 'Analytics', location: 'Pune', employmentType: 'intern', experienceMin: 0, experienceMax: 1, salaryMin: 300000, salaryMax: 500000, applications: 65, vacancies: 5, status: 'open', deadline: '2026-04-25', skills: ['Python', 'SQL', 'Excel', 'Power BI'], postedDate: '2026-03-10' },
+  { key: '5', title: 'HR Business Partner', department: 'HR', location: 'Delhi NCR', employmentType: 'full_time', experienceMin: 6, experienceMax: 12, salaryMin: 2000000, salaryMax: 3500000, applications: 8, vacancies: 1, status: 'on_hold', deadline: '2026-05-20', skills: ['HRBP', 'Employee Relations', 'Talent Management'], postedDate: '2026-03-05' },
+  { key: '6', title: 'UI/UX Designer', department: 'Design', location: 'Bangalore', employmentType: 'contract', experienceMin: 2, experienceMax: 5, salaryMin: 900000, salaryMax: 1600000, applications: 34, vacancies: 2, status: 'closed', deadline: '2026-03-30', skills: ['Figma', 'Adobe XD', 'Prototyping'], postedDate: '2026-02-20' },
+  { key: '7', title: 'Finance Controller', department: 'Finance', location: 'Mumbai', employmentType: 'full_time', experienceMin: 8, experienceMax: 15, salaryMin: 3000000, salaryMax: 5000000, applications: 5, vacancies: 1, status: 'filled', deadline: '2026-03-15', skills: ['CA', 'Financial Planning', 'Compliance'], postedDate: '2026-01-25' },
+  { key: '8', title: 'Sales Executive', department: 'Sales', location: 'Chennai', employmentType: 'full_time', experienceMin: 1, experienceMax: 4, salaryMin: 600000, salaryMax: 1000000, applications: 0, vacancies: 4, status: 'draft', deadline: '2026-05-30', skills: ['B2B Sales', 'CRM', 'Negotiation'], postedDate: '2026-04-05' },
 ];
 
-const statusColors: Record<JobStatus, string> = {
-  Draft: 'default',
-  Open: 'green',
-  'On Hold': 'orange',
-  Closed: 'red',
-  Filled: 'blue',
-};
-
-const employmentTypeColors: Record<string, string> = {
-  'Full-time': 'blue',
-  'Part-time': 'cyan',
-  Contract: 'purple',
-  Internship: 'gold',
+const typeBadgeClass: Record<string, string> = {
+  full_time: 'bg-blue-100 text-blue-700',
+  part_time: 'bg-cyan-100 text-cyan-700',
+  contract: 'bg-purple-100 text-purple-700',
+  intern: 'bg-yellow-100 text-yellow-700',
+  freelancer: 'bg-green-100 text-green-700',
 };
 
 const formatSalary = (val: number) => {
@@ -67,264 +78,299 @@ const JobPostings: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const [form] = Form.useForm();
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
-  const filteredPostings = jobPostings.filter(jp => {
+  // API hooks
+  const queryParams = {
+    page: String(page),
+    limit: String(limit),
+    ...(searchText ? { search: searchText } : {}),
+    ...(activeTab !== 'All' ? { status: activeTab } : {}),
+  };
+  const { data: jobData, isLoading } = useJobList(queryParams);
+  const createJobMutation = useCreateJob();
+  const updateJobMutation = useUpdateJob();
+  // deleteJobMutation available via useDeleteJob() when delete UI is added
+
+  const jobList: JobPosting[] = jobData?.data ?? jobPostings;
+  const jobPagination = jobData?.pagination;
+
+  const filteredPostings = jobData?.data ? jobList : jobPostings.filter(jp => {
     const matchesSearch = jp.title.toLowerCase().includes(searchText.toLowerCase()) ||
       jp.department.toLowerCase().includes(searchText.toLowerCase());
     const matchesTab = activeTab === 'All' || jp.status === activeTab;
     return matchesSearch && matchesTab;
   });
 
-  const tabCounts = {
-    All: jobPostings.length,
-    Draft: jobPostings.filter(j => j.status === 'Draft').length,
-    Open: jobPostings.filter(j => j.status === 'Open').length,
-    'On Hold': jobPostings.filter(j => j.status === 'On Hold').length,
-    Closed: jobPostings.filter(j => j.status === 'Closed').length,
-    Filled: jobPostings.filter(j => j.status === 'Filled').length,
+  const tabCounts: Record<string, number> = {
+    All: jobList.length,
+    draft: jobList.filter(j => j.status === 'draft').length,
+    open: jobList.filter(j => j.status === 'open').length,
+    on_hold: jobList.filter(j => j.status === 'on_hold').length,
+    closed: jobList.filter(j => j.status === 'closed').length,
+    filled: jobList.filter(j => j.status === 'filled').length,
   };
 
-  const columns = [
+  const stats = [
+    { title: 'Open Positions', value: jobList.filter(j => j.status === 'open').length, icon: <Briefcase size={20} />, color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-950' },
+    { title: 'Total Applications', value: jobList.reduce((s, j) => s + j.applications, 0), icon: <Users size={20} />, color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-950' },
+    { title: 'Interviews Scheduled', value: 18, icon: <CalendarCheck size={20} />, color: 'text-amber-600', bgColor: 'bg-amber-100 dark:bg-amber-950' },
+    { title: 'Hired This Month', value: 6, icon: <UserCheck size={20} />, color: 'text-violet-600', bgColor: 'bg-violet-100 dark:bg-violet-950' },
+  ];
+
+  const columns: ColumnDef<JobPosting>[] = [
     {
-      title: 'Job Title', dataIndex: 'title', key: 'title',
-      render: (text: string, record: JobPosting) => (
-        <div>
-          <Text strong>{text}</Text>
-          <br />
-          <Space size={4} style={{ marginTop: 4 }}>
-            <MapPin size={12} style={{ color: '#6b7280' }} />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.location}</Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>|</Text>
-            <Clock size={12} style={{ color: '#6b7280' }} />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.experienceMin}-{record.experienceMax} yrs</Text>
-          </Space>
-        </div>
+      accessorKey: 'title',
+      header: 'Job Title',
+      cell: ({ row }) => {
+        const r = row.original;
+        return (
+          <div>
+            <p className="font-medium">{r.title}</p>
+            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+              <MapPin size={12} /> {r.location}
+              <span>|</span>
+              <Clock size={12} /> {r.experienceMin}-{r.experienceMax} yrs
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => <Badge variant="outline" className="bg-blue-100 text-blue-700">{row.original.department}</Badge>,
+    },
+    {
+      accessorKey: 'employmentType',
+      header: 'Type',
+      cell: ({ row }) => (
+        <Badge variant="outline" className={typeBadgeClass[row.original.employmentType] || ''}>
+          {row.original.employmentType}
+        </Badge>
       ),
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
     {
-      title: 'Type', dataIndex: 'employmentType', key: 'employmentType',
-      render: (t: string) => <Tag color={employmentTypeColors[t] || 'default'}>{t}</Tag>,
-    },
-    {
-      title: 'Salary Range', key: 'salary',
-      render: (_: any, record: JobPosting) => (
-        <Text style={{ fontSize: 13 }}>{formatSalary(record.salaryMin)} - {formatSalary(record.salaryMax)}</Text>
+      id: 'salary',
+      header: 'Salary Range',
+      cell: ({ row }) => (
+        <span className="text-sm">{formatSalary(row.original.salaryMin)} - {formatSalary(row.original.salaryMax)}</span>
       ),
     },
     {
-      title: 'Applications', dataIndex: 'applications', key: 'applications',
-      render: (val: number) => <Badge count={val} showZero style={{ backgroundColor: val > 0 ? '#1a56db' : '#d1d5db' }} />,
+      accessorKey: 'applications',
+      header: 'Applications',
+      cell: ({ row }) => {
+        const val = row.original.applications;
+        return (
+          <Badge variant={val > 0 ? 'default' : 'secondary'}>
+            {val}
+          </Badge>
+        );
+      },
     },
-    { title: 'Vacancies', dataIndex: 'vacancies', key: 'vacancies' },
+    { accessorKey: 'vacancies', header: 'Vacancies' },
     {
-      title: 'Deadline', dataIndex: 'deadline', key: 'deadline',
-      render: (d: string) => <Text type="secondary" style={{ fontSize: 13 }}>{d}</Text>,
+      accessorKey: 'deadline',
+      header: 'Deadline',
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.deadline}</span>,
     },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: JobStatus) => <Tag color={statusColors[status]}>{status}</Tag>,
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
-      title: 'Actions', key: 'actions',
-      render: (_: any, record: JobPosting) => (
-        <Dropdown menu={{ items: [
-          { key: 'view', icon: <Eye size={14} />, label: 'View Applications' },
-          { key: 'edit', icon: <Edit2 size={14} />, label: 'Edit' },
-          { key: 'close', icon: <XCircle size={14} />, label: record.status === 'Open' ? 'Close Posting' : 'Reopen', danger: record.status === 'Open' },
-        ], onClick: ({ key }) => {
-          if (key === 'close') message.success(`Job posting "${record.title}" status updated`);
-        }}} trigger={['click']}>
-          <Button type="text" icon={<MoreHorizontal size={18} />} />
-        </Dropdown>
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View Applications</DropdownMenuItem>
+            <DropdownMenuItem><Edit2 className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+            <DropdownMenuItem
+              className={row.original.status === 'Open' ? 'text-destructive focus:text-destructive' : ''}
+              onClick={() => updateJobMutation.mutate(
+                { id: row.original.key, data: { status: row.original.status === 'Open' ? 'Closed' : 'Open' } },
+                {
+                  onSuccess: () => toast.success(`Job posting "${row.original.title}" status updated`),
+                  onError: (err: any) => toast.error(err?.message || 'Failed to update status'),
+                }
+              )}
+            >
+              <XCircle className="mr-2 h-4 w-4" />
+              {row.original.status === 'Open' ? 'Close Posting' : 'Reopen'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
-  const handleCreate = () => {
-    form.validateFields().then(() => {
-      message.success('Job posting created successfully');
-      setDrawerOpen(false);
-      form.resetFields();
-    }).catch(() => {});
+  const handleCreate = (formData?: any) => {
+    createJobMutation.mutate(formData ?? {}, {
+      onSuccess: () => {
+        toast.success('Job posting created successfully');
+        setDrawerOpen(false);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to create job posting'),
+    });
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Recruitment</Title>
-          <Text type="secondary">Manage job postings and track applications</Text>
-        </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>
-          Create Job Posting
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Recruitment"
+        description="Manage job postings and track applications"
+        actions={
+          <Button onClick={() => setDrawerOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Create Job Posting
+          </Button>
+        }
+      />
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {[
-          { title: 'Open Positions', value: jobPostings.filter(j => j.status === 'Open').length, icon: <Briefcase size={20} />, color: '#1a56db' },
-          { title: 'Total Applications', value: jobPostings.reduce((s, j) => s + j.applications, 0), icon: <Users size={20} />, color: '#059669' },
-          { title: 'Interviews Scheduled', value: 18, icon: <CalendarCheck size={20} />, color: '#d97706' },
-          { title: 'Hired This Month', value: 6, icon: <UserCheck size={20} />, color: '#7c3aed' },
-        ].map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <StatsGrid stats={stats} />
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={Object.entries(tabCounts).map(([key, count]) => ({
-            key,
-            label: <span>{key} <Badge count={count} style={{ backgroundColor: key === activeTab ? '#1a56db' : '#d1d5db', marginLeft: 6 }} size="small" /></span>,
-          }))}
-          style={{ marginBottom: 16 }}
-        />
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-          <Input
-            placeholder="Search job postings..."
-            prefix={<Search size={16} />}
-            value={searchText}
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: 300 }}
+      <Card>
+        <CardContent className="p-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+            <TabsList className="flex-wrap h-auto gap-1">
+              {Object.entries(tabCounts).map(([key, count]) => (
+                <TabsTrigger key={key} value={key} className="gap-1.5">
+                  {key}
+                  <Badge variant={key === activeTab ? 'default' : 'secondary'} className="ml-1 h-5 px-1.5 text-[10px]">
+                    {count}
+                  </Badge>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          <div className="mb-4">
+            <Input
+              placeholder="Search job postings..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+
+          <DataTable
+            columns={columns}
+            data={filteredPostings}
+            isLoading={isLoading}
+            pagination={jobPagination ?? { page, limit, total: filteredPostings.length, totalPages: Math.ceil(filteredPostings.length / limit) }}
+            onPaginationChange={(newPage) => setPage(newPage)}
           />
-        </Space>
-        <Table
-          dataSource={filteredPostings}
-          columns={columns}
-          pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} postings` }}
-        />
+        </CardContent>
       </Card>
 
-      <Drawer
-        title="Create Job Posting"
-        width={720}
+      <FormSheet
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        extra={
-          <Space>
-            <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-            <Button type="primary" onClick={handleCreate}>Create</Button>
-          </Space>
-        }
+        onOpenChange={setDrawerOpen}
+        title="Create Job Posting"
+        description="Fill in all required details for the new job posting."
+        className="sm:max-w-2xl"
       >
-        <Form form={form} layout="vertical">
-          <Form.Item name="title" label="Job Title" rules={[{ required: true }]}>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Job Title *</Label>
             <Input placeholder="e.g. Senior React Developer" />
-          </Form.Item>
-          <Form.Item name="description" label="Job Description" rules={[{ required: true }]}>
-            <Input.TextArea rows={4} placeholder="Describe the role, responsibilities, and requirements" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="department" label="Department" rules={[{ required: true }]}>
-                <Select placeholder="Select department" options={[
-                  { value: 'Engineering', label: 'Engineering' },
-                  { value: 'Marketing', label: 'Marketing' },
-                  { value: 'Finance', label: 'Finance' },
-                  { value: 'HR', label: 'HR' },
-                  { value: 'Sales', label: 'Sales' },
-                  { value: 'Design', label: 'Design' },
-                  { value: 'Analytics', label: 'Analytics' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="designation" label="Designation">
-                <Input placeholder="e.g. Senior Engineer" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="location" label="Location" rules={[{ required: true }]}>
-                <Select placeholder="Select location" options={[
-                  { value: 'Bangalore', label: 'Bangalore' },
-                  { value: 'Mumbai', label: 'Mumbai' },
-                  { value: 'Hyderabad', label: 'Hyderabad' },
-                  { value: 'Delhi NCR', label: 'Delhi NCR' },
-                  { value: 'Pune', label: 'Pune' },
-                  { value: 'Chennai', label: 'Chennai' },
-                  { value: 'Remote', label: 'Remote' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="employmentType" label="Employment Type" rules={[{ required: true }]}>
-                <Select placeholder="Select type" options={[
-                  { value: 'Full-time', label: 'Full-time' },
-                  { value: 'Part-time', label: 'Part-time' },
-                  { value: 'Contract', label: 'Contract' },
-                  { value: 'Internship', label: 'Internship' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="experienceMin" label="Min Experience (years)" rules={[{ required: true }]}>
-                <InputNumber min={0} max={30} style={{ width: '100%' }} placeholder="0" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="experienceMax" label="Max Experience (years)" rules={[{ required: true }]}>
-                <InputNumber min={0} max={30} style={{ width: '100%' }} placeholder="5" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="salaryMin" label="Min Salary (Annual INR)" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} placeholder="e.g. 1200000" formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="salaryMax" label="Max Salary (Annual INR)" rules={[{ required: true }]}>
-                <InputNumber min={0} style={{ width: '100%' }} placeholder="e.g. 2000000" formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="skills" label="Required Skills">
-            <Select mode="tags" placeholder="Type and press enter to add skills" />
-          </Form.Item>
-          <Form.Item name="qualifications" label="Qualifications">
-            <Input.TextArea rows={2} placeholder="e.g. B.Tech/B.E. in Computer Science or equivalent" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="vacancies" label="Number of Vacancies" rules={[{ required: true }]}>
-                <InputNumber min={1} style={{ width: '100%' }} placeholder="1" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="deadline" label="Application Deadline" rules={[{ required: true }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Drawer>
+          </div>
+          <div className="space-y-2">
+            <Label>Job Description *</Label>
+            <Textarea rows={4} placeholder="Describe the role, responsibilities, and requirements" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Department *</Label>
+              <Select>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectContent>
+                  {['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'Design', 'Analytics'].map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Designation</Label>
+              <Input placeholder="e.g. Senior Engineer" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Location *</Label>
+              <Select>
+                <SelectTrigger><SelectValue placeholder="Select location" /></SelectTrigger>
+                <SelectContent>
+                  {['Bangalore', 'Mumbai', 'Hyderabad', 'Delhi NCR', 'Pune', 'Chennai', 'Remote'].map(l => (
+                    <SelectItem key={l} value={l}>{l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Employment Type *</Label>
+              <Select>
+                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Full-Time">Full-Time</SelectItem>
+                  <SelectItem value="Part-Time">Part-Time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Intern">Intern</SelectItem>
+                  <SelectItem value="Freelancer">Freelancer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Min Experience (years) *</Label>
+              <Input type="number" min={0} max={30} placeholder="0" />
+            </div>
+            <div className="space-y-2">
+              <Label>Max Experience (years) *</Label>
+              <Input type="number" min={0} max={30} placeholder="5" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Min Salary (Annual INR) *</Label>
+              <Input type="number" placeholder="e.g. 1200000" />
+            </div>
+            <div className="space-y-2">
+              <Label>Max Salary (Annual INR) *</Label>
+              <Input type="number" placeholder="e.g. 2000000" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Qualifications</Label>
+            <Textarea rows={2} placeholder="e.g. B.Tech/B.E. in Computer Science or equivalent" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Number of Vacancies *</Label>
+              <Input type="number" min={1} placeholder="1" />
+            </div>
+            <div className="space-y-2">
+              <Label>Application Deadline *</Label>
+              <DatePicker onChange={() => {}} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setDrawerOpen(false)}>Cancel</Button>
+          <Button onClick={handleCreate}>Create</Button>
+        </div>
+      </FormSheet>
     </div>
   );
 };

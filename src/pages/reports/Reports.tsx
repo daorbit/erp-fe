@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import {
-  Card, Table, Button, Space, Tag, Typography, Row, Col, Select, DatePicker,
-  Divider,
-} from 'antd';
+  useEmployeeReport, useAttendanceReport, useLeaveReport, usePayrollReport,
+  useRecruitmentReport, useExpenseReport, useHeadcountReport, useTurnoverReport,
+} from '@/hooks/queries/useReports';
 import {
   Users, Clock, CalendarDays, IndianRupee, UserPlus, Receipt,
   BarChart3, TrendingDown, ArrowLeft, Download, FileText,
@@ -12,9 +12,20 @@ import {
   PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, Legend, ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
+import { type ColumnDef } from '@tanstack/react-table';
+import PageHeader from '@/components/shared/PageHeader';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { formatINR } from '@/lib/formatters';
 
-const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
+/* ============================== */
+/*  Report Card Configs           */
+/* ============================== */
 
 interface ReportConfig {
   key: string;
@@ -22,20 +33,24 @@ interface ReportConfig {
   description: string;
   icon: React.ReactNode;
   color: string;
+  bgColor: string;
 }
 
 const reportCards: ReportConfig[] = [
-  { key: 'employee', title: 'Employee Report', description: 'Comprehensive employee directory with demographics and status', icon: <Users size={28} />, color: '#1a56db' },
-  { key: 'attendance', title: 'Attendance Report', description: 'Daily, weekly and monthly attendance summaries', icon: <Clock size={28} />, color: '#059669' },
-  { key: 'leave', title: 'Leave Report', description: 'Leave utilisation, balances and trends analysis', icon: <CalendarDays size={28} />, color: '#d97706' },
-  { key: 'payroll', title: 'Payroll Report', description: 'Salary disbursements, deductions and tax summary', icon: <IndianRupee size={28} />, color: '#7c3aed' },
-  { key: 'recruitment', title: 'Recruitment Report', description: 'Hiring pipeline, source analysis and time-to-hire', icon: <UserPlus size={28} />, color: '#dc2626' },
-  { key: 'expense', title: 'Expense Report', description: 'Expense claims, reimbursements and category breakdown', icon: <Receipt size={28} />, color: '#0891b2' },
-  { key: 'headcount', title: 'Headcount Report', description: 'Department-wise headcount distribution and growth', icon: <BarChart3 size={28} />, color: '#ea580c' },
-  { key: 'turnover', title: 'Turnover Report', description: 'Attrition analysis, exit reasons and retention metrics', icon: <TrendingDown size={28} />, color: '#be185d' },
+  { key: 'employee', title: 'Employee Report', description: 'Comprehensive employee directory with demographics and status', icon: <Users className="h-7 w-7" />, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+  { key: 'attendance', title: 'Attendance Report', description: 'Daily, weekly and monthly attendance summaries', icon: <Clock className="h-7 w-7" />, color: 'text-green-600', bgColor: 'bg-green-100' },
+  { key: 'leave', title: 'Leave Report', description: 'Leave utilisation, balances and trends analysis', icon: <CalendarDays className="h-7 w-7" />, color: 'text-amber-600', bgColor: 'bg-amber-100' },
+  { key: 'payroll', title: 'Payroll Report', description: 'Salary disbursements, deductions and tax summary', icon: <IndianRupee className="h-7 w-7" />, color: 'text-violet-600', bgColor: 'bg-violet-100' },
+  { key: 'recruitment', title: 'Recruitment Report', description: 'Hiring pipeline, source analysis and time-to-hire', icon: <UserPlus className="h-7 w-7" />, color: 'text-red-600', bgColor: 'bg-red-100' },
+  { key: 'expense', title: 'Expense Report', description: 'Expense claims, reimbursements and category breakdown', icon: <Receipt className="h-7 w-7" />, color: 'text-cyan-600', bgColor: 'bg-cyan-100' },
+  { key: 'headcount', title: 'Headcount Report', description: 'Department-wise headcount distribution and growth', icon: <BarChart3 className="h-7 w-7" />, color: 'text-orange-600', bgColor: 'bg-orange-100' },
+  { key: 'turnover', title: 'Turnover Report', description: 'Attrition analysis, exit reasons and retention metrics', icon: <TrendingDown className="h-7 w-7" />, color: 'text-pink-600', bgColor: 'bg-pink-100' },
 ];
 
-// -- Chart Data --
+/* ============================== */
+/*  Chart Data                    */
+/* ============================== */
+
 const departmentDistribution = [
   { name: 'Engineering', value: 98, color: '#1a56db' },
   { name: 'Marketing', value: 32, color: '#059669' },
@@ -61,7 +76,10 @@ const attendanceTrend = [
   { month: 'Dec', present: 87, absent: 5, leave: 8 },
 ];
 
-// -- Sample Report Data --
+/* ============================== */
+/*  Report Table Data             */
+/* ============================== */
+
 const employeeReportData = [
   { key: '1', name: 'Rahul Sharma', empId: 'EMP-001', department: 'Engineering', designation: 'Senior Software Engineer', joinDate: '2023-06-15', status: 'Active', location: 'Bangalore' },
   { key: '2', name: 'Priya Singh', empId: 'EMP-002', department: 'Marketing', designation: 'Marketing Manager', joinDate: '2022-03-20', status: 'Active', location: 'Mumbai' },
@@ -132,85 +150,110 @@ const turnoverReportData = [
   { key: '4', month: 'April', exits: 0, newJoins: 4, attritionRate: '0.0%', reason: '--', department: '--' },
 ];
 
-// -- Report Column Configs --
-const reportColumns: Record<string, any[]> = {
+/* ============================== */
+/*  Column Definitions            */
+/* ============================== */
+
+const DeptBadge = ({ dept }: { dept: string }) => (
+  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800">
+    {dept}
+  </Badge>
+);
+
+const EmpIdCode = ({ id }: { id: string }) => (
+  <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">{id}</code>
+);
+
+const reportColumnsMap: Record<string, ColumnDef<any, any>[]> = {
   employee: [
-    { title: 'Emp ID', dataIndex: 'empId', key: 'empId', render: (t: string) => <Text code>{t}</Text> },
-    { title: 'Name', dataIndex: 'name', key: 'name', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'Designation', dataIndex: 'designation', key: 'designation' },
-    { title: 'Join Date', dataIndex: 'joinDate', key: 'joinDate' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'Active' ? 'green' : 'orange'}>{s}</Tag> },
-    { title: 'Location', dataIndex: 'location', key: 'location' },
+    { accessorKey: 'empId', header: 'Emp ID', cell: ({ row }) => <EmpIdCode id={row.original.empId} /> },
+    { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
+    { accessorKey: 'department', header: 'Department', cell: ({ row }) => <DeptBadge dept={row.original.department} /> },
+    { accessorKey: 'designation', header: 'Designation' },
+    { accessorKey: 'joinDate', header: 'Join Date' },
+    { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+    { accessorKey: 'location', header: 'Location' },
   ],
   attendance: [
-    { title: 'Emp ID', dataIndex: 'empId', key: 'empId', render: (t: string) => <Text code>{t}</Text> },
-    { title: 'Name', dataIndex: 'name', key: 'name', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'Present', dataIndex: 'presentDays', key: 'presentDays', render: (v: number) => <Text style={{ color: '#059669' }}>{v}</Text> },
-    { title: 'Absent', dataIndex: 'absentDays', key: 'absentDays', render: (v: number) => <Text style={{ color: v > 0 ? '#dc2626' : undefined }}>{v}</Text> },
-    { title: 'Leave', dataIndex: 'leaveDays', key: 'leaveDays' },
-    { title: 'Late', dataIndex: 'lateDays', key: 'lateDays', render: (v: number) => <Text style={{ color: v > 0 ? '#d97706' : undefined }}>{v}</Text> },
-    { title: 'Avg Hours', dataIndex: 'avgHours', key: 'avgHours' },
-    { title: 'Attendance %', dataIndex: 'percentage', key: 'percentage', render: (p: string) => <Tag color={parseFloat(p) >= 90 ? 'green' : parseFloat(p) >= 80 ? 'orange' : 'red'}>{p}</Tag> },
+    { accessorKey: 'empId', header: 'Emp ID', cell: ({ row }) => <EmpIdCode id={row.original.empId} /> },
+    { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
+    { accessorKey: 'department', header: 'Department', cell: ({ row }) => <DeptBadge dept={row.original.department} /> },
+    { accessorKey: 'presentDays', header: 'Present', cell: ({ row }) => <span className="text-green-600 font-medium">{row.original.presentDays}</span> },
+    { accessorKey: 'absentDays', header: 'Absent', cell: ({ row }) => <span className={row.original.absentDays > 0 ? 'text-red-600 font-medium' : ''}>{row.original.absentDays}</span> },
+    { accessorKey: 'leaveDays', header: 'Leave' },
+    { accessorKey: 'lateDays', header: 'Late', cell: ({ row }) => <span className={row.original.lateDays > 0 ? 'text-amber-600 font-medium' : ''}>{row.original.lateDays}</span> },
+    { accessorKey: 'avgHours', header: 'Avg Hours' },
+    {
+      accessorKey: 'percentage', header: 'Attendance %', cell: ({ row }) => {
+        const pct = parseFloat(row.original.percentage);
+        const variant = pct >= 90 ? 'active' : pct >= 80 ? 'pending' : 'absent';
+        return <StatusBadge status={variant === 'active' ? 'active' : variant === 'pending' ? 'pending' : 'absent'} />;
+      },
+    },
   ],
   leave: [
-    { title: 'Emp ID', dataIndex: 'empId', key: 'empId', render: (t: string) => <Text code>{t}</Text> },
-    { title: 'Name', dataIndex: 'name', key: 'name', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'CL (Used/Total)', dataIndex: 'cl', key: 'cl' },
-    { title: 'SL (Used/Total)', dataIndex: 'sl', key: 'sl' },
-    { title: 'EL (Used/Total)', dataIndex: 'el', key: 'el' },
-    { title: 'Comp Off', dataIndex: 'compOff', key: 'compOff' },
-    { title: 'Total Used', dataIndex: 'totalUsed', key: 'totalUsed', render: (v: number) => <Text strong>{v}</Text> },
-    { title: 'Balance', dataIndex: 'totalBalance', key: 'totalBalance', render: (v: number) => <Tag color="green">{v}</Tag> },
+    { accessorKey: 'empId', header: 'Emp ID', cell: ({ row }) => <EmpIdCode id={row.original.empId} /> },
+    { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
+    { accessorKey: 'department', header: 'Department', cell: ({ row }) => <DeptBadge dept={row.original.department} /> },
+    { accessorKey: 'cl', header: 'CL (Used/Total)' },
+    { accessorKey: 'sl', header: 'SL (Used/Total)' },
+    { accessorKey: 'el', header: 'EL (Used/Total)' },
+    { accessorKey: 'compOff', header: 'Comp Off' },
+    { accessorKey: 'totalUsed', header: 'Total Used', cell: ({ row }) => <span className="font-semibold">{row.original.totalUsed}</span> },
+    { accessorKey: 'totalBalance', header: 'Balance', cell: ({ row }) => <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{row.original.totalBalance}</Badge> },
   ],
   payroll: [
-    { title: 'Emp ID', dataIndex: 'empId', key: 'empId', render: (t: string) => <Text code>{t}</Text> },
-    { title: 'Name', dataIndex: 'name', key: 'name', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'Basic', dataIndex: 'basic', key: 'basic', render: (v: number) => `\u20B9${v.toLocaleString('en-IN')}` },
-    { title: 'HRA', dataIndex: 'hra', key: 'hra', render: (v: number) => `\u20B9${v.toLocaleString('en-IN')}` },
-    { title: 'Special', dataIndex: 'special', key: 'special', render: (v: number) => `\u20B9${v.toLocaleString('en-IN')}` },
-    { title: 'PF', dataIndex: 'pf', key: 'pf', render: (v: number) => <Text type="danger">{`\u20B9${v.toLocaleString('en-IN')}`}</Text> },
-    { title: 'Tax', dataIndex: 'tax', key: 'tax', render: (v: number) => <Text type="danger">{`\u20B9${v.toLocaleString('en-IN')}`}</Text> },
-    { title: 'Net Pay', dataIndex: 'netPay', key: 'netPay', render: (v: number) => <Text strong style={{ color: '#059669' }}>{`\u20B9${v.toLocaleString('en-IN')}`}</Text> },
+    { accessorKey: 'empId', header: 'Emp ID', cell: ({ row }) => <EmpIdCode id={row.original.empId} /> },
+    { accessorKey: 'name', header: 'Name', cell: ({ row }) => <span className="font-medium">{row.original.name}</span> },
+    { accessorKey: 'department', header: 'Department', cell: ({ row }) => <DeptBadge dept={row.original.department} /> },
+    { accessorKey: 'basic', header: 'Basic', cell: ({ row }) => formatINR(row.original.basic) },
+    { accessorKey: 'hra', header: 'HRA', cell: ({ row }) => formatINR(row.original.hra) },
+    { accessorKey: 'special', header: 'Special', cell: ({ row }) => formatINR(row.original.special) },
+    { accessorKey: 'pf', header: 'PF', cell: ({ row }) => <span className="text-red-600">{formatINR(row.original.pf)}</span> },
+    { accessorKey: 'tax', header: 'Tax', cell: ({ row }) => <span className="text-red-600">{formatINR(row.original.tax)}</span> },
+    { accessorKey: 'netPay', header: 'Net Pay', cell: ({ row }) => <span className="text-green-600 font-semibold">{formatINR(row.original.netPay)}</span> },
   ],
   recruitment: [
-    { title: 'Position', dataIndex: 'position', key: 'position', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'Applicants', dataIndex: 'applicants', key: 'applicants' },
-    { title: 'Shortlisted', dataIndex: 'shortlisted', key: 'shortlisted' },
-    { title: 'Interviewed', dataIndex: 'interviewed', key: 'interviewed' },
-    { title: 'Offered', dataIndex: 'offered', key: 'offered' },
-    { title: 'Joined', dataIndex: 'joined', key: 'joined', render: (v: number) => <Text strong style={{ color: '#059669' }}>{v}</Text> },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'Open' ? 'blue' : 'green'}>{s}</Tag> },
-    { title: 'Avg Days', dataIndex: 'avgDays', key: 'avgDays' },
+    { accessorKey: 'position', header: 'Position', cell: ({ row }) => <span className="font-medium">{row.original.position}</span> },
+    { accessorKey: 'department', header: 'Department', cell: ({ row }) => <DeptBadge dept={row.original.department} /> },
+    { accessorKey: 'applicants', header: 'Applicants' },
+    { accessorKey: 'shortlisted', header: 'Shortlisted' },
+    { accessorKey: 'interviewed', header: 'Interviewed' },
+    { accessorKey: 'offered', header: 'Offered' },
+    { accessorKey: 'joined', header: 'Joined', cell: ({ row }) => <span className="text-green-600 font-semibold">{row.original.joined}</span> },
+    { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status === 'Open' ? 'open' : 'completed'} /> },
+    { accessorKey: 'avgDays', header: 'Avg Days' },
   ],
   expense: [
-    { title: 'Category', dataIndex: 'category', key: 'category', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Claims', dataIndex: 'claims', key: 'claims' },
-    { title: 'Total Amount', dataIndex: 'totalAmount', key: 'totalAmount', render: (v: number) => `\u20B9${v.toLocaleString('en-IN')}` },
-    { title: 'Approved', dataIndex: 'approved', key: 'approved', render: (v: number) => <Text style={{ color: '#059669' }}>{`\u20B9${v.toLocaleString('en-IN')}`}</Text> },
-    { title: 'Pending', dataIndex: 'pending', key: 'pending', render: (v: number) => <Text style={{ color: v > 0 ? '#d97706' : undefined }}>{`\u20B9${v.toLocaleString('en-IN')}`}</Text> },
-    { title: 'Avg Claim', dataIndex: 'avgClaim', key: 'avgClaim', render: (v: number) => `\u20B9${v.toLocaleString('en-IN')}` },
+    { accessorKey: 'category', header: 'Category', cell: ({ row }) => <span className="font-medium">{row.original.category}</span> },
+    { accessorKey: 'claims', header: 'Claims' },
+    { accessorKey: 'totalAmount', header: 'Total Amount', cell: ({ row }) => formatINR(row.original.totalAmount) },
+    { accessorKey: 'approved', header: 'Approved', cell: ({ row }) => <span className="text-green-600">{formatINR(row.original.approved)}</span> },
+    { accessorKey: 'pending', header: 'Pending', cell: ({ row }) => <span className={row.original.pending > 0 ? 'text-amber-600' : ''}>{formatINR(row.original.pending)}</span> },
+    { accessorKey: 'avgClaim', header: 'Avg Claim', cell: ({ row }) => formatINR(row.original.avgClaim) },
   ],
   headcount: [
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Current', dataIndex: 'current', key: 'current', render: (v: number) => <Text strong>{v}</Text> },
-    { title: 'Last Quarter', dataIndex: 'lastQuarter', key: 'lastQuarter' },
-    { title: 'Growth', dataIndex: 'growth', key: 'growth', render: (v: string) => <Tag color="green">{v}</Tag> },
-    { title: 'Male', dataIndex: 'male', key: 'male' },
-    { title: 'Female', dataIndex: 'female', key: 'female' },
-    { title: 'Avg Tenure', dataIndex: 'avgTenure', key: 'avgTenure' },
+    { accessorKey: 'department', header: 'Department', cell: ({ row }) => <span className="font-medium">{row.original.department}</span> },
+    { accessorKey: 'current', header: 'Current', cell: ({ row }) => <span className="font-semibold">{row.original.current}</span> },
+    { accessorKey: 'lastQuarter', header: 'Last Quarter' },
+    { accessorKey: 'growth', header: 'Growth', cell: ({ row }) => <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{row.original.growth}</Badge> },
+    { accessorKey: 'male', header: 'Male' },
+    { accessorKey: 'female', header: 'Female' },
+    { accessorKey: 'avgTenure', header: 'Avg Tenure' },
   ],
   turnover: [
-    { title: 'Month', dataIndex: 'month', key: 'month', render: (t: string) => <Text strong>{t}</Text> },
-    { title: 'Exits', dataIndex: 'exits', key: 'exits', render: (v: number) => <Text style={{ color: v > 0 ? '#dc2626' : '#059669' }}>{v}</Text> },
-    { title: 'New Joins', dataIndex: 'newJoins', key: 'newJoins', render: (v: number) => <Text style={{ color: '#059669' }}>{v}</Text> },
-    { title: 'Attrition Rate', dataIndex: 'attritionRate', key: 'attritionRate', render: (r: string) => <Tag color={parseFloat(r) > 1 ? 'red' : parseFloat(r) > 0 ? 'orange' : 'green'}>{r}</Tag> },
-    { title: 'Primary Reason', dataIndex: 'reason', key: 'reason' },
-    { title: 'Department', dataIndex: 'department', key: 'department' },
+    { accessorKey: 'month', header: 'Month', cell: ({ row }) => <span className="font-medium">{row.original.month}</span> },
+    { accessorKey: 'exits', header: 'Exits', cell: ({ row }) => <span className={row.original.exits > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>{row.original.exits}</span> },
+    { accessorKey: 'newJoins', header: 'New Joins', cell: ({ row }) => <span className="text-green-600">{row.original.newJoins}</span> },
+    {
+      accessorKey: 'attritionRate', header: 'Attrition Rate', cell: ({ row }) => {
+        const rate = parseFloat(row.original.attritionRate);
+        const status = rate > 1 ? 'rejected' : rate > 0 ? 'pending' : 'active';
+        return <StatusBadge status={status} />;
+      },
+    },
+    { accessorKey: 'reason', header: 'Primary Reason' },
+    { accessorKey: 'department', header: 'Department' },
   ],
 };
 
@@ -225,88 +268,68 @@ const reportDataMap: Record<string, any[]> = {
   turnover: turnoverReportData,
 };
 
-const Reports: React.FC = () => {
-  const [selectedReport, setSelectedReport] = useState<string | null>(null);
-  const [isGenerated, setIsGenerated] = useState(false);
-  const [department, setDepartment] = useState<string | null>(null);
+/* ============================== */
+/*  Chart Components              */
+/* ============================== */
 
-  const renderReportGrid = () => (
-    <Row gutter={[16, 16]}>
-      {reportCards.map(report => (
-        <Col xs={24} sm={12} lg={6} key={report.key}>
-          <Card
-            bordered={false}
-            hoverable
-            style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', cursor: 'pointer' }}
-            onClick={() => { setSelectedReport(report.key); setIsGenerated(false); }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: 16,
-                background: `${report.color}15`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 16px', color: report.color,
-              }}>
-                {report.icon}
-              </div>
-              <Title level={5} style={{ margin: '0 0 8px 0' }}>{report.title}</Title>
-              <Text type="secondary" style={{ fontSize: 13 }}>{report.description}</Text>
-              <div style={{ marginTop: 16 }}>
-                <Button type="primary" ghost>Generate</Button>
-              </div>
-            </div>
-          </Card>
-        </Col>
-      ))}
-    </Row>
-  );
+const EXPENSE_COLORS = ['#1a56db', '#d97706', '#7c3aed', '#059669', '#0891b2'];
 
-  const renderCharts = () => {
-    if (selectedReport === 'headcount' || selectedReport === 'employee') {
-      return (
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} lg={12}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }} title="Department Distribution">
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={departmentDistribution}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {departmentDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
-          <Col xs={24} lg={12}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }} title="Headcount by Department">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={departmentDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis />
-                  <RechartsTooltip />
-                  <Bar dataKey="value" fill="#1a56db" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
-        </Row>
-      );
-    }
+function ChartsForReport({ reportKey }: { reportKey: string }) {
+  if (reportKey === 'headcount' || reportKey === 'employee') {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Department Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={departmentDistribution}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {departmentDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Headcount by Department</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={departmentDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis />
+                <RechartsTooltip />
+                <Bar dataKey="value" fill="#1a56db" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-    if (selectedReport === 'attendance') {
-      return (
-        <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24 }} title="Attendance Trend (% by Month)">
+  if (reportKey === 'attendance') {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">Attendance Trend (% by Month)</CardTitle>
+        </CardHeader>
+        <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={attendanceTrend}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -319,13 +342,18 @@ const Reports: React.FC = () => {
               <Line type="monotone" dataKey="leave" stroke="#d97706" strokeWidth={2} name="Leave %" dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
-        </Card>
-      );
-    }
+        </CardContent>
+      </Card>
+    );
+  }
 
-    if (selectedReport === 'turnover') {
-      return (
-        <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24 }} title="Exits vs New Joins">
+  if (reportKey === 'turnover') {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base">Exits vs New Joins</CardTitle>
+        </CardHeader>
+        <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={turnoverReportData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -337,132 +365,202 @@ const Reports: React.FC = () => {
               <Bar dataKey="newJoins" fill="#059669" name="New Joins" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (reportKey === 'expense') {
+    const pieData = expenseReportData.map((e, i) => ({
+      name: e.category,
+      value: e.totalAmount,
+      color: EXPENSE_COLORS[i],
+    }));
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Expense by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${formatINR(value)}`}
+                >
+                  {pieData.map((entry, i) => (
+                    <Cell key={`cell-${i}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <RechartsTooltip formatter={(value: number) => formatINR(value)} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
-      );
-    }
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Claims by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={expenseReportData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" tick={{ fontSize: 11 }} />
+                <YAxis />
+                <RechartsTooltip />
+                <Bar dataKey="claims" fill="#1a56db" name="Number of Claims" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-    if (selectedReport === 'expense') {
-      return (
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} lg={12}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }} title="Expense by Category">
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={expenseReportData.map((e, i) => ({ name: e.category, value: e.totalAmount, color: ['#1a56db', '#d97706', '#7c3aed', '#059669', '#0891b2'][i] }))}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: \u20B9${(value / 1000).toFixed(0)}K`}
-                  >
-                    {expenseReportData.map((_, i) => (
-                      <Cell key={`cell-${i}`} fill={['#1a56db', '#d97706', '#7c3aed', '#059669', '#0891b2'][i]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip formatter={(value: number) => `\u20B9${value.toLocaleString('en-IN')}`} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
-          <Col xs={24} lg={12}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }} title="Claims by Category">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={expenseReportData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="category" tick={{ fontSize: 11 }} />
-                  <YAxis />
-                  <RechartsTooltip />
-                  <Bar dataKey="claims" fill="#1a56db" name="Number of Claims" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-          </Col>
-        </Row>
-      );
-    }
+  return null;
+}
 
-    return null;
+/* ============================== */
+/*  Main Component                */
+/* ============================== */
+
+const Reports: React.FC = () => {
+  const [selectedReport, setSelectedReport] = useState<string | null>(null);
+  const [isGenerated, setIsGenerated] = useState(false);
+  const [department, setDepartment] = useState<string>('all');
+
+  // API integration - fetch reports conditionally based on selection
+  const reportParams = { department: department !== 'all' ? department : undefined };
+  const { data: employeeRpt } = useEmployeeReport(selectedReport === 'employee' && isGenerated ? reportParams : undefined);
+  const { data: attendanceRpt } = useAttendanceReport(selectedReport === 'attendance' && isGenerated ? reportParams : undefined);
+  const { data: leaveRpt } = useLeaveReport(selectedReport === 'leave' && isGenerated ? reportParams : undefined);
+  const { data: payrollRpt } = usePayrollReport(selectedReport === 'payroll' && isGenerated ? reportParams : undefined);
+  const { data: recruitmentRpt } = useRecruitmentReport(selectedReport === 'recruitment' && isGenerated ? reportParams : undefined);
+  const { data: expenseRpt } = useExpenseReport(selectedReport === 'expense' && isGenerated ? reportParams : undefined);
+  const { data: headcountRpt } = useHeadcountReport(selectedReport === 'headcount' && isGenerated ? reportParams : undefined);
+  const { data: turnoverRpt } = useTurnoverReport(selectedReport === 'turnover' && isGenerated ? reportParams : undefined);
+
+  const apiReportDataMap: Record<string, any> = {
+    employee: employeeRpt,
+    attendance: attendanceRpt,
+    leave: leaveRpt,
+    payroll: payrollRpt,
+    recruitment: recruitmentRpt,
+    expense: expenseRpt,
+    headcount: headcountRpt,
+    turnover: turnoverRpt,
   };
 
+  const getReportData = (key: string) => apiReportDataMap[key]?.data ?? reportDataMap[key];
+
+  /* ----- Report cards grid ----- */
+  const renderReportGrid = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {reportCards.map((report) => (
+        <Card
+          key={report.key}
+          className="cursor-pointer transition-shadow hover:shadow-md"
+          onClick={() => { setSelectedReport(report.key); setIsGenerated(false); }}
+        >
+          <CardContent className="p-6 text-center">
+            <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${report.bgColor}`}>
+              <span className={report.color}>{report.icon}</span>
+            </div>
+            <h3 className="font-semibold mb-1">{report.title}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{report.description}</p>
+            <Button variant="outline" size="sm">Generate</Button>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  /* ----- Selected report detail ----- */
   const renderSelectedReport = () => {
-    const report = reportCards.find(r => r.key === selectedReport);
-    if (!report) return null;
+    const report = reportCards.find((r) => r.key === selectedReport);
+    if (!report || !selectedReport) return null;
 
     return (
-      <div>
+      <div className="space-y-6">
         <Button
-          type="text"
-          icon={<ArrowLeft size={16} />}
+          variant="ghost"
           onClick={() => { setSelectedReport(null); setIsGenerated(false); }}
-          style={{ marginBottom: 16 }}
+          className="gap-1"
         >
-          Back to Reports
+          <ArrowLeft className="h-4 w-4" /> Back to Reports
         </Button>
 
-        <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Space>
-              <div style={{
-                width: 48, height: 48, borderRadius: 12,
-                background: `${report.color}15`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: report.color,
-              }}>
-                {React.cloneElement(report.icon as React.ReactElement, { size: 22 })}
+        {/* Report header + filters */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${report.bgColor}`}>
+                  <span className={report.color}>
+                    {React.cloneElement(report.icon as React.ReactElement, { className: 'h-5 w-5' })}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">{report.title}</h2>
+                  <p className="text-sm text-muted-foreground">{report.description}</p>
+                </div>
               </div>
-              <div>
-                <Title level={4} style={{ margin: 0 }}>{report.title}</Title>
-                <Text type="secondary">{report.description}</Text>
-              </div>
-            </Space>
-          </div>
+            </div>
 
-          <Divider style={{ margin: '16px 0' }} />
+            <Separator className="my-4" />
 
-          <Space wrap style={{ marginBottom: 16 }}>
-            <RangePicker />
-            <Select
-              placeholder="Department"
-              allowClear
-              style={{ width: 180 }}
-              value={department}
-              onChange={setDepartment}
-              options={[
-                { value: 'Engineering', label: 'Engineering' },
-                { value: 'Marketing', label: 'Marketing' },
-                { value: 'Sales', label: 'Sales' },
-                { value: 'Finance', label: 'Finance' },
-                { value: 'HR', label: 'HR' },
-                { value: 'Operations', label: 'Operations' },
-                { value: 'Product', label: 'Product' },
-              ]}
-            />
-            <Button type="primary" onClick={() => setIsGenerated(true)}>
-              Generate Report
-            </Button>
-          </Space>
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={department} onValueChange={setDepartment}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Sales">Sales</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                  <SelectItem value="Operations">Operations</SelectItem>
+                  <SelectItem value="Product">Product</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={() => setIsGenerated(true)}>Generate Report</Button>
+            </div>
+          </CardContent>
         </Card>
 
+        {/* Generated content: charts + table */}
         {isGenerated && (
           <>
-            {renderCharts()}
+            <ChartsForReport reportKey={selectedReport} />
 
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <Text strong>Report Data</Text>
-                <Space>
-                  <Button icon={<Download size={14} />}>Export CSV</Button>
-                  <Button icon={<FileText size={14} />}>Export PDF</Button>
-                </Space>
-              </div>
-              <Table
-                dataSource={reportDataMap[selectedReport!]}
-                columns={reportColumns[selectedReport!]}
-                pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} records` }}
-                scroll={{ x: 1000 }}
-              />
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="text-base">Report Data</CardTitle>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      <Download className="mr-1 h-3.5 w-3.5" /> Export CSV
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <FileText className="mr-1 h-3.5 w-3.5" /> Export PDF
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={reportColumnsMap[selectedReport]}
+                  data={getReportData(selectedReport)}
+                />
+              </CardContent>
             </Card>
           </>
         )}
@@ -471,12 +569,11 @@ const Reports: React.FC = () => {
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0 }}>Reports & Analytics</Title>
-        <Text type="secondary">Generate and export comprehensive HR reports</Text>
-      </div>
-
+    <div className="space-y-6">
+      <PageHeader
+        title="Reports & Analytics"
+        description="Generate and export comprehensive HR reports"
+      />
       {selectedReport ? renderSelectedReport() : renderReportGrid()}
     </div>
   );

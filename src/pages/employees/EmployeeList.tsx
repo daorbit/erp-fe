@@ -1,538 +1,561 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { type ColumnDef } from '@tanstack/react-table';
 import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Form,
-  Select, Row, Col, Dropdown, Badge, Statistic, Drawer, Tabs, DatePicker,
-  Popconfirm, message,
-} from 'antd';
-import {
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  MoreHorizontal,
-  Users,
-  UserCheck,
-  UserMinus,
-  UserPlus,
-  Eye,
-  SlidersHorizontal,
-  Upload,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Building2,
-  CreditCard,
-  Briefcase,
+  Plus, Upload, Users, UserCheck, UserMinus, UserPlus,
+  Eye, Edit2, Trash2, MoreHorizontal, SlidersHorizontal,
+  User, Mail, Phone, MapPin, Briefcase, CreditCard, Building2,
   ArrowUpRight,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
-const { Title, Text } = Typography;
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormSheet from '@/components/shared/FormSheet';
+import DatePicker from '@/components/shared/DatePicker';
 
-const mockEmployees = [
-  { key: '1', employeeId: 'EMP001', firstName: 'Rahul', lastName: 'Sharma', email: 'rahul.sharma@company.com', phone: '+91 9876543210', department: 'Engineering', designation: 'Senior Developer', joinDate: '2023-01-15', status: 'Active', employmentType: 'Full-time', reportingManager: 'Ananya Reddy' },
-  { key: '2', employeeId: 'EMP002', firstName: 'Priya', lastName: 'Singh', email: 'priya.singh@company.com', phone: '+91 9876543211', department: 'Marketing', designation: 'Marketing Executive', joinDate: '2023-06-20', status: 'Active', employmentType: 'Full-time', reportingManager: 'Meera Nair' },
-  { key: '3', employeeId: 'EMP003', firstName: 'Amit', lastName: 'Patel', email: 'amit.patel@company.com', phone: '+91 9876543212', department: 'Finance', designation: 'Financial Analyst', joinDate: '2024-03-10', status: 'On Leave', employmentType: 'Full-time', reportingManager: 'Suresh Iyer' },
-  { key: '4', employeeId: 'EMP004', firstName: 'Sneha', lastName: 'Gupta', email: 'sneha.gupta@company.com', phone: '+91 9876543213', department: 'HR', designation: 'HR Manager', joinDate: '2022-11-05', status: 'Active', employmentType: 'Full-time', reportingManager: 'Deepak Verma' },
-  { key: '5', employeeId: 'EMP005', firstName: 'Vikram', lastName: 'Joshi', email: 'vikram.joshi@company.com', phone: '+91 9876543214', department: 'Sales', designation: 'Sales Lead', joinDate: '2024-02-28', status: 'Active', employmentType: 'Full-time', reportingManager: 'Meera Nair' },
-  { key: '6', employeeId: 'EMP006', firstName: 'Ananya', lastName: 'Reddy', email: 'ananya.reddy@company.com', phone: '+91 9876543215', department: 'Engineering', designation: 'Engineering Manager', joinDate: '2022-09-12', status: 'Active', employmentType: 'Full-time', reportingManager: 'Deepak Verma' },
-  { key: '7', employeeId: 'EMP007', firstName: 'Karthik', lastName: 'Nair', email: 'karthik.nair@company.com', phone: '+91 9876543216', department: 'Engineering', designation: 'Software Engineer', joinDate: '2024-06-01', status: 'Active', employmentType: 'Full-time', reportingManager: 'Rahul Sharma' },
-  { key: '8', employeeId: 'EMP008', firstName: 'Meera', lastName: 'Nair', email: 'meera.nair@company.com', phone: '+91 9876543217', department: 'Marketing', designation: 'Marketing Manager', joinDate: '2022-04-18', status: 'Active', employmentType: 'Full-time', reportingManager: 'Deepak Verma' },
-  { key: '9', employeeId: 'EMP009', firstName: 'Suresh', lastName: 'Iyer', email: 'suresh.iyer@company.com', phone: '+91 9876543218', department: 'Finance', designation: 'Finance Manager', joinDate: '2021-08-22', status: 'Active', employmentType: 'Full-time', reportingManager: 'Deepak Verma' },
-  { key: '10', employeeId: 'EMP010', firstName: 'Pooja', lastName: 'Deshmukh', email: 'pooja.deshmukh@company.com', phone: '+91 9876543219', department: 'IT', designation: 'System Administrator', joinDate: '2024-01-08', status: 'Active', employmentType: 'Contract', reportingManager: 'Ananya Reddy' },
-  { key: '11', employeeId: 'EMP011', firstName: 'Arjun', lastName: 'Menon', email: 'arjun.menon@company.com', phone: '+91 9876543220', department: 'Engineering', designation: 'Team Lead', joinDate: '2023-03-15', status: 'Inactive', employmentType: 'Full-time', reportingManager: 'Ananya Reddy' },
-  { key: '12', employeeId: 'EMP012', firstName: 'Divya', lastName: 'Krishnan', email: 'divya.krishnan@company.com', phone: '+91 9876543221', department: 'HR', designation: 'HR Executive', joinDate: '2024-07-20', status: 'Active', employmentType: 'Intern', reportingManager: 'Sneha Gupta' },
-  { key: '13', employeeId: 'EMP013', firstName: 'Deepak', lastName: 'Verma', email: 'deepak.verma@company.com', phone: '+91 9876543222', department: 'Operations', designation: 'VP Operations', joinDate: '2020-05-10', status: 'Active', employmentType: 'Full-time', reportingManager: '' },
-  { key: '14', employeeId: 'EMP014', firstName: 'Neha', lastName: 'Bhatt', email: 'neha.bhatt@company.com', phone: '+91 9876543223', department: 'Legal', designation: 'Legal Counsel', joinDate: '2023-11-01', status: 'On Leave', employmentType: 'Part-time', reportingManager: 'Deepak Verma' },
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+import { getInitials, formatDate } from '@/lib/formatters';
+import { useEmployeeList, useCreateEmployee, useDeleteEmployee } from '@/hooks/queries/useEmployees';
+
+interface Employee {
+  key: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  department: string;
+  designation: string;
+  joinDate: string;
+  status: string;
+  employmentType: string;
+  reportingManager: string;
+}
+
+const mockEmployees: Employee[] = [
+  { key: '1', employeeId: 'EMP001', firstName: 'Rahul', lastName: 'Sharma', email: 'rahul.sharma@company.com', phone: '+91 9876543210', department: 'Engineering', designation: 'Senior Developer', joinDate: '2023-01-15', status: 'active', employmentType: 'full_time', reportingManager: 'Ananya Reddy' },
+  { key: '2', employeeId: 'EMP002', firstName: 'Priya', lastName: 'Singh', email: 'priya.singh@company.com', phone: '+91 9876543211', department: 'Marketing', designation: 'Marketing Executive', joinDate: '2023-06-20', status: 'active', employmentType: 'full_time', reportingManager: 'Meera Nair' },
+  { key: '3', employeeId: 'EMP003', firstName: 'Amit', lastName: 'Patel', email: 'amit.patel@company.com', phone: '+91 9876543212', department: 'Finance', designation: 'Financial Analyst', joinDate: '2024-03-10', status: 'on_leave', employmentType: 'full_time', reportingManager: 'Suresh Iyer' },
+  { key: '4', employeeId: 'EMP004', firstName: 'Sneha', lastName: 'Gupta', email: 'sneha.gupta@company.com', phone: '+91 9876543213', department: 'HR', designation: 'HR Manager', joinDate: '2022-11-05', status: 'active', employmentType: 'full_time', reportingManager: 'Deepak Verma' },
+  { key: '5', employeeId: 'EMP005', firstName: 'Vikram', lastName: 'Joshi', email: 'vikram.joshi@company.com', phone: '+91 9876543214', department: 'Sales', designation: 'Sales Lead', joinDate: '2024-02-28', status: 'active', employmentType: 'full_time', reportingManager: 'Meera Nair' },
+  { key: '6', employeeId: 'EMP006', firstName: 'Ananya', lastName: 'Reddy', email: 'ananya.reddy@company.com', phone: '+91 9876543215', department: 'Engineering', designation: 'Engineering Manager', joinDate: '2022-09-12', status: 'active', employmentType: 'full_time', reportingManager: 'Deepak Verma' },
+  { key: '7', employeeId: 'EMP007', firstName: 'Karthik', lastName: 'Nair', email: 'karthik.nair@company.com', phone: '+91 9876543216', department: 'Engineering', designation: 'Software Engineer', joinDate: '2024-06-01', status: 'active', employmentType: 'full_time', reportingManager: 'Rahul Sharma' },
+  { key: '8', employeeId: 'EMP008', firstName: 'Meera', lastName: 'Nair', email: 'meera.nair@company.com', phone: '+91 9876543217', department: 'Marketing', designation: 'Marketing Manager', joinDate: '2022-04-18', status: 'active', employmentType: 'full_time', reportingManager: 'Deepak Verma' },
+  { key: '9', employeeId: 'EMP009', firstName: 'Suresh', lastName: 'Iyer', email: 'suresh.iyer@company.com', phone: '+91 9876543218', department: 'Finance', designation: 'Finance Manager', joinDate: '2021-08-22', status: 'active', employmentType: 'full_time', reportingManager: 'Deepak Verma' },
+  { key: '10', employeeId: 'EMP010', firstName: 'Pooja', lastName: 'Deshmukh', email: 'pooja.deshmukh@company.com', phone: '+91 9876543219', department: 'IT', designation: 'System Administrator', joinDate: '2024-01-08', status: 'active', employmentType: 'contract', reportingManager: 'Ananya Reddy' },
+  { key: '11', employeeId: 'EMP011', firstName: 'Arjun', lastName: 'Menon', email: 'arjun.menon@company.com', phone: '+91 9876543220', department: 'Engineering', designation: 'Team Lead', joinDate: '2023-03-15', status: 'inactive', employmentType: 'full_time', reportingManager: 'Ananya Reddy' },
+  { key: '12', employeeId: 'EMP012', firstName: 'Divya', lastName: 'Krishnan', email: 'divya.krishnan@company.com', phone: '+91 9876543221', department: 'HR', designation: 'HR Executive', joinDate: '2024-07-20', status: 'active', employmentType: 'intern', reportingManager: 'Sneha Gupta' },
+  { key: '13', employeeId: 'EMP013', firstName: 'Deepak', lastName: 'Verma', email: 'deepak.verma@company.com', phone: '+91 9876543222', department: 'Operations', designation: 'VP Operations', joinDate: '2020-05-10', status: 'active', employmentType: 'full_time', reportingManager: '' },
+  { key: '14', employeeId: 'EMP014', firstName: 'Neha', lastName: 'Bhatt', email: 'neha.bhatt@company.com', phone: '+91 9876543223', department: 'Legal', designation: 'Legal Counsel', joinDate: '2023-11-01', status: 'on_leave', employmentType: 'part_time', reportingManager: 'Deepak Verma' },
 ];
 
-const departmentColors: Record<string, string> = {
-  Engineering: 'blue',
-  Marketing: 'magenta',
-  Finance: 'green',
-  HR: 'purple',
-  Sales: 'orange',
-  IT: 'cyan',
-  Operations: 'geekblue',
-  Legal: 'gold',
+const departmentBadgeClass: Record<string, string> = {
+  Engineering: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
+  Marketing: 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-400',
+  Finance: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400',
+  HR: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400',
+  Sales: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400',
+  IT: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400',
+  Operations: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400',
+  Legal: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400',
+};
+
+const typeBadgeClass: Record<string, string> = {
+  full_time: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
+  part_time: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400',
+  contract: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400',
+  intern: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400',
 };
 
 const EmployeeList: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [filterDepartment, setFilterDepartment] = useState<string | undefined>(undefined);
-  const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
-  const [filterType, setFilterType] = useState<string | undefined>(undefined);
-  const [form] = Form.useForm();
+  const [filterDepartment, setFilterDepartment] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
   const navigate = useNavigate();
 
-  const filteredEmployees = mockEmployees.filter(emp => {
+  const queryParams = {
+    page,
+    limit,
+    search: searchText || undefined,
+    department: filterDepartment !== 'all' ? filterDepartment : undefined,
+    status: filterStatus !== 'all' ? filterStatus : undefined,
+    employmentType: filterType !== 'all' ? filterType : undefined,
+  };
+
+  const { data, isLoading } = useEmployeeList(queryParams);
+  const createMutation = useCreateEmployee();
+  const deleteMutation = useDeleteEmployee();
+
+  const employees: Employee[] = data?.data ?? mockEmployees;
+  const paginationData = data?.pagination;
+
+  const filteredEmployees = data?.data ? employees : mockEmployees.filter(emp => {
     const matchesSearch = !searchText ||
       `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchText.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchText.toLowerCase()) ||
       emp.employeeId.toLowerCase().includes(searchText.toLowerCase());
-    const matchesDept = !filterDepartment || emp.department === filterDepartment;
-    const matchesStatus = !filterStatus || emp.status === filterStatus;
-    const matchesType = !filterType || emp.employmentType === filterType;
+    const matchesDept = filterDepartment === 'all' || emp.department === filterDepartment;
+    const matchesStatus = filterStatus === 'all' || emp.status === filterStatus;
+    const matchesType = filterType === 'all' || emp.employmentType === filterType;
     return matchesSearch && matchesDept && matchesStatus && matchesType;
   });
 
   const stats = [
-    { title: 'Total Employees', value: mockEmployees.length, icon: <Users size={20} />, color: '#1a56db' },
-    { title: 'Active', value: mockEmployees.filter(e => e.status === 'Active').length, icon: <UserCheck size={20} />, color: '#059669' },
-    { title: 'On Leave', value: mockEmployees.filter(e => e.status === 'On Leave').length, icon: <UserMinus size={20} />, color: '#d97706' },
-    { title: 'New Joiners (This Month)', value: 2, icon: <UserPlus size={20} />, color: '#7c3aed' },
+    { title: 'Total Employees', value: paginationData?.total ?? mockEmployees.length, icon: <Users size={20} />, color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-950', change: 'Updated today' },
+    { title: 'Active', value: data?.data ? data.data.filter((e: any) => e.status === 'active').length : mockEmployees.filter(e => e.status === 'active').length, icon: <UserCheck size={20} />, color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-950', change: 'Updated today' },
+    { title: 'On Leave', value: data?.data ? data.data.filter((e: any) => e.status === 'on_leave').length : mockEmployees.filter(e => e.status === 'on_leave').length, icon: <UserMinus size={20} />, color: 'text-amber-600', bgColor: 'bg-amber-100 dark:bg-amber-950', change: 'Updated today' },
+    { title: 'New Joiners (This Month)', value: 2, icon: <UserPlus size={20} />, color: 'text-violet-600', bgColor: 'bg-violet-100 dark:bg-violet-950', change: 'Updated today' },
   ];
 
-  const columns = [
+  const columns: ColumnDef<Employee>[] = [
     {
-      title: 'Employee', dataIndex: 'firstName', key: 'employee',
-      render: (_: string, record: any) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{record.firstName[0]}</Avatar>
-          <div>
-            <Text strong>{record.firstName} {record.lastName}</Text><br />
-            <Text type="secondary" style={{ fontSize: 12 }}>{record.email}</Text><br />
-            <Text type="secondary" style={{ fontSize: 11 }}>{record.employeeId}</Text>
+      accessorKey: 'firstName',
+      header: 'Employee',
+      cell: ({ row }) => {
+        const emp = row.original;
+        const fullName = `${emp.firstName} ${emp.lastName}`;
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {getInitials(fullName)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="font-medium truncate">{fullName}</p>
+              <p className="text-xs text-muted-foreground truncate">{emp.email}</p>
+              <p className="text-[11px] text-muted-foreground">{emp.employeeId}</p>
+            </div>
           </div>
-        </Space>
+        );
+      },
+    },
+    {
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => (
+        <Badge variant="outline" className={departmentBadgeClass[row.original.department] || ''}>
+          {row.original.department}
+        </Badge>
+      ),
+    },
+    { accessorKey: 'designation', header: 'Designation' },
+    {
+      accessorKey: 'joinDate',
+      header: 'Join Date',
+      cell: ({ row }) => formatDate(row.original.joinDate),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      accessorKey: 'employmentType',
+      header: 'Type',
+      cell: ({ row }) => (
+        <Badge variant="outline" className={typeBadgeClass[row.original.employmentType] || ''}>
+          {row.original.employmentType}
+        </Badge>
       ),
     },
     {
-      title: 'Department', dataIndex: 'department', key: 'department',
-      render: (dept: string) => <Tag color={departmentColors[dept] || 'default'}>{dept}</Tag>,
-    },
-    { title: 'Designation', dataIndex: 'designation', key: 'designation' },
-    { title: 'Join Date', dataIndex: 'joinDate', key: 'joinDate' },
-    {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: string) => {
-        const statusMap: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
-          Active: 'success', 'On Leave': 'warning', Inactive: 'error', Terminated: 'default',
-        };
-        return <Badge status={statusMap[status] || 'default'} text={status} />;
-      },
-    },
-    {
-      title: 'Type', dataIndex: 'employmentType', key: 'employmentType',
-      render: (type: string) => {
-        const colorMap: Record<string, string> = {
-          'Full-time': 'blue', 'Part-time': 'cyan', Contract: 'orange', Intern: 'purple',
-        };
-        return <Tag color={colorMap[type] || 'default'}>{type}</Tag>;
-      },
-    },
-    {
-      title: 'Actions', key: 'actions', width: 80,
-      render: (_: any, record: any) => (
-        <Dropdown menu={{ items: [
-          { key: 'view', icon: <Eye size={16} />, label: 'View Profile', onClick: () => navigate(`/employees/${record.key}`) },
-          { key: 'edit', icon: <Edit2 size={16} />, label: 'Edit' },
-          { type: 'divider' as const },
-          { key: 'delete', icon: <Trash2 size={16} />, label: 'Delete', danger: true, onClick: () => message.success('Employee deleted (mock)') },
-        ]}} trigger={['click']}>
-          <Button type="text" icon={<MoreHorizontal size={18} />} />
-        </Dropdown>
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal size={16} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => navigate(`/employees/${row.original.key}`)}>
+              <Eye className="mr-2 h-4 w-4" /> View Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Edit2 className="mr-2 h-4 w-4" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => {
+                deleteMutation.mutate(row.original.key, {
+                  onSuccess: () => toast.success('Employee deleted successfully'),
+                  onError: (err: any) => toast.error(err?.message || 'Failed to delete employee'),
+                });
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
-  const handleDrawerSubmit = () => {
-    form.validateFields().then(() => {
-      message.success('Employee added successfully (mock)');
-      setDrawerOpen(false);
-      form.resetFields();
+  const handleDrawerSubmit = (formData?: any) => {
+    createMutation.mutate(formData ?? {}, {
+      onSuccess: () => {
+        toast.success('Employee added successfully');
+        setDrawerOpen(false);
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to add employee'),
     });
   };
 
-  const tabItems = [
-    {
-      key: 'personal',
-      label: (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <User size={14} /> Personal Info
-        </span>
-      ),
-      children: (
-        <>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}>
-                <Input prefix={<User size={16} />} placeholder="Enter first name" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
-                <Input placeholder="Enter last name" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
-                <Input prefix={<Mail size={16} />} placeholder="Enter email" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="phone" label="Phone" rules={[{ required: true }]}>
-                <Input prefix={<Phone size={16} />} placeholder="Enter phone" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="dateOfBirth" label="Date of Birth">
-                <DatePicker style={{ width: '100%' }} placeholder="Select date" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="gender" label="Gender">
-                <Select placeholder="Select gender" options={[
-                  { value: 'Male', label: 'Male' },
-                  { value: 'Female', label: 'Female' },
-                  { value: 'Other', label: 'Other' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="maritalStatus" label="Marital Status">
-                <Select placeholder="Select status" options={[
-                  { value: 'Single', label: 'Single' },
-                  { value: 'Married', label: 'Married' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="bloodGroup" label="Blood Group">
-                <Select placeholder="Select blood group" options={[
-                  { value: 'A+', label: 'A+' }, { value: 'A-', label: 'A-' },
-                  { value: 'B+', label: 'B+' }, { value: 'B-', label: 'B-' },
-                  { value: 'AB+', label: 'AB+' }, { value: 'AB-', label: 'AB-' },
-                  { value: 'O+', label: 'O+' }, { value: 'O-', label: 'O-' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="address" label="Address">
-            <Input.TextArea rows={2} prefix={<MapPin size={16} />} placeholder="Enter address" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="city" label="City">
-                <Input placeholder="City" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="state" label="State">
-                <Input placeholder="State" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="pincode" label="PIN Code">
-                <Input placeholder="PIN Code" />
-              </Form.Item>
-            </Col>
-          </Row>
-        </>
-      ),
-    },
-    {
-      key: 'employment',
-      label: (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <Briefcase size={14} /> Employment
-        </span>
-      ),
-      children: (
-        <>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
-                <Input placeholder="e.g. EMP015" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="joinDate" label="Join Date" rules={[{ required: true }]}>
-                <DatePicker style={{ width: '100%' }} placeholder="Select date" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="department" label="Department" rules={[{ required: true }]}>
-                <Select placeholder="Select department" options={[
-                  { value: 'Engineering', label: 'Engineering' },
-                  { value: 'Marketing', label: 'Marketing' },
-                  { value: 'Finance', label: 'Finance' },
-                  { value: 'HR', label: 'HR' },
-                  { value: 'Sales', label: 'Sales' },
-                  { value: 'IT', label: 'IT' },
-                  { value: 'Operations', label: 'Operations' },
-                  { value: 'Legal', label: 'Legal' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="designation" label="Designation" rules={[{ required: true }]}>
-                <Select placeholder="Select designation" options={[
-                  { value: 'Software Engineer', label: 'Software Engineer' },
-                  { value: 'Senior Developer', label: 'Senior Developer' },
-                  { value: 'Team Lead', label: 'Team Lead' },
-                  { value: 'Engineering Manager', label: 'Engineering Manager' },
-                  { value: 'Marketing Executive', label: 'Marketing Executive' },
-                  { value: 'Financial Analyst', label: 'Financial Analyst' },
-                  { value: 'HR Executive', label: 'HR Executive' },
-                  { value: 'Sales Lead', label: 'Sales Lead' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="employmentType" label="Employment Type" rules={[{ required: true }]}>
-                <Select placeholder="Select type" options={[
-                  { value: 'Full-time', label: 'Full-time' },
-                  { value: 'Part-time', label: 'Part-time' },
-                  { value: 'Contract', label: 'Contract' },
-                  { value: 'Intern', label: 'Intern' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="reportingManager" label="Reporting Manager">
-                <Select placeholder="Select manager" options={[
-                  { value: 'Ananya Reddy', label: 'Ananya Reddy' },
-                  { value: 'Deepak Verma', label: 'Deepak Verma' },
-                  { value: 'Sneha Gupta', label: 'Sneha Gupta' },
-                  { value: 'Meera Nair', label: 'Meera Nair' },
-                  { value: 'Suresh Iyer', label: 'Suresh Iyer' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="workShift" label="Work Shift">
-                <Select placeholder="Select shift" options={[
-                  { value: 'General', label: 'General (9 AM - 6 PM)' },
-                  { value: 'Morning', label: 'Morning (6 AM - 2 PM)' },
-                  { value: 'Evening', label: 'Evening (2 PM - 10 PM)' },
-                  { value: 'Night', label: 'Night (10 PM - 6 AM)' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="status" label="Status" initialValue="Active">
-                <Select options={[
-                  { value: 'Active', label: 'Active' },
-                  { value: 'Inactive', label: 'Inactive' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </>
-      ),
-    },
-    {
-      key: 'bank',
-      label: (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <CreditCard size={14} /> Bank Details
-        </span>
-      ),
-      children: (
-        <>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="bankName" label="Bank Name">
-                <Input prefix={<Building2 size={16} />} placeholder="Enter bank name" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="bankAccountNo" label="Account Number">
-                <Input prefix={<CreditCard size={16} />} placeholder="Enter account number" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="ifscCode" label="IFSC Code">
-                <Input placeholder="Enter IFSC code" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="panNumber" label="PAN Number">
-                <Input placeholder="Enter PAN number" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="aadharNumber" label="Aadhaar Number">
-            <Input placeholder="Enter Aadhaar number" />
-          </Form.Item>
-          <Text type="secondary" style={{ fontSize: 13, display: 'block', marginTop: 8 }}>
-            Emergency Contact
-          </Text>
-          <div style={{ borderTop: '1px solid #f0f0f0', marginTop: 8, paddingTop: 16 }}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <Form.Item name="emergencyContactName" label="Name">
-                  <Input placeholder="Contact name" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="emergencyContactPhone" label="Phone">
-                  <Input placeholder="Contact phone" />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="emergencyContactRelation" label="Relation">
-                  <Select placeholder="Relation" options={[
-                    { value: 'Spouse', label: 'Spouse' },
-                    { value: 'Parent', label: 'Parent' },
-                    { value: 'Sibling', label: 'Sibling' },
-                    { value: 'Friend', label: 'Friend' },
-                    { value: 'Other', label: 'Other' },
-                  ]} />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-        </>
-      ),
-    },
-  ];
-
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Employee Directory</Title>
-          <Text type="secondary">Manage and view all employee information</Text>
-        </div>
-        <Space>
-          <Button icon={<Upload size={16} />}>Export</Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>
-            Add Employee
-          </Button>
-        </Space>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Employee Directory"
+        description="Manage and view all employee information"
+        actions={
+          <>
+            <Button variant="outline">
+              <Upload className="mr-2 h-4 w-4" /> Export
+            </Button>
+            <Button onClick={() => setDrawerOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Add Employee
+            </Button>
+          </>
+        }
+      />
 
-      {/* Stats Row */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {stats.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
+      <StatsGrid stats={stats} />
+
+      <Card>
+        <CardContent className="p-6">
+          {/* Filters */}
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative w-full sm:w-64">
+                <Input
+                  placeholder="Search employees..."
+                  value={searchText}
+                  onChange={e => setSearchText(e.target.value)}
+                  className="pl-9"
                 />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <User size={16} />
+                </span>
               </div>
-              <Text style={{ color: stat.color, fontSize: 12 }}>
-                <ArrowUpRight size={12} /> Updated today
-              </Text>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+              <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'IT', 'Operations', 'Legal'].map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="on_leave">On Leave</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger className="w-[130px]">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="full_time">Full Time</SelectItem>
+                  <SelectItem value="part_time">Part Time</SelectItem>
+                  <SelectItem value="contract">Contract</SelectItem>
+                  <SelectItem value="intern">Intern</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" size="sm">
+              <SlidersHorizontal className="mr-2 h-4 w-4" /> More Filters
+            </Button>
+          </div>
 
-      {/* Employee Table */}
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }} wrap>
-          <Space wrap>
-            <Input
-              placeholder="Search employees..."
-              prefix={<Search size={16} />}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              style={{ width: 260 }}
-            />
-            <Select
-              placeholder="Department"
-              allowClear
-              value={filterDepartment}
-              onChange={setFilterDepartment}
-              style={{ width: 150 }}
-              options={[
-                { value: 'Engineering', label: 'Engineering' },
-                { value: 'Marketing', label: 'Marketing' },
-                { value: 'Finance', label: 'Finance' },
-                { value: 'HR', label: 'HR' },
-                { value: 'Sales', label: 'Sales' },
-                { value: 'IT', label: 'IT' },
-                { value: 'Operations', label: 'Operations' },
-                { value: 'Legal', label: 'Legal' },
-              ]}
-            />
-            <Select
-              placeholder="Status"
-              allowClear
-              value={filterStatus}
-              onChange={setFilterStatus}
-              style={{ width: 130 }}
-              options={[
-                { value: 'Active', label: 'Active' },
-                { value: 'On Leave', label: 'On Leave' },
-                { value: 'Inactive', label: 'Inactive' },
-              ]}
-            />
-            <Select
-              placeholder="Type"
-              allowClear
-              value={filterType}
-              onChange={setFilterType}
-              style={{ width: 130 }}
-              options={[
-                { value: 'Full-time', label: 'Full-time' },
-                { value: 'Part-time', label: 'Part-time' },
-                { value: 'Contract', label: 'Contract' },
-                { value: 'Intern', label: 'Intern' },
-              ]}
-            />
-          </Space>
-          <Button icon={<SlidersHorizontal size={16} />}>More Filters</Button>
-        </Space>
-        <Table
-          dataSource={filteredEmployees}
-          columns={columns}
-          pagination={{
-            pageSize: 10,
-            showTotal: (total) => `Total ${total} employees`,
-            showSizeChanger: true,
-          }}
-        />
+          <DataTable
+            columns={columns}
+            data={filteredEmployees}
+            isLoading={isLoading}
+            pagination={paginationData ?? { page, limit, total: filteredEmployees.length, totalPages: Math.ceil(filteredEmployees.length / limit) }}
+            onPaginationChange={(newPage) => setPage(newPage)}
+          />
+        </CardContent>
       </Card>
 
       {/* Add Employee Drawer */}
-      <Drawer
-        title="Add New Employee"
-        width={720}
+      <FormSheet
         open={drawerOpen}
-        onClose={() => { setDrawerOpen(false); form.resetFields(); }}
-        extra={
-          <Space>
-            <Button onClick={() => { setDrawerOpen(false); form.resetFields(); }}>Cancel</Button>
-            <Button type="primary" onClick={handleDrawerSubmit}>Submit</Button>
-          </Space>
-        }
+        onOpenChange={setDrawerOpen}
+        title="Add New Employee"
+        description="Fill in all required information to add a new employee."
+        className="sm:max-w-2xl"
       >
-        <Form form={form} layout="vertical">
-          <Tabs items={tabItems} />
-        </Form>
-      </Drawer>
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="personal" className="gap-1.5">
+              <User size={14} /> Personal Info
+            </TabsTrigger>
+            <TabsTrigger value="employment" className="gap-1.5">
+              <Briefcase size={14} /> Employment
+            </TabsTrigger>
+            <TabsTrigger value="bank" className="gap-1.5">
+              <CreditCard size={14} /> Bank Details
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="personal" className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>First Name *</Label>
+                <Input placeholder="Enter first name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Last Name *</Label>
+                <Input placeholder="Enter last name" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Email *</Label>
+                <Input type="email" placeholder="Enter email" />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone *</Label>
+                <Input placeholder="Enter phone" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Date of Birth</Label>
+                <DatePicker onChange={() => {}} placeholder="Select date" />
+              </div>
+              <div className="space-y-2">
+                <Label>Gender</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Marital Status</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Single">Single</SelectItem>
+                    <SelectItem value="Married">Married</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Blood Group</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
+                  <SelectContent>
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                      <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Textarea rows={2} placeholder="Enter address" />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>City</Label>
+                <Input placeholder="City" />
+              </div>
+              <div className="space-y-2">
+                <Label>State</Label>
+                <Input placeholder="State" />
+              </div>
+              <div className="space-y-2">
+                <Label>PIN Code</Label>
+                <Input placeholder="PIN Code" />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="employment" className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Employee ID *</Label>
+                <Input placeholder="e.g. EMP015" />
+              </div>
+              <div className="space-y-2">
+                <Label>Join Date *</Label>
+                <DatePicker onChange={() => {}} placeholder="Select date" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Department *</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    {['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'IT', 'Operations', 'Legal'].map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Designation *</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select designation" /></SelectTrigger>
+                  <SelectContent>
+                    {['Software Engineer', 'Senior Developer', 'Team Lead', 'Engineering Manager', 'Marketing Executive', 'Financial Analyst', 'HR Executive', 'Sales Lead'].map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Employment Type *</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="full_time">Full Time</SelectItem>
+                    <SelectItem value="part_time">Part Time</SelectItem>
+                    <SelectItem value="contract">Contract</SelectItem>
+                    <SelectItem value="intern">Intern</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Reporting Manager</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select manager" /></SelectTrigger>
+                  <SelectContent>
+                    {['Ananya Reddy', 'Deepak Verma', 'Sneha Gupta', 'Meera Nair', 'Suresh Iyer'].map(m => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Work Shift</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Select shift" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="General">General (9 AM - 6 PM)</SelectItem>
+                    <SelectItem value="Morning">Morning (6 AM - 2 PM)</SelectItem>
+                    <SelectItem value="Evening">Evening (2 PM - 10 PM)</SelectItem>
+                    <SelectItem value="Night">Night (10 PM - 6 AM)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select defaultValue="active">
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="bank" className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Bank Name</Label>
+                <Input placeholder="Enter bank name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Account Number</Label>
+                <Input placeholder="Enter account number" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>IFSC Code</Label>
+                <Input placeholder="Enter IFSC code" />
+              </div>
+              <div className="space-y-2">
+                <Label>PAN Number</Label>
+                <Input placeholder="Enter PAN number" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Aadhaar Number</Label>
+              <Input placeholder="Enter Aadhaar number" />
+            </div>
+
+            <Separator className="my-4" />
+            <p className="text-sm font-medium text-muted-foreground">Emergency Contact</p>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input placeholder="Contact name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input placeholder="Contact phone" />
+              </div>
+              <div className="space-y-2">
+                <Label>Relation</Label>
+                <Select>
+                  <SelectTrigger><SelectValue placeholder="Relation" /></SelectTrigger>
+                  <SelectContent>
+                    {['Spouse', 'Parent', 'Sibling', 'Friend', 'Other'].map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setDrawerOpen(false)}>Cancel</Button>
+          <Button onClick={handleDrawerSubmit}>Submit</Button>
+        </div>
+      </FormSheet>
     </div>
   );
 };

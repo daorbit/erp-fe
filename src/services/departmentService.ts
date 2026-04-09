@@ -1,52 +1,25 @@
 import api from './api';
 
-export interface Department {
-  id: string;
-  name: string;
-  code: string;
-  description: string;
-  headOfDepartment: string;
-  headOfDepartmentId: string;
-  parentDepartment: string;
-  parentDepartmentId: string;
-  employeeCount: number;
-  status: 'Active' | 'Inactive';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DepartmentListParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-}
-
-export interface DepartmentListResponse {
-  data: Department[];
-  total: number;
-  page: number;
-  limit: number;
-}
+const DEPARTMENTS_URL = '/departments';
 
 const departmentService = {
-  getAll: (params?: DepartmentListParams) =>
-    api.get<DepartmentListResponse>('/departments', params as Record<string, string>),
+  getAll: (params?: Record<string, string>) =>
+    api.get<any>(DEPARTMENTS_URL, params),
 
   getById: (id: string) =>
-    api.get<Department>(`/departments/${id}`),
+    api.get<any>(`${DEPARTMENTS_URL}/${id}`),
 
-  create: (data: Partial<Department>) =>
-    api.post<Department>('/departments', data),
+  create: (data: any) =>
+    api.post<any>(DEPARTMENTS_URL, data),
 
-  update: (id: string, data: Partial<Department>) =>
-    api.put<Department>(`/departments/${id}`, data),
+  update: (id: string, data: any) =>
+    api.put<any>(`${DEPARTMENTS_URL}/${id}`, data),
 
   delete: (id: string) =>
-    api.delete<void>(`/departments/${id}`),
+    api.delete<void>(`${DEPARTMENTS_URL}/${id}`),
 
   getEmployees: (id: string) =>
-    api.get<unknown>(`/departments/${id}/employees`),
+    api.get<any>(`${DEPARTMENTS_URL}/${id}/employees`),
 };
 
 export default departmentService;

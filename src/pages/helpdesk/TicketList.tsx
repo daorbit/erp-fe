@@ -1,16 +1,30 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useTicketList, useCreateTicket, useAddTicketComment, useUpdateTicketStatus } from '@/hooks/queries/useHelpdesk';
 import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Drawer, Form,
-  Select, Row, Col, Statistic, Upload, Dropdown, Tooltip, Rate, Divider, Badge,
-} from 'antd';
-import {
-  Plus, Search, Eye, MoreHorizontal, SlidersHorizontal,
+  Plus, Eye, MoreHorizontal,
   MessageSquare, Clock, CheckCircle2, AlertCircle, Send, Paperclip,
-  Timer, TrendingDown,
+  Timer, Star,
 } from 'lucide-react';
-
-const { Title, Text, Paragraph } = Typography;
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormSheet from '@/components/shared/FormSheet';
+import FileUploadZone from '@/components/shared/FileUploadZone';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
+import { formatDate, getInitials } from '@/lib/formatters';
 
 interface Comment {
   id: string;
@@ -26,10 +40,10 @@ interface Ticket {
   subject: string;
   description: string;
   category: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   employee: string;
   assignedTo: string | null;
-  status: 'Open' | 'In Progress' | 'Waiting on User' | 'Resolved' | 'Closed';
+  status: 'open' | 'in_progress' | 'on_hold' | 'resolved' | 'closed' | 'reopened';
   created: string;
   lastUpdated: string;
   resolution: string | null;
@@ -38,436 +52,414 @@ interface Ticket {
 }
 
 const tickets: Ticket[] = [
-  {
-    key: '1', ticketNo: 'TKT-2026-001', subject: 'Laptop not working - Screen flickering', description: 'My MacBook Pro screen has been flickering intermittently since yesterday. It happens especially when connected to the external monitor. I have tried restarting and resetting NVRAM but the issue persists.', category: 'IT Hardware', priority: 'High', employee: 'Rahul Sharma', assignedTo: 'Vikram Joshi', status: 'In Progress', created: '2026-04-07', lastUpdated: '2026-04-08', resolution: null, satisfaction: null,
-    comments: [
-      { id: '1', author: 'Rahul Sharma', content: 'Screen started flickering since yesterday morning. Attached a video of the issue.', date: '2026-04-07 09:30', isStaff: false },
-      { id: '2', author: 'Vikram Joshi', content: 'Thanks Rahul. I have checked the logs. It seems like a display driver issue. Can you try updating to the latest macOS version? I will also arrange a replacement monitor for testing.', date: '2026-04-07 11:15', isStaff: true },
-      { id: '3', author: 'Rahul Sharma', content: 'Updated the macOS but issue still persists with external monitor.', date: '2026-04-08 10:00', isStaff: false },
-    ],
-  },
-  {
-    key: '2', ticketNo: 'TKT-2026-002', subject: 'VPN access required for WFH', description: 'I need VPN access configured for work from home. I recently got approval for 3 days WFH and need the VPN client set up on my laptop.', category: 'IT Access', priority: 'Medium', employee: 'Amit Patel', assignedTo: 'Vikram Joshi', status: 'Resolved', created: '2026-04-05', lastUpdated: '2026-04-06', resolution: 'VPN client installed and configured. Credentials shared via secure channel.', satisfaction: 5,
-    comments: [
-      { id: '1', author: 'Amit Patel', content: 'Need VPN access for WFH starting next week. Manager approval attached.', date: '2026-04-05 14:00', isStaff: false },
-      { id: '2', author: 'Vikram Joshi', content: 'VPN access has been configured. Please check your email for setup instructions and credentials.', date: '2026-04-06 10:30', isStaff: true },
-    ],
-  },
-  {
-    key: '3', ticketNo: 'TKT-2026-003', subject: 'Leave balance discrepancy - Casual Leave', description: 'My casual leave balance shows 5 days but I believe it should be 7 days. I have only taken 3 casual leaves this year but the system shows 5 taken.', category: 'HR Query', priority: 'Medium', employee: 'Priya Singh', assignedTo: 'Sneha Gupta', status: 'Waiting on User', created: '2026-04-04', lastUpdated: '2026-04-07', resolution: null, satisfaction: null,
-    comments: [
-      { id: '1', author: 'Priya Singh', content: 'Please check my CL balance. It shows 5 remaining but should be 7.', date: '2026-04-04 11:00', isStaff: false },
-      { id: '2', author: 'Sneha Gupta', content: 'Hi Priya, I checked the records. You had 2 CLs carried forward from a late cancellation in March. Can you confirm if you applied for leave on March 12-13?', date: '2026-04-05 09:00', isStaff: true },
-    ],
-  },
-  {
-    key: '4', ticketNo: 'TKT-2026-004', subject: 'AC not working in 3rd floor conference room', description: 'The air conditioning in the 3rd floor conference room (Room 301) has not been working since Monday. Multiple meetings are scheduled there this week.', category: 'Facilities', priority: 'High', employee: 'Ananya Reddy', assignedTo: null, status: 'Open', created: '2026-04-07', lastUpdated: '2026-04-07', resolution: null, satisfaction: null,
-    comments: [
-      { id: '1', author: 'Ananya Reddy', content: 'AC has been down since Monday morning. Room temperature is very uncomfortable for meetings.', date: '2026-04-07 08:45', isStaff: false },
-    ],
-  },
-  {
-    key: '5', ticketNo: 'TKT-2026-005', subject: 'Salary slip download not working', description: 'Unable to download salary slip for March 2026 from the HRMS portal. Getting a 404 error when clicking the download button.', category: 'HR Query', priority: 'Medium', employee: 'Vikram Joshi', assignedTo: 'Sneha Gupta', status: 'Resolved', created: '2026-04-03', lastUpdated: '2026-04-04', resolution: 'The payroll module had a temporary issue. Fixed and salary slips are now downloadable.', satisfaction: 4,
-    comments: [
-      { id: '1', author: 'Vikram Joshi', content: 'Getting 404 error when trying to download March salary slip. Screenshot attached.', date: '2026-04-03 16:00', isStaff: false },
-      { id: '2', author: 'Sneha Gupta', content: 'This was a known issue with the payroll system update. It has been fixed now. Please try again.', date: '2026-04-04 10:00', isStaff: true },
-    ],
-  },
-  {
-    key: '6', ticketNo: 'TKT-2026-006', subject: 'Request for standing desk', description: 'I would like to request a standing desk for my workstation. I have a doctor\'s recommendation due to back issues.', category: 'Facilities', priority: 'Low', employee: 'Amit Patel', assignedTo: null, status: 'Open', created: '2026-04-06', lastUpdated: '2026-04-06', resolution: null, satisfaction: null,
-    comments: [
-      { id: '1', author: 'Amit Patel', content: 'Requesting a standing desk. Doctor recommendation attached. Current seat is causing back pain.', date: '2026-04-06 12:00', isStaff: false },
-    ],
-  },
-  {
-    key: '7', ticketNo: 'TKT-2026-007', subject: 'Email not syncing on mobile', description: 'Company email stopped syncing on my iPhone since the recent password change. I have tried reconfiguring but getting authentication errors.', category: 'IT Access', priority: 'Medium', employee: 'Sneha Gupta', assignedTo: 'Vikram Joshi', status: 'In Progress', created: '2026-04-08', lastUpdated: '2026-04-08', resolution: null, satisfaction: null,
-    comments: [
-      { id: '1', author: 'Sneha Gupta', content: 'Email stopped working on phone after password reset yesterday.', date: '2026-04-08 08:00', isStaff: false },
-      { id: '2', author: 'Vikram Joshi', content: 'This usually happens when the app password is not updated. I will send you the steps to generate a new app-specific password.', date: '2026-04-08 09:30', isStaff: true },
-    ],
-  },
-  {
-    key: '8', ticketNo: 'TKT-2026-008', subject: 'Reimbursement for online course - Coursera', description: 'Requesting reimbursement for Coursera subscription used for AWS Cloud Practitioner course. Rs 4,999 paid. Manager has approved the learning plan.', category: 'HR Query', priority: 'Low', employee: 'Rahul Sharma', assignedTo: 'Sneha Gupta', status: 'Closed', created: '2026-03-25', lastUpdated: '2026-03-30', resolution: 'Reimbursement approved and processed. Amount will be credited in April payroll.', satisfaction: 5,
-    comments: [
-      { id: '1', author: 'Rahul Sharma', content: 'Requesting reimbursement for Coursera subscription. Invoice and manager approval attached.', date: '2026-03-25 10:00', isStaff: false },
-      { id: '2', author: 'Sneha Gupta', content: 'Approved. The amount of Rs 4,999 will be included in your April salary.', date: '2026-03-30 14:00', isStaff: true },
-    ],
-  },
+  { key: '1', ticketNo: 'TKT-2026-001', subject: 'Laptop not working - Screen flickering', description: 'My MacBook Pro screen has been flickering intermittently since yesterday. It happens especially when connected to the external monitor.', category: 'it', priority: 'high', employee: 'Rahul Sharma', assignedTo: 'Vikram Joshi', status: 'in_progress', created: '2026-04-07', lastUpdated: '2026-04-08', resolution: null, satisfaction: null, comments: [
+    { id: '1', author: 'Rahul Sharma', content: 'Screen started flickering since yesterday morning. Attached a video of the issue.', date: '2026-04-07 09:30', isStaff: false },
+    { id: '2', author: 'Vikram Joshi', content: 'Thanks Rahul. It seems like a display driver issue. Can you try updating to the latest macOS version?', date: '2026-04-07 11:15', isStaff: true },
+    { id: '3', author: 'Rahul Sharma', content: 'Updated the macOS but issue still persists with external monitor.', date: '2026-04-08 10:00', isStaff: false },
+  ]},
+  { key: '2', ticketNo: 'TKT-2026-002', subject: 'VPN access required for WFH', description: 'I need VPN access configured for work from home.', category: 'it', priority: 'medium', employee: 'Amit Patel', assignedTo: 'Vikram Joshi', status: 'resolved', created: '2026-04-05', lastUpdated: '2026-04-06', resolution: 'VPN client installed and configured. Credentials shared via secure channel.', satisfaction: 5, comments: [
+    { id: '1', author: 'Amit Patel', content: 'Need VPN access for WFH starting next week.', date: '2026-04-05 14:00', isStaff: false },
+    { id: '2', author: 'Vikram Joshi', content: 'VPN access has been configured. Please check your email for setup instructions.', date: '2026-04-06 10:30', isStaff: true },
+  ]},
+  { key: '3', ticketNo: 'TKT-2026-003', subject: 'Leave balance discrepancy - Casual Leave', description: 'My casual leave balance shows 5 days but I believe it should be 7 days.', category: 'hr', priority: 'medium', employee: 'Priya Singh', assignedTo: 'Sneha Gupta', status: 'on_hold', created: '2026-04-04', lastUpdated: '2026-04-07', resolution: null, satisfaction: null, comments: [
+    { id: '1', author: 'Priya Singh', content: 'Please check my CL balance. It shows 5 remaining but should be 7.', date: '2026-04-04 11:00', isStaff: false },
+    { id: '2', author: 'Sneha Gupta', content: 'Hi Priya, I checked the records. Can you confirm if you applied for leave on March 12-13?', date: '2026-04-05 09:00', isStaff: true },
+  ]},
+  { key: '4', ticketNo: 'TKT-2026-004', subject: 'AC not working in 3rd floor conference room', description: 'The air conditioning in Room 301 has not been working since Monday.', category: 'facilities', priority: 'high', employee: 'Ananya Reddy', assignedTo: null, status: 'open', created: '2026-04-07', lastUpdated: '2026-04-07', resolution: null, satisfaction: null, comments: [
+    { id: '1', author: 'Ananya Reddy', content: 'AC has been down since Monday morning.', date: '2026-04-07 08:45', isStaff: false },
+  ]},
+  { key: '5', ticketNo: 'TKT-2026-005', subject: 'Salary slip download not working', description: 'Getting a 404 error when clicking the download button.', category: 'hr', priority: 'medium', employee: 'Vikram Joshi', assignedTo: 'Sneha Gupta', status: 'resolved', created: '2026-04-03', lastUpdated: '2026-04-04', resolution: 'The payroll module had a temporary issue. Fixed and salary slips are now downloadable.', satisfaction: 4, comments: [
+    { id: '1', author: 'Vikram Joshi', content: 'Getting 404 error when trying to download March salary slip.', date: '2026-04-03 16:00', isStaff: false },
+    { id: '2', author: 'Sneha Gupta', content: 'This was a known issue with the payroll system update. It has been fixed now.', date: '2026-04-04 10:00', isStaff: true },
+  ]},
+  { key: '6', ticketNo: 'TKT-2026-006', subject: 'Request for standing desk', description: 'I would like to request a standing desk. Doctor recommendation attached.', category: 'facilities', priority: 'low', employee: 'Amit Patel', assignedTo: null, status: 'open', created: '2026-04-06', lastUpdated: '2026-04-06', resolution: null, satisfaction: null, comments: [
+    { id: '1', author: 'Amit Patel', content: 'Requesting a standing desk due to back pain. Doctor recommendation attached.', date: '2026-04-06 12:00', isStaff: false },
+  ]},
+  { key: '7', ticketNo: 'TKT-2026-007', subject: 'Email not syncing on mobile', description: 'Company email stopped syncing after password change.', category: 'it', priority: 'medium', employee: 'Sneha Gupta', assignedTo: 'Vikram Joshi', status: 'in_progress', created: '2026-04-08', lastUpdated: '2026-04-08', resolution: null, satisfaction: null, comments: [
+    { id: '1', author: 'Sneha Gupta', content: 'Email stopped working on phone after password reset yesterday.', date: '2026-04-08 08:00', isStaff: false },
+    { id: '2', author: 'Vikram Joshi', content: 'I will send you the steps to generate a new app-specific password.', date: '2026-04-08 09:30', isStaff: true },
+  ]},
+  { key: '8', ticketNo: 'TKT-2026-008', subject: 'Reimbursement for online course - Coursera', description: 'Requesting reimbursement for Coursera subscription. Rs 4,999 paid.', category: 'hr', priority: 'low', employee: 'Rahul Sharma', assignedTo: 'Sneha Gupta', status: 'closed', created: '2026-03-25', lastUpdated: '2026-03-30', resolution: 'Reimbursement approved. Amount will be credited in April payroll.', satisfaction: 5, comments: [
+    { id: '1', author: 'Rahul Sharma', content: 'Requesting reimbursement for Coursera subscription. Invoice attached.', date: '2026-03-25 10:00', isStaff: false },
+    { id: '2', author: 'Sneha Gupta', content: 'Approved. Rs 4,999 will be included in your April salary.', date: '2026-03-30 14:00', isStaff: true },
+  ]},
 ];
 
-const priorityColors: Record<string, string> = {
-  Low: 'default',
-  Medium: 'blue',
-  High: 'orange',
-  Critical: 'red',
+const priorityVariant: Record<string, string> = {
+  low: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  high: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
+  critical: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
 };
 
-const statusColors: Record<string, string> = {
-  Open: 'red',
-  'In Progress': 'blue',
-  'Waiting on User': 'orange',
-  Resolved: 'green',
-  Closed: 'default',
+const categoryVariant: Record<string, string> = {
+  it: 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300',
+  hr: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+  finance: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  admin: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+  facilities: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+  other: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300',
 };
 
-const categoryColors: Record<string, string> = {
-  'IT Hardware': 'volcano',
-  'IT Access': 'blue',
-  'HR Query': 'purple',
-  Facilities: 'green',
-};
-
-const TicketList: React.FC = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+export default function TicketList() {
+  const [createOpen, setCreateOpen] = useState(false);
   const [detailTicket, setDetailTicket] = useState<Ticket | null>(null);
   const [searchText, setSearchText] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [newComment, setNewComment] = useState('');
-  const [form] = Form.useForm();
 
-  const openCount = tickets.filter(t => t.status === 'Open').length;
-  const inProgressCount = tickets.filter(t => t.status === 'In Progress').length;
-  const resolvedTodayCount = tickets.filter(t => ['Resolved', 'Closed'].includes(t.status) && t.lastUpdated >= '2026-04-08').length;
+  // API integration
+  const { data: ticketData, isLoading } = useTicketList();
+  const createMutation = useCreateTicket();
+  const addCommentMutation = useAddTicketComment();
+  const updateStatusMutation = useUpdateTicketStatus();
+  const allTickets: Ticket[] = ticketData?.data ?? tickets;
 
-  const filteredTickets = tickets.filter(t => {
-    if (searchText && !t.subject.toLowerCase().includes(searchText.toLowerCase()) && !t.ticketNo.toLowerCase().includes(searchText.toLowerCase()) && !t.employee.toLowerCase().includes(searchText.toLowerCase())) return false;
-    if (categoryFilter && t.category !== categoryFilter) return false;
-    if (priorityFilter && t.priority !== priorityFilter) return false;
-    if (statusFilter && t.status !== statusFilter) return false;
+  const openCount = allTickets.filter(t => t.status === 'open').length;
+  const inProgressCount = allTickets.filter(t => t.status === 'in_progress').length;
+  const resolvedTodayCount = allTickets.filter(t => ['resolved', 'closed'].includes(t.status) && t.lastUpdated >= '2026-04-08').length;
+
+  const filteredTickets = useMemo(() => allTickets.filter(t => {
+    if (searchText && !t.subject.toLowerCase().includes(searchText.toLowerCase()) && !t.ticketNo.toLowerCase().includes(searchText.toLowerCase())) return false;
+    if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
+    if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
+    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
     return true;
-  });
+  }), [allTickets, searchText, categoryFilter, priorityFilter, statusFilter]);
 
-  const columns = [
+  const columns: ColumnDef<Ticket>[] = [
     {
-      title: 'Ticket #', dataIndex: 'ticketNo', key: 'ticketNo',
-      render: (t: string) => <Text strong style={{ color: '#1a56db' }}>{t}</Text>,
+      accessorKey: 'ticketNo',
+      header: 'Ticket #',
+      cell: ({ row }) => <span className="font-semibold text-primary">{row.getValue('ticketNo')}</span>,
     },
     {
-      title: 'Subject', dataIndex: 'subject', key: 'subject',
-      render: (text: string) => <Text strong>{text}</Text>,
-      ellipsis: true,
+      accessorKey: 'subject',
+      header: 'Subject',
+      cell: ({ row }) => <span className="font-medium truncate max-w-[200px] block">{row.getValue('subject')}</span>,
     },
     {
-      title: 'Category', dataIndex: 'category', key: 'category',
-      render: (cat: string) => <Tag color={categoryColors[cat] || 'default'}>{cat}</Tag>,
+      accessorKey: 'category',
+      header: 'Category',
+      cell: ({ row }) => {
+        const cat = row.getValue('category') as string;
+        return <Badge variant="outline" className={categoryVariant[cat]}>{cat}</Badge>;
+      },
     },
     {
-      title: 'Priority', dataIndex: 'priority', key: 'priority',
-      render: (p: string) => <Tag color={priorityColors[p]}>{p}</Tag>,
+      accessorKey: 'priority',
+      header: 'Priority',
+      cell: ({ row }) => {
+        const p = row.getValue('priority') as string;
+        return <Badge variant="outline" className={priorityVariant[p]}>{p}</Badge>;
+      },
     },
     {
-      title: 'Employee', dataIndex: 'employee', key: 'employee',
-      render: (emp: string) => (
-        <Space>
-          <Avatar size="small" style={{ backgroundColor: '#1a56db' }}>{emp[0]}</Avatar>
-          <Text>{emp}</Text>
-        </Space>
-      ),
+      accessorKey: 'employee',
+      header: 'Employee',
+      cell: ({ row }) => {
+        const name = row.getValue('employee') as string;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-7 w-7"><AvatarFallback className="bg-primary text-primary-foreground text-xs">{getInitials(name)}</AvatarFallback></Avatar>
+            <span className="text-sm">{name}</span>
+          </div>
+        );
+      },
     },
     {
-      title: 'Assigned To', dataIndex: 'assignedTo', key: 'assignedTo',
-      render: (name: string | null) => name ? (
-        <Space>
-          <Avatar size="small" style={{ backgroundColor: '#059669' }}>{name[0]}</Avatar>
-          <Text>{name}</Text>
-        </Space>
-      ) : <Tag>Unassigned</Tag>,
+      accessorKey: 'assignedTo',
+      header: 'Assigned To',
+      cell: ({ row }) => {
+        const name = row.getValue('assignedTo') as string | null;
+        if (!name) return <Badge variant="outline" className="text-muted-foreground">Unassigned</Badge>;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-7 w-7"><AvatarFallback className="bg-green-600 text-white text-xs">{getInitials(name)}</AvatarFallback></Avatar>
+            <span className="text-sm">{name}</span>
+          </div>
+        );
+      },
     },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (s: string) => <Tag color={statusColors[s]}>{s}</Tag>,
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
     },
-    { title: 'Created', dataIndex: 'created', key: 'created' },
-    { title: 'Updated', dataIndex: 'lastUpdated', key: 'lastUpdated' },
     {
-      title: 'Actions', key: 'actions',
-      render: (_: any, record: Ticket) => (
-        <Tooltip title="View Details">
-          <Button type="text" icon={<Eye size={16} />} onClick={() => setDetailTicket(record)} />
-        </Tooltip>
+      accessorKey: 'created',
+      header: 'Created',
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatDate(row.getValue('created'))}</span>,
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setDetailTicket(row.original)}><Eye className="mr-2 h-4 w-4" /> View Details</DropdownMenuItem>
+            <DropdownMenuItem><MessageSquare className="mr-2 h-4 w-4" /> Add Comment</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
-  const renderTicketDetail = () => {
-    if (!detailTicket) return null;
-    return (
-      <Drawer
-        title={
-          <Space>
-            <Text strong>{detailTicket.ticketNo}</Text>
-            <Tag color={statusColors[detailTicket.status]}>{detailTicket.status}</Tag>
-            <Tag color={priorityColors[detailTicket.priority]}>{detailTicket.priority}</Tag>
-          </Space>
-        }
-        open={!!detailTicket}
-        onClose={() => { setDetailTicket(null); setNewComment(''); }}
-        width={600}
-      >
-        <div style={{ marginBottom: 24 }}>
-          <Title level={5} style={{ marginBottom: 8 }}>{detailTicket.subject}</Title>
-          <Space split={<Divider type="vertical" />} wrap>
-            <Space size={4}>
-              <Avatar size="small" style={{ backgroundColor: '#1a56db' }}>{detailTicket.employee[0]}</Avatar>
-              <Text type="secondary">{detailTicket.employee}</Text>
-            </Space>
-            <Text type="secondary">{detailTicket.category}</Text>
-            <Text type="secondary">Created {detailTicket.created}</Text>
-          </Space>
-        </div>
-
-        <Card bordered={false} style={{ borderRadius: 12, background: '#f8fafc', marginBottom: 16 }}>
-          <Paragraph>{detailTicket.description}</Paragraph>
-        </Card>
-
-        {detailTicket.assignedTo && (
-          <div style={{ marginBottom: 16 }}>
-            <Text type="secondary">Assigned to: </Text>
-            <Space size={4}>
-              <Avatar size="small" style={{ backgroundColor: '#059669' }}>{detailTicket.assignedTo[0]}</Avatar>
-              <Text strong>{detailTicket.assignedTo}</Text>
-            </Space>
-          </div>
-        )}
-
-        {detailTicket.resolution && (
-          <Card bordered={false} style={{ borderRadius: 12, background: '#f0fdf4', marginBottom: 16, border: '1px solid #bbf7d0' }}>
-            <Text strong style={{ color: '#059669' }}>Resolution</Text>
-            <Paragraph style={{ marginBottom: 0, marginTop: 4 }}>{detailTicket.resolution}</Paragraph>
-          </Card>
-        )}
-
-        {detailTicket.satisfaction !== null && (
-          <div style={{ marginBottom: 16 }}>
-            <Text type="secondary">Satisfaction Rating: </Text>
-            <Rate disabled defaultValue={detailTicket.satisfaction} style={{ fontSize: 16 }} />
-          </div>
-        )}
-
-        <Divider>Comments</Divider>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-          {detailTicket.comments.map(comment => (
-            <div
-              key={comment.id}
-              style={{
-                padding: 12, borderRadius: 12,
-                background: comment.isStaff ? '#eff6ff' : '#f8fafc',
-                borderLeft: comment.isStaff ? '3px solid #1a56db' : '3px solid #e5e7eb',
-              }}
-            >
-              <Space style={{ marginBottom: 4 }}>
-                <Avatar size="small" style={{ backgroundColor: comment.isStaff ? '#1a56db' : '#6b7280' }}>
-                  {comment.author[0]}
-                </Avatar>
-                <Text strong style={{ fontSize: 13 }}>{comment.author}</Text>
-                {comment.isStaff && <Tag color="blue" style={{ fontSize: 10 }}>Staff</Tag>}
-                <Text type="secondary" style={{ fontSize: 11 }}>{comment.date}</Text>
-              </Space>
-              <Paragraph style={{ marginBottom: 0, marginLeft: 32, fontSize: 13 }}>{comment.content}</Paragraph>
-            </div>
-          ))}
-        </div>
-
-        {!['Closed', 'Resolved'].includes(detailTicket.status) && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Input.TextArea
-              placeholder="Write a comment..."
-              value={newComment}
-              onChange={e => setNewComment(e.target.value)}
-              rows={2}
-              style={{ flex: 1 }}
-            />
-            <Button type="primary" icon={<Send size={14} />} style={{ alignSelf: 'flex-end' }}>
-              Send
-            </Button>
-          </div>
-        )}
-
-        {!['Closed', 'Resolved'].includes(detailTicket.status) && (
-          <>
-            <Divider />
-            <Space>
-              <Select placeholder="Change Status" style={{ width: 180 }} options={[
-                { value: 'Open', label: 'Open' },
-                { value: 'In Progress', label: 'In Progress' },
-                { value: 'Waiting on User', label: 'Waiting on User' },
-                { value: 'Resolved', label: 'Resolved' },
-                { value: 'Closed', label: 'Closed' },
-              ]} />
-              <Select placeholder="Assign To" style={{ width: 180 }} options={[
-                { value: 'Vikram Joshi', label: 'Vikram Joshi' },
-                { value: 'Sneha Gupta', label: 'Sneha Gupta' },
-                { value: 'Priya Singh', label: 'Priya Singh' },
-              ]} />
-            </Space>
-          </>
-        )}
-      </Drawer>
-    );
-  };
-
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Helpdesk</Title>
-          <Text type="secondary">Manage employee support tickets and requests</Text>
-        </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsDrawerOpen(true)}>
-          Create Ticket
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Helpdesk"
+        description="Manage employee support tickets and requests"
+        actions={<Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" /> Create Ticket</Button>}
+      />
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {[
-          { title: 'Open Tickets', value: openCount, icon: <AlertCircle size={20} />, color: '#dc2626' },
-          { title: 'In Progress', value: inProgressCount, icon: <Clock size={20} />, color: '#d97706' },
-          { title: 'Resolved Today', value: resolvedTodayCount, icon: <CheckCircle2 size={20} />, color: '#059669' },
-          { title: 'Avg Resolution Time', value: '1.8', suffix: 'days', icon: <Timer size={20} />, color: '#1a56db' },
-        ].map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  suffix={(stat as any).suffix}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <StatsGrid stats={[
+        { title: 'Open Tickets', value: openCount, icon: <AlertCircle className="h-5 w-5" />, color: 'text-red-600', bgColor: 'bg-red-50' },
+        { title: 'In Progress', value: inProgressCount, icon: <Clock className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+        { title: 'Resolved Today', value: resolvedTodayCount, icon: <CheckCircle2 className="h-5 w-5" />, color: 'text-green-600', bgColor: 'bg-green-50' },
+        { title: 'Avg Resolution', value: '1.8 days', icon: <Timer className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+      ]} />
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }} wrap>
-          <Space wrap>
-            <Input
-              placeholder="Search tickets..."
-              prefix={<Search size={16} />}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              style={{ width: 280 }}
-            />
-            <Select
-              placeholder="Category"
-              allowClear
-              style={{ width: 140 }}
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              options={[
-                { value: 'IT Hardware', label: 'IT Hardware' },
-                { value: 'IT Access', label: 'IT Access' },
-                { value: 'HR Query', label: 'HR Query' },
-                { value: 'Facilities', label: 'Facilities' },
-              ]}
-            />
-            <Select
-              placeholder="Priority"
-              allowClear
-              style={{ width: 120 }}
-              value={priorityFilter}
-              onChange={setPriorityFilter}
-              options={[
-                { value: 'Low', label: 'Low' },
-                { value: 'Medium', label: 'Medium' },
-                { value: 'High', label: 'High' },
-                { value: 'Critical', label: 'Critical' },
-              ]}
-            />
-            <Select
-              placeholder="Status"
-              allowClear
-              style={{ width: 160 }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { value: 'Open', label: 'Open' },
-                { value: 'In Progress', label: 'In Progress' },
-                { value: 'Waiting on User', label: 'Waiting on User' },
-                { value: 'Resolved', label: 'Resolved' },
-                { value: 'Closed', label: 'Closed' },
-              ]}
-            />
-          </Space>
-        </Space>
-
-        <Table
-          dataSource={filteredTickets}
-          columns={columns}
-          pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} tickets` }}
-          scroll={{ x: 1300 }}
-        />
-      </Card>
-
-      <Drawer
-        title="Create New Ticket"
-        open={isDrawerOpen}
-        onClose={() => { setIsDrawerOpen(false); form.resetFields(); }}
-        width={560}
-        extra={
-          <Space>
-            <Button onClick={() => { setIsDrawerOpen(false); form.resetFields(); }}>Cancel</Button>
-            <Button type="primary" onClick={() => { form.validateFields().then(() => { setIsDrawerOpen(false); form.resetFields(); }); }}>
-              Submit Ticket
-            </Button>
-          </Space>
+      <DataTable
+        columns={columns}
+        data={filteredTickets}
+        searchKey="subject"
+        searchPlaceholder="Search tickets..."
+        onSearchChange={setSearchText}
+        filterContent={
+          <div className="flex flex-wrap gap-2">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Category" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="it">IT</SelectItem>
+                <SelectItem value="hr">HR</SelectItem>
+                <SelectItem value="finance">Finance</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="facilities">Facilities</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-[120px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+                <SelectItem value="reopened">Reopened</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         }
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item name="subject" label="Subject" rules={[{ required: true, message: 'Please enter subject' }]}>
-            <Input placeholder="Brief summary of the issue" />
-          </Form.Item>
-          <Form.Item name="description" label="Description" rules={[{ required: true, message: 'Please describe the issue' }]}>
-            <Input.TextArea rows={5} placeholder="Describe your issue in detail. Include steps to reproduce if applicable." />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-                <Select placeholder="Select category" options={[
-                  { value: 'IT Hardware', label: 'IT Hardware' },
-                  { value: 'IT Access', label: 'IT Access' },
-                  { value: 'HR Query', label: 'HR Query' },
-                  { value: 'Facilities', label: 'Facilities' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
-                <Select placeholder="Select priority" options={[
-                  { value: 'Low', label: 'Low' },
-                  { value: 'Medium', label: 'Medium' },
-                  { value: 'High', label: 'High' },
-                  { value: 'Critical', label: 'Critical' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="attachments" label="Attachments">
-            <Upload.Dragger maxCount={3} beforeUpload={() => false} multiple>
-              <p style={{ marginBottom: 4 }}><Paperclip size={24} style={{ color: '#1a56db' }} /></p>
-              <p><Text strong>Attach files</Text></p>
-              <p><Text type="secondary" style={{ fontSize: 12 }}>Screenshots, logs, or other relevant files (Max 3 files)</Text></p>
-            </Upload.Dragger>
-          </Form.Item>
-        </Form>
-      </Drawer>
+      />
 
-      {renderTicketDetail()}
+      {/* Create Ticket Sheet */}
+      <FormSheet open={createOpen} onOpenChange={setCreateOpen} title="Create New Ticket" description="Submit a support request">
+        <div className="space-y-4">
+          <div>
+            <Label>Subject</Label>
+            <Input placeholder="Brief summary of the issue" className="mt-1.5" />
+          </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea rows={5} placeholder="Describe your issue in detail..." className="mt-1.5" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label>Category</Label>
+              <Select>
+                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="it">IT</SelectItem>
+                  <SelectItem value="hr">HR</SelectItem>
+                  <SelectItem value="finance">Finance</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="facilities">Facilities</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Priority</Label>
+              <Select>
+                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select priority" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>Attachments</Label>
+            <div className="mt-1.5">
+              <FileUploadZone label="Attach files" description="Screenshots, logs, or relevant files (Max 3)" multiple onFilesSelected={() => {}} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={() => {
+              createMutation.mutate({}, {
+                onSuccess: () => { setCreateOpen(false); toast.success('Ticket created'); },
+                onError: (err: any) => toast.error(err?.message || 'Failed to create ticket'),
+              });
+            }}>Submit Ticket</Button>
+          </div>
+        </div>
+      </FormSheet>
+
+      {/* Ticket Detail Sheet */}
+      <Sheet open={!!detailTicket} onOpenChange={(open) => { if (!open) { setDetailTicket(null); setNewComment(''); } }}>
+        <SheetContent className="w-full sm:max-w-[600px] overflow-y-auto">
+          {detailTicket && (
+            <>
+              <SheetHeader>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <SheetTitle>{detailTicket.ticketNo}</SheetTitle>
+                  <StatusBadge status={detailTicket.status} />
+                  <Badge variant="outline" className={priorityVariant[detailTicket.priority]}>{detailTicket.priority}</Badge>
+                </div>
+              </SheetHeader>
+
+              <div className="mt-4 space-y-4">
+                <h3 className="text-lg font-semibold">{detailTicket.subject}</h3>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <Avatar className="h-5 w-5"><AvatarFallback className="bg-primary text-primary-foreground text-[10px]">{getInitials(detailTicket.employee)}</AvatarFallback></Avatar>
+                    {detailTicket.employee}
+                  </div>
+                  <span>{detailTicket.category}</span>
+                  <span>Created {formatDate(detailTicket.created)}</span>
+                </div>
+
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4 text-sm">{detailTicket.description}</CardContent>
+                </Card>
+
+                {detailTicket.assignedTo && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Assigned to:</span>
+                    <Avatar className="h-5 w-5"><AvatarFallback className="bg-green-600 text-white text-[10px]">{getInitials(detailTicket.assignedTo)}</AvatarFallback></Avatar>
+                    <span className="font-medium">{detailTicket.assignedTo}</span>
+                  </div>
+                )}
+
+                {detailTicket.resolution && (
+                  <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+                    <CardContent className="pt-4">
+                      <p className="text-sm font-semibold text-green-700 dark:text-green-400">Resolution</p>
+                      <p className="text-sm mt-1">{detailTicket.resolution}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {detailTicket.satisfaction !== null && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Satisfaction:</span>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <Star key={i} className={`h-4 w-4 ${i <= detailTicket.satisfaction! ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+                <h4 className="font-semibold text-sm">Comments</h4>
+
+                <div className="space-y-3">
+                  {detailTicket.comments.map(comment => (
+                    <div
+                      key={comment.id}
+                      className={`p-3 rounded-lg border-l-[3px] ${comment.isStaff ? 'bg-blue-50 border-l-blue-600 dark:bg-blue-950 dark:border-l-blue-400' : 'bg-muted/50 border-l-gray-300 dark:border-l-gray-600'}`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className={`text-[10px] ${comment.isStaff ? 'bg-blue-600 text-white' : 'bg-gray-500 text-white'}`}>
+                            {getInitials(comment.author)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">{comment.author}</span>
+                        {comment.isStaff && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-100 text-blue-700">Staff</Badge>}
+                        <span className="text-xs text-muted-foreground">{comment.date}</span>
+                      </div>
+                      <p className="text-sm ml-8">{comment.content}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {!['closed', 'resolved'].includes(detailTicket.status) && (
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Write a comment..."
+                      value={newComment}
+                      onChange={e => setNewComment(e.target.value)}
+                      rows={2}
+                      className="flex-1"
+                    />
+                    <Button className="self-end" onClick={() => {
+                      if (!newComment.trim()) return;
+                      addCommentMutation.mutate({ id: detailTicket.key, data: { content: newComment } }, {
+                        onSuccess: () => { toast.success('Comment sent'); setNewComment(''); },
+                        onError: (err: any) => toast.error(err?.message || 'Failed to add comment'),
+                      });
+                    }}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {!['closed', 'resolved'].includes(detailTicket.status) && (
+                  <>
+                    <Separator />
+                    <div className="flex flex-wrap gap-2">
+                      <Select>
+                        <SelectTrigger className="w-[160px]"><SelectValue placeholder="Change Status" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Open</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="on_hold">On Hold</SelectItem>
+                          <SelectItem value="resolved">Resolved</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                          <SelectItem value="reopened">Reopened</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select>
+                        <SelectTrigger className="w-[160px]"><SelectValue placeholder="Assign To" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Vikram Joshi">Vikram Joshi</SelectItem>
+                          <SelectItem value="Sneha Gupta">Sneha Gupta</SelectItem>
+                          <SelectItem value="Priya Singh">Priya Singh</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
-};
-
-export default TicketList;
+}

@@ -1,126 +1,234 @@
 import React from 'react';
-import { Row, Col, Card, Statistic, Table, Tag, Progress, Typography, Space, List, Avatar } from 'antd';
 import {
   Users,
   UserPlus,
   CheckCircle2,
   Clock3,
-  ArrowUpRight,
   ShieldCheck,
 } from 'lucide-react';
+import { type ColumnDef } from '@tanstack/react-table';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { getInitials } from '@/lib/formatters';
+import { useDashboardStats, useRecentActivities } from '@/hooks/queries/useDashboard';
 
-const { Title, Text } = Typography;
+/* ---------- Mock Data ---------- */
+
+interface OnboardingRecord {
+  key: string;
+  name: string;
+  email: string;
+  department: string;
+  status: string;
+  progress: number;
+}
+
+const recentOnboarding: OnboardingRecord[] = [
+  { key: '1', name: 'Rahul Sharma', email: 'rahul@company.com', department: 'Engineering', status: 'In Progress', progress: 60 },
+  { key: '2', name: 'Priya Singh', email: 'priya@company.com', department: 'Marketing', status: 'Completed', progress: 100 },
+  { key: '3', name: 'Amit Patel', email: 'amit@company.com', department: 'Finance', status: 'Pending', progress: 20 },
+  { key: '4', name: 'Sneha Gupta', email: 'sneha@company.com', department: 'HR', status: 'In Progress', progress: 75 },
+  { key: '5', name: 'Vikram Joshi', email: 'vikram@company.com', department: 'Sales', status: 'Completed', progress: 100 },
+];
+
+const activities = [
+  { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <ShieldCheck className="h-4 w-4 text-blue-600" />, initials: 'RS', color: 'bg-blue-100 text-blue-700' },
+  { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircle2 className="h-4 w-4 text-green-600" />, initials: 'PS', color: 'bg-green-100 text-green-700' },
+  { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserPlus className="h-4 w-4 text-amber-600" />, initials: 'AP', color: 'bg-amber-100 text-amber-700' },
+  { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <ShieldCheck className="h-4 w-4 text-blue-600" />, initials: 'SG', color: 'bg-blue-100 text-blue-700' },
+];
+
+/* ---------- Stats ---------- */
+
+const stats = [
+  {
+    title: 'Total Employees',
+    value: 248,
+    icon: <Users className="h-5 w-5" />,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
+    change: '+12% from last month',
+  },
+  {
+    title: 'Pending Onboarding',
+    value: 15,
+    icon: <UserPlus className="h-5 w-5" />,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-100',
+    change: '+3 from last month',
+  },
+  {
+    title: 'KYC Completed',
+    value: 230,
+    icon: <CheckCircle2 className="h-5 w-5" />,
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    change: '93% completion rate',
+  },
+  {
+    title: 'Pending Approvals',
+    value: 8,
+    icon: <Clock3 className="h-5 w-5" />,
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
+    change: '-2 from last month',
+  },
+];
+
+/* ---------- Table Columns ---------- */
+
+const columns: ColumnDef<OnboardingRecord, unknown>[] = [
+  {
+    accessorKey: 'name',
+    header: 'Employee',
+    cell: ({ row }) => (
+      <div className="flex items-center gap-3">
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+            {getInitials(row.original.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="font-medium text-sm">{row.original.name}</p>
+          <p className="text-xs text-muted-foreground">{row.original.email}</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'department',
+    header: 'Department',
+    cell: ({ row }) => (
+      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800">
+        {row.original.department}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => <StatusBadge status={row.original.status} />,
+  },
+  {
+    accessorKey: 'progress',
+    header: 'KYC Progress',
+    cell: ({ row }) => {
+      const val = row.original.progress;
+      return (
+        <div className="flex items-center gap-2 min-w-[120px]">
+          <Progress value={val} className="h-2 flex-1" />
+          <span className="text-xs text-muted-foreground w-9 text-right">{val}%</span>
+        </div>
+      );
+    },
+  },
+];
+
+/* ---------- Component ---------- */
 
 const Dashboard: React.FC = () => {
-  const statsCards = [
-    { title: 'Total Employees', value: 248, icon: <Users size={20} />, color: '#1a56db', change: '+12%' },
-    { title: 'Pending Onboarding', value: 15, icon: <UserPlus size={20} />, color: '#d97706', change: '+3' },
-    { title: 'KYC Completed', value: 230, icon: <CheckCircle2 size={20} />, color: '#059669', change: '93%' },
-    { title: 'Pending Approvals', value: 8, icon: <Clock3 size={20} />, color: '#dc2626', change: '-2' },
-  ];
+  const { data: statsData, isLoading: statsLoading } = useDashboardStats();
+  const { data: activitiesData, isLoading: activitiesLoading } = useRecentActivities();
 
-  const recentOnboarding = [
-    { key: '1', name: 'Rahul Sharma', email: 'rahul@company.com', department: 'Engineering', status: 'In Progress', progress: 60 },
-    { key: '2', name: 'Priya Singh', email: 'priya@company.com', department: 'Marketing', status: 'Completed', progress: 100 },
-    { key: '3', name: 'Amit Patel', email: 'amit@company.com', department: 'Finance', status: 'Pending', progress: 20 },
-    { key: '4', name: 'Sneha Gupta', email: 'sneha@company.com', department: 'HR', status: 'In Progress', progress: 75 },
-    { key: '5', name: 'Vikram Joshi', email: 'vikram@company.com', department: 'Sales', status: 'Completed', progress: 100 },
-  ];
+  const dashboardStats = statsData?.data;
+  const apiStats = dashboardStats ? [
+    {
+      title: 'Total Employees',
+      value: dashboardStats.totalEmployees ?? 248,
+      icon: <Users className="h-5 w-5" />,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+      change: dashboardStats.employeeChange ?? '+12% from last month',
+    },
+    {
+      title: 'Pending Onboarding',
+      value: dashboardStats.pendingOnboarding ?? 15,
+      icon: <UserPlus className="h-5 w-5" />,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-100',
+      change: dashboardStats.onboardingChange ?? '+3 from last month',
+    },
+    {
+      title: 'KYC Completed',
+      value: dashboardStats.kycCompleted ?? 230,
+      icon: <CheckCircle2 className="h-5 w-5" />,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      change: dashboardStats.kycRate ?? '93% completion rate',
+    },
+    {
+      title: 'Pending Approvals',
+      value: dashboardStats.pendingApprovals ?? 8,
+      icon: <Clock3 className="h-5 w-5" />,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100',
+      change: dashboardStats.approvalChange ?? '-2 from last month',
+    },
+  ] : stats;
 
-  const columns = [
-    { title: 'Employee', dataIndex: 'name', key: 'name', render: (text: string, record: any) => (
-      <Space>
-        <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
-        <div>
-          <Text strong>{text}</Text>
-          <br />
-          <Text type="secondary" style={{ fontSize: 12 }}>{record.email}</Text>
-        </div>
-      </Space>
-    )},
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (text: string) => <Tag color="blue">{text}</Tag> },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (status: string) => {
-      const color = status === 'Completed' ? 'green' : status === 'In Progress' ? 'orange' : 'red';
-      return <Tag color={color}>{status}</Tag>;
-    }},
-    { title: 'KYC Progress', dataIndex: 'progress', key: 'progress', render: (val: number) => (
-      <Progress percent={val} size="small" strokeColor={val === 100 ? '#059669' : '#1a56db'} />
-    )},
-  ];
-
-  const activities = [
-    { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <ShieldCheck style={{ color: '#1a56db' }} size={18} /> },
-    { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircle2 style={{ color: '#059669' }} size={18} /> },
-    { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserPlus style={{ color: '#d97706' }} size={18} /> },
-    { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <ShieldCheck style={{ color: '#1a56db' }} size={18} /> },
-  ];
+  const recentActivities = activitiesData?.data ?? activities;
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0 }}>HR Dashboard</Title>
-        <Text type="secondary">Welcome back, Admin. Here's what's happening today.</Text>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="HR Dashboard"
+        description="Welcome back, Admin. Here's what's happening today."
+      />
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {statsCards.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 22, color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
+      {/* KPI Stats */}
+      <StatsGrid stats={apiStats} />
+
+      {/* Main Content: Table + Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Onboarding Table */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Onboarding</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DataTable columns={columns} data={recentOnboarding} />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Activity Feed */}
+        <div className="lg:col-span-1">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                {recentActivities.map((activity: any, index: number) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <Avatar className="h-9 w-9 shrink-0">
+                      <AvatarFallback className="bg-muted text-xs">
+                        {activity.icon}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-snug">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {activity.time}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <Text style={{ color: stat.color, fontSize: 12 }}>
-                <ArrowUpRight size={12} /> {stat.change} from last month
-              </Text>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <Card
-            title="Recent Onboarding"
-            bordered={false}
-            style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-          >
-            <Table dataSource={recentOnboarding} columns={columns} pagination={false} size="middle" />
+            </CardContent>
           </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card
-            title="Recent Activity"
-            bordered={false}
-            style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-          >
-            <List
-              itemLayout="horizontal"
-              dataSource={activities}
-              renderItem={(item) => (
-                <List.Item style={{ border: 'none', padding: '8px 0' }}>
-                  <List.Item.Meta
-                    avatar={<Avatar style={{ backgroundColor: '#f0f5ff' }} icon={item.icon} />}
-                    title={<Text style={{ fontSize: 13 }}>{item.title}</Text>}
-                    description={<Text type="secondary" style={{ fontSize: 12 }}>{item.time}</Text>}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-      </Row>
+        </div>
+      </div>
     </div>
   );
 };

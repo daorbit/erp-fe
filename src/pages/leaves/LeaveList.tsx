@@ -1,11 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Modal, Form,
-  Select, Row, Col, Tabs, Statistic, DatePicker, Switch, InputNumber, Popconfirm,
-} from 'antd';
-import {
-  Search,
   Plus,
   CheckCircle2,
   XCircle,
@@ -15,38 +10,98 @@ import {
   X,
   Eye,
 } from 'lucide-react';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import type { StatsCardProps } from '@/components/shared/StatsCard';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormDialog from '@/components/shared/FormDialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { getInitials } from '@/lib/formatters';
+import {
+  useLeaveList,
+  useLeaveTypeList,
+  useCreateLeaveType,
+  useApproveLeave,
+  useRejectLeave,
+} from '@/hooks/queries/useLeaves';
 
-const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
+// ----- Types -----
 
-// Leave Requests mock data
-const leaveRequests = [
-  { key: '1', name: 'Rahul Sharma', department: 'Engineering', leaveType: 'Casual Leave', from: '10 Apr 2026', to: '11 Apr 2026', days: 2, reason: 'Personal work', status: 'Pending', appliedOn: '05 Apr 2026' },
-  { key: '2', name: 'Priya Singh', department: 'Marketing', leaveType: 'Sick Leave', from: '07 Apr 2026', to: '07 Apr 2026', days: 1, reason: 'Not feeling well', status: 'Approved', appliedOn: '06 Apr 2026' },
-  { key: '3', name: 'Amit Patel', department: 'Finance', leaveType: 'Earned Leave', from: '14 Apr 2026', to: '18 Apr 2026', days: 5, reason: 'Family vacation', status: 'Pending', appliedOn: '03 Apr 2026' },
-  { key: '4', name: 'Sneha Gupta', department: 'HR', leaveType: 'Casual Leave', from: '01 Apr 2026', to: '01 Apr 2026', days: 1, reason: 'Doctor appointment', status: 'Approved', appliedOn: '30 Mar 2026' },
-  { key: '5', name: 'Vikram Joshi', department: 'Sales', leaveType: 'Comp Off', from: '08 Apr 2026', to: '08 Apr 2026', days: 1, reason: 'Worked on Saturday', status: 'Approved', appliedOn: '06 Apr 2026' },
-  { key: '6', name: 'Ananya Reddy', department: 'Engineering', leaveType: 'Sick Leave', from: '03 Apr 2026', to: '04 Apr 2026', days: 2, reason: 'Fever and cold', status: 'Approved', appliedOn: '03 Apr 2026' },
-  { key: '7', name: 'Karan Mehta', department: 'Sales', leaveType: 'Casual Leave', from: '20 Apr 2026', to: '22 Apr 2026', days: 3, reason: 'Wedding ceremony', status: 'Pending', appliedOn: '07 Apr 2026' },
-  { key: '8', name: 'Deepika Nair', department: 'Engineering', leaveType: 'Maternity Leave', from: '01 May 2026', to: '27 Oct 2026', days: 180, reason: 'Maternity', status: 'Approved', appliedOn: '15 Mar 2026' },
-  { key: '9', name: 'Rajesh Kumar', department: 'Finance', leaveType: 'Earned Leave', from: '25 Apr 2026', to: '30 Apr 2026', days: 4, reason: 'Hometown visit', status: 'Rejected', appliedOn: '04 Apr 2026' },
-  { key: '10', name: 'Meera Iyer', department: 'Marketing', leaveType: 'Loss of Pay', from: '12 Apr 2026', to: '12 Apr 2026', days: 1, reason: 'Personal emergency', status: 'Pending', appliedOn: '08 Apr 2026' },
-  { key: '11', name: 'Suresh Pillai', department: 'HR', leaveType: 'Paternity Leave', from: '15 Apr 2026', to: '29 Apr 2026', days: 15, reason: 'Paternity', status: 'Approved', appliedOn: '01 Apr 2026' },
+interface LeaveRequest {
+  key: string;
+  name: string;
+  department: string;
+  leaveType: string;
+  from: string;
+  to: string;
+  days: number;
+  reason: string;
+  status: string;
+  appliedOn: string;
+}
+
+interface LeaveType {
+  key: string;
+  name: string;
+  code: string;
+  defaultDays: number;
+  carryForward: boolean;
+  paid: boolean;
+  applicableFor: string;
+  status: string;
+}
+
+interface LeaveBalance {
+  key: string;
+  name: string;
+  department: string;
+  cl: { allocated: number; used: number; remaining: number };
+  sl: { allocated: number; used: number; remaining: number };
+  el: { allocated: number; used: number; remaining: number };
+}
+
+// ----- Mock Data -----
+
+const leaveRequests: LeaveRequest[] = [
+  { key: '1', name: 'Rahul Sharma', department: 'Engineering', leaveType: 'Casual Leave', from: '10 Apr 2026', to: '11 Apr 2026', days: 2, reason: 'Personal work', status: 'pending', appliedOn: '05 Apr 2026' },
+  { key: '2', name: 'Priya Singh', department: 'Marketing', leaveType: 'Sick Leave', from: '07 Apr 2026', to: '07 Apr 2026', days: 1, reason: 'Not feeling well', status: 'approved', appliedOn: '06 Apr 2026' },
+  { key: '3', name: 'Amit Patel', department: 'Finance', leaveType: 'Earned Leave', from: '14 Apr 2026', to: '18 Apr 2026', days: 5, reason: 'Family vacation', status: 'pending', appliedOn: '03 Apr 2026' },
+  { key: '4', name: 'Sneha Gupta', department: 'HR', leaveType: 'Casual Leave', from: '01 Apr 2026', to: '01 Apr 2026', days: 1, reason: 'Doctor appointment', status: 'approved', appliedOn: '30 Mar 2026' },
+  { key: '5', name: 'Vikram Joshi', department: 'Sales', leaveType: 'Comp Off', from: '08 Apr 2026', to: '08 Apr 2026', days: 1, reason: 'Worked on Saturday', status: 'approved', appliedOn: '06 Apr 2026' },
+  { key: '6', name: 'Ananya Reddy', department: 'Engineering', leaveType: 'Sick Leave', from: '03 Apr 2026', to: '04 Apr 2026', days: 2, reason: 'Fever and cold', status: 'approved', appliedOn: '03 Apr 2026' },
+  { key: '7', name: 'Karan Mehta', department: 'Sales', leaveType: 'Casual Leave', from: '20 Apr 2026', to: '22 Apr 2026', days: 3, reason: 'Wedding ceremony', status: 'pending', appliedOn: '07 Apr 2026' },
+  { key: '8', name: 'Deepika Nair', department: 'Engineering', leaveType: 'Maternity Leave', from: '01 May 2026', to: '27 Oct 2026', days: 180, reason: 'Maternity', status: 'approved', appliedOn: '15 Mar 2026' },
+  { key: '9', name: 'Rajesh Kumar', department: 'Finance', leaveType: 'Earned Leave', from: '25 Apr 2026', to: '30 Apr 2026', days: 4, reason: 'Hometown visit', status: 'rejected', appliedOn: '04 Apr 2026' },
+  { key: '10', name: 'Meera Iyer', department: 'Marketing', leaveType: 'Loss of Pay', from: '12 Apr 2026', to: '12 Apr 2026', days: 1, reason: 'Personal emergency', status: 'pending', appliedOn: '08 Apr 2026' },
+  { key: '11', name: 'Suresh Pillai', department: 'HR', leaveType: 'Paternity Leave', from: '15 Apr 2026', to: '29 Apr 2026', days: 15, reason: 'Paternity', status: 'approved', appliedOn: '01 Apr 2026' },
 ];
 
-// Leave Types mock data
-const leaveTypes = [
-  { key: '1', name: 'Casual Leave', code: 'CL', defaultDays: 12, carryForward: false, paid: true, applicableFor: 'All', status: 'Active' },
-  { key: '2', name: 'Sick Leave', code: 'SL', defaultDays: 8, carryForward: false, paid: true, applicableFor: 'All', status: 'Active' },
-  { key: '3', name: 'Earned Leave', code: 'EL', defaultDays: 15, carryForward: true, paid: true, applicableFor: 'All', status: 'Active' },
-  { key: '4', name: 'Maternity Leave', code: 'ML', defaultDays: 180, carryForward: false, paid: true, applicableFor: 'Female', status: 'Active' },
-  { key: '5', name: 'Paternity Leave', code: 'PL', defaultDays: 15, carryForward: false, paid: true, applicableFor: 'Male', status: 'Active' },
-  { key: '6', name: 'Comp Off', code: 'CO', defaultDays: 0, carryForward: false, paid: true, applicableFor: 'All', status: 'Active' },
-  { key: '7', name: 'Loss of Pay', code: 'LOP', defaultDays: 0, carryForward: false, paid: false, applicableFor: 'All', status: 'Active' },
+const leaveTypes: LeaveType[] = [
+  { key: '1', name: 'Casual Leave', code: 'CL', defaultDays: 12, carryForward: false, paid: true, applicableFor: 'all', status: 'Active' },
+  { key: '2', name: 'Sick Leave', code: 'SL', defaultDays: 8, carryForward: false, paid: true, applicableFor: 'all', status: 'Active' },
+  { key: '3', name: 'Earned Leave', code: 'EL', defaultDays: 15, carryForward: true, paid: true, applicableFor: 'all', status: 'Active' },
+  { key: '4', name: 'Maternity Leave', code: 'ML', defaultDays: 180, carryForward: false, paid: true, applicableFor: 'female', status: 'Active' },
+  { key: '5', name: 'Paternity Leave', code: 'PL', defaultDays: 15, carryForward: false, paid: true, applicableFor: 'male', status: 'Active' },
+  { key: '6', name: 'Comp Off', code: 'CO', defaultDays: 0, carryForward: false, paid: true, applicableFor: 'all', status: 'Active' },
+  { key: '7', name: 'Loss of Pay', code: 'LOP', defaultDays: 0, carryForward: false, paid: false, applicableFor: 'all', status: 'Active' },
 ];
 
-// Leave Balances mock data
-const leaveBalances = [
+const leaveBalances: LeaveBalance[] = [
   { key: '1', name: 'Rahul Sharma', department: 'Engineering', cl: { allocated: 12, used: 3, remaining: 9 }, sl: { allocated: 8, used: 1, remaining: 7 }, el: { allocated: 15, used: 5, remaining: 10 } },
   { key: '2', name: 'Priya Singh', department: 'Marketing', cl: { allocated: 12, used: 5, remaining: 7 }, sl: { allocated: 8, used: 2, remaining: 6 }, el: { allocated: 15, used: 0, remaining: 15 } },
   { key: '3', name: 'Amit Patel', department: 'Finance', cl: { allocated: 12, used: 2, remaining: 10 }, sl: { allocated: 8, used: 0, remaining: 8 }, el: { allocated: 15, used: 8, remaining: 7 } },
@@ -57,359 +112,550 @@ const leaveBalances = [
   { key: '8', name: 'Rajesh Kumar', department: 'Finance', cl: { allocated: 12, used: 7, remaining: 5 }, sl: { allocated: 8, used: 2, remaining: 6 }, el: { allocated: 15, used: 6, remaining: 9 } },
 ];
 
+const leaveTypeColorMap: Record<string, string> = {
+  'Casual Leave': 'bg-blue-50 text-blue-700 border-blue-200',
+  'Sick Leave': 'bg-red-50 text-red-700 border-red-200',
+  'Earned Leave': 'bg-green-50 text-green-700 border-green-200',
+  'Maternity Leave': 'bg-pink-50 text-pink-700 border-pink-200',
+  'Paternity Leave': 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  'Comp Off': 'bg-purple-50 text-purple-700 border-purple-200',
+  'Loss of Pay': 'bg-gray-50 text-gray-700 border-gray-200',
+};
+
+// ----- Component -----
+
 const LeaveList: React.FC = () => {
   const [activeTab, setActiveTab] = useState('requests');
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState('all');
   const [searchText, setSearchText] = useState('');
   const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
-  const [typeForm] = Form.useForm();
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
-  const pendingCount = leaveRequests.filter(l => l.status === 'Pending').length;
-  const approvedCount = leaveRequests.filter(l => l.status === 'Approved').length;
-  const rejectedCount = leaveRequests.filter(l => l.status === 'Rejected').length;
-  const totalDaysUsed = leaveRequests.filter(l => l.status === 'Approved').reduce((sum, l) => sum + l.days, 0);
+  // Leave type form state
+  const [typeName, setTypeName] = useState('');
+  const [typeCode, setTypeCode] = useState('');
+  const [typeDefaultDays, setTypeDefaultDays] = useState('');
+  const [typeApplicableFor, setTypeApplicableFor] = useState('');
+  const [typePaid, setTypePaid] = useState(true);
+  const [typeCarryForward, setTypeCarryForward] = useState(false);
 
-  const statsCards = [
-    { title: 'Pending Approval', value: pendingCount, icon: <Clock3 size={20} />, color: '#d97706' },
-    { title: 'Approved This Month', value: approvedCount, icon: <CheckCircle2 size={20} />, color: '#059669' },
-    { title: 'Rejected', value: rejectedCount, icon: <XCircle size={20} />, color: '#dc2626' },
-    { title: 'Total Days Used', value: totalDaysUsed, icon: <Calendar size={20} />, color: '#2563eb' },
-  ];
-
-  const statusColorMap: Record<string, string> = {
-    Pending: 'orange',
-    Approved: 'green',
-    Rejected: 'red',
+  // API hooks
+  const requestParams = {
+    page: String(page),
+    limit: String(limit),
+    ...(searchText ? { search: searchText } : {}),
+    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
   };
+  const { data: requestsData, isLoading: isLoadingRequests } = useLeaveList(requestParams);
+  const { data: typesData, isLoading: isLoadingTypes } = useLeaveTypeList();
+  const createLeaveTypeMutation = useCreateLeaveType();
+  const approveMutation = useApproveLeave();
+  const rejectMutation = useRejectLeave();
 
-  const leaveTypeColorMap: Record<string, string> = {
-    'Casual Leave': 'blue',
-    'Sick Leave': 'red',
-    'Earned Leave': 'green',
-    'Maternity Leave': 'pink',
-    'Paternity Leave': 'cyan',
-    'Comp Off': 'purple',
-    'Loss of Pay': 'default',
-  };
+  const requestsList: LeaveRequest[] = requestsData?.data ?? leaveRequests;
+  const typesList: LeaveType[] = typesData?.data ?? leaveTypes;
+  const requestsPagination = requestsData?.pagination;
 
-  const filteredRequests = leaveRequests.filter(l => {
-    const matchesStatus = !statusFilter || l.status === statusFilter;
-    const matchesSearch = !searchText ||
-      l.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      l.department.toLowerCase().includes(searchText.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const pendingCount = requestsList.filter(l => l.status === 'Pending').length;
+  const approvedCount = requestsList.filter(l => l.status === 'approved').length;
+  const rejectedCount = requestsList.filter(l => l.status === 'rejected').length;
+  const totalDaysUsed = requestsList.filter(l => l.status === 'approved').reduce((sum, l) => sum + l.days, 0);
 
-  const requestColumns = [
-    {
-      title: 'Employee', dataIndex: 'name', key: 'name',
-      render: (text: string) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
-          <Text strong>{text}</Text>
-        </Space>
-      ),
-    },
-    {
-      title: 'Leave Type', dataIndex: 'leaveType', key: 'leaveType',
-      render: (type: string) => <Tag color={leaveTypeColorMap[type]}>{type}</Tag>,
-    },
-    { title: 'From', dataIndex: 'from', key: 'from' },
-    { title: 'To', dataIndex: 'to', key: 'to' },
-    { title: 'Days', dataIndex: 'days', key: 'days', render: (d: number) => <Text strong>{d}</Text> },
-    {
-      title: 'Reason', dataIndex: 'reason', key: 'reason',
-      ellipsis: true,
-      render: (r: string) => <Text type="secondary">{r}</Text>,
-    },
-    {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: string) => <Tag color={statusColorMap[status]}>{status}</Tag>,
-    },
-    { title: 'Applied On', dataIndex: 'appliedOn', key: 'appliedOn' },
-    {
-      title: 'Actions', key: 'actions',
-      render: (_: any, record: any) => (
-        <Space>
-          {record.status === 'Pending' ? (
-            <>
-              <Popconfirm title="Approve this leave request?" onConfirm={() => {}}>
-                <Button type="text" size="small" style={{ color: '#059669' }} icon={<Check size={16} />} />
-              </Popconfirm>
-              <Popconfirm title="Reject this leave request?" onConfirm={() => {}}>
-                <Button type="text" size="small" danger icon={<X size={16} />} />
-              </Popconfirm>
-            </>
-          ) : (
-            <Button type="text" size="small" icon={<Eye size={16} />} />
-          )}
-        </Space>
-      ),
-    },
+  const statsCards: StatsCardProps[] = [
+    { title: 'Pending Approval', value: pendingCount, icon: <Clock3 className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'Approved This Month', value: approvedCount, icon: <CheckCircle2 className="h-5 w-5" />, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Rejected', value: rejectedCount, icon: <XCircle className="h-5 w-5" />, color: 'text-red-600', bgColor: 'bg-red-50' },
+    { title: 'Total Days Used', value: totalDaysUsed, icon: <Calendar className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-50' },
   ];
 
-  const typeColumns = [
-    { title: 'Name', dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
-    { title: 'Code', dataIndex: 'code', key: 'code', render: (c: string) => <Tag>{c}</Tag> },
-    { title: 'Default Days', dataIndex: 'defaultDays', key: 'defaultDays', render: (d: number) => <Text strong>{d || '-'}</Text> },
-    {
-      title: 'Carry Forward', dataIndex: 'carryForward', key: 'carryForward',
-      render: (cf: boolean) => cf ? <Tag color="green">Yes</Tag> : <Tag>No</Tag>,
-    },
-    {
-      title: 'Paid', dataIndex: 'paid', key: 'paid',
-      render: (p: boolean) => p ? <Tag color="green">Yes</Tag> : <Tag color="red">No</Tag>,
-    },
-    {
-      title: 'Applicable For', dataIndex: 'applicableFor', key: 'applicableFor',
-      render: (a: string) => <Tag color={a === 'All' ? 'blue' : a === 'Female' ? 'pink' : 'cyan'}>{a}</Tag>,
-    },
-    {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (s: string) => <Tag color={s === 'Active' ? 'green' : 'default'}>{s}</Tag>,
-    },
-  ];
+  const filteredRequests = useMemo(() => {
+    if (requestsData?.data) return requestsList;
+    return leaveRequests.filter(l => {
+      const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
+      const matchesSearch = !searchText ||
+        l.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        l.department.toLowerCase().includes(searchText.toLowerCase());
+      return matchesStatus && matchesSearch;
+    });
+  }, [statusFilter, searchText, requestsData, requestsList]);
 
-  const balanceColumns = [
-    {
-      title: 'Employee', dataIndex: 'name', key: 'name',
-      render: (text: string) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
-          <Text strong>{text}</Text>
-        </Space>
-      ),
-    },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    {
-      title: 'Casual Leave', key: 'cl',
-      children: [
-        { title: 'Alloc', dataIndex: ['cl', 'allocated'], key: 'cl_a', width: 60 },
-        { title: 'Used', dataIndex: ['cl', 'used'], key: 'cl_u', width: 60, render: (v: number) => <Text type={v > 0 ? 'danger' : undefined}>{v}</Text> },
-        { title: 'Left', dataIndex: ['cl', 'remaining'], key: 'cl_r', width: 60, render: (v: number) => <Text strong style={{ color: '#059669' }}>{v}</Text> },
-      ],
-    },
-    {
-      title: 'Sick Leave', key: 'sl',
-      children: [
-        { title: 'Alloc', dataIndex: ['sl', 'allocated'], key: 'sl_a', width: 60 },
-        { title: 'Used', dataIndex: ['sl', 'used'], key: 'sl_u', width: 60, render: (v: number) => <Text type={v > 0 ? 'danger' : undefined}>{v}</Text> },
-        { title: 'Left', dataIndex: ['sl', 'remaining'], key: 'sl_r', width: 60, render: (v: number) => <Text strong style={{ color: '#059669' }}>{v}</Text> },
-      ],
-    },
-    {
-      title: 'Earned Leave', key: 'el',
-      children: [
-        { title: 'Alloc', dataIndex: ['el', 'allocated'], key: 'el_a', width: 60 },
-        { title: 'Used', dataIndex: ['el', 'used'], key: 'el_u', width: 60, render: (v: number) => <Text type={v > 0 ? 'danger' : undefined}>{v}</Text> },
-        { title: 'Left', dataIndex: ['el', 'remaining'], key: 'el_r', width: 60, render: (v: number) => <Text strong style={{ color: '#059669' }}>{v}</Text> },
-      ],
-    },
-  ];
+  const filteredBalances = useMemo(() => {
+    return leaveBalances.filter(b =>
+      !searchText || b.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      b.department.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [searchText]);
 
-  const filteredBalances = leaveBalances.filter(b =>
-    !searchText || b.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    b.department.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  const tabItems = [
+  // ----- Request Columns -----
+  const requestColumns: ColumnDef<LeaveRequest>[] = [
     {
-      key: 'requests',
-      label: 'Leave Requests',
-      children: (
-        <div>
-          <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-            {statsCards.map((stat, index) => (
-              <Col xs={24} sm={12} lg={6} key={index}>
-                <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Statistic
-                      title={<Text type="secondary">{stat.title}</Text>}
-                      value={stat.value}
-                      valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                    />
-                    <div style={{
-                      width: 48, height: 48, borderRadius: 12,
-                      background: `${stat.color}15`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: stat.color,
-                    }}>
-                      {stat.icon}
-                    </div>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-
-          <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-            <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-              <Space wrap>
-                <Input
-                  placeholder="Search employees..."
-                  prefix={<Search size={16} />}
-                  value={searchText}
-                  onChange={e => setSearchText(e.target.value)}
-                  style={{ width: 250 }}
-                />
-                <Select
-                  placeholder="Status"
-                  allowClear
-                  style={{ width: 140 }}
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  options={[
-                    { value: 'Pending', label: 'Pending' },
-                    { value: 'Approved', label: 'Approved' },
-                    { value: 'Rejected', label: 'Rejected' },
-                  ]}
-                />
-                <Select
-                  placeholder="Department"
-                  allowClear
-                  style={{ width: 160 }}
-                  options={[
-                    { value: 'Engineering', label: 'Engineering' },
-                    { value: 'Marketing', label: 'Marketing' },
-                    { value: 'Finance', label: 'Finance' },
-                    { value: 'HR', label: 'HR' },
-                    { value: 'Sales', label: 'Sales' },
-                  ]}
-                />
-                <Select
-                  placeholder="Leave Type"
-                  allowClear
-                  style={{ width: 160 }}
-                  options={leaveTypes.map(t => ({ value: t.name, label: t.name }))}
-                />
-              </Space>
-              <RangePicker />
-            </Space>
-            <Table
-              dataSource={filteredRequests}
-              columns={requestColumns}
-              pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} requests` }}
-            />
-          </Card>
+      accessorKey: 'name',
+      header: 'Employee',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-medium">{row.original.name}</span>
         </div>
       ),
     },
     {
-      key: 'types',
-      label: 'Leave Types',
-      children: (
-        <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsTypeModalOpen(true)}>
+      accessorKey: 'leaveType',
+      header: 'Leave Type',
+      cell: ({ row }) => (
+        <Badge variant="outline" className={leaveTypeColorMap[row.original.leaveType] || ''}>
+          {row.original.leaveType}
+        </Badge>
+      ),
+    },
+    { accessorKey: 'from', header: 'From' },
+    { accessorKey: 'to', header: 'To' },
+    {
+      accessorKey: 'days',
+      header: 'Days',
+      cell: ({ row }) => <span className="font-semibold">{row.original.days}</span>,
+    },
+    {
+      accessorKey: 'reason',
+      header: 'Reason',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground truncate max-w-[200px] block">
+          {row.original.reason}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    { accessorKey: 'appliedOn', header: 'Applied On' },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          {row.original.status === 'Pending' ? (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                onClick={() => approveMutation.mutate(
+                  { id: row.original.key },
+                  {
+                    onSuccess: () => toast.success('Leave request approved'),
+                    onError: (err: any) => toast.error(err?.message || 'Failed to approve'),
+                  }
+                )}
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => rejectMutation.mutate(
+                  { id: row.original.key },
+                  {
+                    onSuccess: () => toast.success('Leave request rejected'),
+                    onError: (err: any) => toast.error(err?.message || 'Failed to reject'),
+                  }
+                )}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Eye className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  // ----- Leave Type Columns -----
+  const typeColumns: ColumnDef<LeaveType>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+    },
+    {
+      accessorKey: 'code',
+      header: 'Code',
+      cell: ({ row }) => (
+        <Badge variant="outline">{row.original.code}</Badge>
+      ),
+    },
+    {
+      accessorKey: 'defaultDays',
+      header: 'Default Days',
+      cell: ({ row }) => (
+        <span className="font-semibold">{row.original.defaultDays || '-'}</span>
+      ),
+    },
+    {
+      accessorKey: 'carryForward',
+      header: 'Carry Forward',
+      cell: ({ row }) =>
+        row.original.carryForward ? (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Yes</Badge>
+        ) : (
+          <Badge variant="outline">No</Badge>
+        ),
+    },
+    {
+      accessorKey: 'paid',
+      header: 'Paid',
+      cell: ({ row }) =>
+        row.original.paid ? (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Yes</Badge>
+        ) : (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">No</Badge>
+        ),
+    },
+    {
+      accessorKey: 'applicableFor',
+      header: 'Applicable For',
+      cell: ({ row }) => {
+        const a = row.original.applicableFor;
+        const colorClass = a === 'all' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+          a === 'female' ? 'bg-pink-50 text-pink-700 border-pink-200' :
+          'bg-cyan-50 text-cyan-700 border-cyan-200';
+        return <Badge variant="outline" className={colorClass}>{a}</Badge>;
+      },
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+  ];
+
+  // ----- Balance Columns -----
+  const balanceColumns: ColumnDef<LeaveBalance>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Employee',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-medium">{row.original.name}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          {row.original.department}
+        </Badge>
+      ),
+    },
+    {
+      id: 'cl_allocated',
+      header: 'CL Alloc',
+      cell: ({ row }) => <span>{row.original.cl.allocated}</span>,
+    },
+    {
+      id: 'cl_used',
+      header: 'CL Used',
+      cell: ({ row }) => (
+        <span className={row.original.cl.used > 0 ? 'text-red-600' : ''}>
+          {row.original.cl.used}
+        </span>
+      ),
+    },
+    {
+      id: 'cl_remaining',
+      header: 'CL Left',
+      cell: ({ row }) => (
+        <span className="font-semibold text-emerald-600">{row.original.cl.remaining}</span>
+      ),
+    },
+    {
+      id: 'sl_allocated',
+      header: 'SL Alloc',
+      cell: ({ row }) => <span>{row.original.sl.allocated}</span>,
+    },
+    {
+      id: 'sl_used',
+      header: 'SL Used',
+      cell: ({ row }) => (
+        <span className={row.original.sl.used > 0 ? 'text-red-600' : ''}>
+          {row.original.sl.used}
+        </span>
+      ),
+    },
+    {
+      id: 'sl_remaining',
+      header: 'SL Left',
+      cell: ({ row }) => (
+        <span className="font-semibold text-emerald-600">{row.original.sl.remaining}</span>
+      ),
+    },
+    {
+      id: 'el_allocated',
+      header: 'EL Alloc',
+      cell: ({ row }) => <span>{row.original.el.allocated}</span>,
+    },
+    {
+      id: 'el_used',
+      header: 'EL Used',
+      cell: ({ row }) => (
+        <span className={row.original.el.used > 0 ? 'text-red-600' : ''}>
+          {row.original.el.used}
+        </span>
+      ),
+    },
+    {
+      id: 'el_remaining',
+      header: 'EL Left',
+      cell: ({ row }) => (
+        <span className="font-semibold text-emerald-600">{row.original.el.remaining}</span>
+      ),
+    },
+  ];
+
+  const resetTypeForm = () => {
+    setTypeName('');
+    setTypeCode('');
+    setTypeDefaultDays('');
+    setTypeApplicableFor('');
+    setTypePaid(true);
+    setTypeCarryForward(false);
+  };
+
+  const handleAddType = () => {
+    if (!typeName || !typeCode || !typeApplicableFor) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+    createLeaveTypeMutation.mutate(
+      {
+        name: typeName,
+        code: typeCode,
+        defaultDays: Number(typeDefaultDays) || 0,
+        applicableFor: typeApplicableFor,
+        paid: typePaid,
+        carryForward: typeCarryForward,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Leave type added successfully');
+          setIsTypeModalOpen(false);
+          resetTypeForm();
+        },
+        onError: (err: any) => toast.error(err?.message || 'Failed to add leave type'),
+      }
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Leave Management"
+        description="Manage leave requests, types and balances"
+      />
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="requests">Leave Requests</TabsTrigger>
+          <TabsTrigger value="types">Leave Types</TabsTrigger>
+          <TabsTrigger value="balances">Leave Balances</TabsTrigger>
+        </TabsList>
+
+        {/* Leave Requests Tab */}
+        <TabsContent value="requests" className="space-y-6 mt-4">
+          <StatsGrid stats={statsCards} />
+
+          <DataTable
+            columns={requestColumns}
+            data={filteredRequests}
+            isLoading={isLoadingRequests}
+            searchKey="name"
+            searchPlaceholder="Search employees..."
+            onSearchChange={setSearchText}
+            pagination={requestsPagination ?? { page, limit, total: filteredRequests.length, totalPages: Math.ceil(filteredRequests.length / limit) }}
+            onPaginationChange={(newPage) => setPage(newPage)}
+            filterContent={
+              <div className="flex items-center gap-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Engineering">Engineering</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Sales">Sales</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Leave Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typesList.map(t => (
+                      <SelectItem key={t.key} value={t.name}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            }
+          />
+        </TabsContent>
+
+        {/* Leave Types Tab */}
+        <TabsContent value="types" className="mt-4">
+          <div className="flex justify-end mb-4">
+            <Button onClick={() => setIsTypeModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
               Add Leave Type
             </Button>
           </div>
-          <Table
-            dataSource={leaveTypes}
+          <DataTable
             columns={typeColumns}
-            pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} leave types` }}
+            data={typesList}
+            isLoading={isLoadingTypes}
           />
-        </Card>
-      ),
-    },
-    {
-      key: 'balances',
-      label: 'Leave Balances',
-      children: (
-        <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <Space style={{ marginBottom: 16 }}>
-            <Input
-              placeholder="Search employees..."
-              prefix={<Search size={16} />}
-              value={searchText}
-              onChange={e => setSearchText(e.target.value)}
-              style={{ width: 250 }}
-            />
-            <Select
-              placeholder="Department"
-              allowClear
-              style={{ width: 160 }}
-              options={[
-                { value: 'Engineering', label: 'Engineering' },
-                { value: 'Marketing', label: 'Marketing' },
-                { value: 'Finance', label: 'Finance' },
-                { value: 'HR', label: 'HR' },
-                { value: 'Sales', label: 'Sales' },
-              ]}
-            />
-          </Space>
-          <Table
-            dataSource={filteredBalances}
+        </TabsContent>
+
+        {/* Leave Balances Tab */}
+        <TabsContent value="balances" className="mt-4">
+          <DataTable
             columns={balanceColumns}
-            pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} employees` }}
-            bordered
-            size="middle"
+            data={filteredBalances}
+            searchKey="name"
+            searchPlaceholder="Search employees..."
+            onSearchChange={setSearchText}
+            filterContent={
+              <Select>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                  <SelectItem value="Sales">Sales</SelectItem>
+                </SelectContent>
+              </Select>
+            }
           />
-        </Card>
-      ),
-    },
-  ];
+        </TabsContent>
+      </Tabs>
 
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Leave Management</Title>
-          <Text type="secondary">Manage leave requests, types and balances</Text>
-        </div>
-      </div>
-
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
-
-      <Modal
-        title="Add Leave Type"
+      {/* Add Leave Type Modal */}
+      <FormDialog
         open={isTypeModalOpen}
-        onCancel={() => { setIsTypeModalOpen(false); typeForm.resetFields(); }}
-        onOk={() => { typeForm.validateFields().then(() => { setIsTypeModalOpen(false); typeForm.resetFields(); }); }}
-        width={560}
+        onOpenChange={(open) => {
+          setIsTypeModalOpen(open);
+          if (!open) resetTypeForm();
+        }}
+        title="Add Leave Type"
+        description="Define a new leave type for your organization"
       >
-        <Form form={typeForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Row gutter={16}>
-            <Col span={16}>
-              <Form.Item name="name" label="Leave Type Name" rules={[{ required: true }]}>
-                <Input placeholder="e.g. Casual Leave" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="code" label="Code" rules={[{ required: true }]}>
-                <Input placeholder="e.g. CL" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item name="defaultDays" label="Default Days" rules={[{ required: true }]}>
-                <InputNumber style={{ width: '100%' }} min={0} placeholder="12" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="applicableFor" label="Applicable For" rules={[{ required: true }]}>
-                <Select
-                  placeholder="Select"
-                  options={[
-                    { value: 'All', label: 'All' },
-                    { value: 'Male', label: 'Male' },
-                    { value: 'Female', label: 'Female' },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item name="paid" label="Paid Leave" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="carryForward" label="Carry Forward" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Modal>
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label>Leave Type Name *</Label>
+              <Input
+                placeholder="e.g. Casual Leave"
+                value={typeName}
+                onChange={(e) => setTypeName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Code *</Label>
+              <Input
+                placeholder="e.g. CL"
+                value={typeCode}
+                onChange={(e) => setTypeCode(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Default Days *</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="12"
+                value={typeDefaultDays}
+                onChange={(e) => setTypeDefaultDays(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Applicable For *</Label>
+              <Select value={typeApplicableFor} onValueChange={setTypeApplicableFor}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Paid Leave</Label>
+              <div className="flex items-center gap-2 pt-2">
+                <Switch checked={typePaid} onCheckedChange={setTypePaid} />
+                <span className="text-sm text-muted-foreground">{typePaid ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Carry Forward</Label>
+            <div className="flex items-center gap-2">
+              <Switch checked={typeCarryForward} onCheckedChange={setTypeCarryForward} />
+              <span className="text-sm text-muted-foreground">{typeCarryForward ? 'Yes' : 'No'}</span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsTypeModalOpen(false);
+                resetTypeForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAddType}>Add Leave Type</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

@@ -1,22 +1,50 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { toast } from 'sonner';
+import { useHolidayList, useCreateHoliday, useDeleteHoliday } from '@/hooks/queries/useHolidays';
 import {
-  Card, Table, Button, Space, Tag, Typography, Modal, Form,
-  Select, Row, Col, Statistic, Input, DatePicker, Checkbox, Tooltip, Badge,
-} from 'antd';
-import {
-  Plus, Calendar as CalendarIcon, List, ChevronLeft, ChevronRight,
-  PartyPopper, Globe, Building2, Star,
+  Plus,
+  Calendar as CalendarIcon,
+  List,
+  Globe,
+  Star,
+  PartyPopper,
 } from 'lucide-react';
-
-const { Title, Text } = Typography;
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormDialog from '@/components/shared/FormDialog';
+import DatePicker from '@/components/shared/DatePicker';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { HolidayType } from '@/types/enums';
 
 interface Holiday {
   key: string;
   name: string;
   date: string;
   day: string;
-  type: 'Public' | 'Religious' | 'Company' | 'Optional';
+  type: 'Public' | 'Religious' | 'CompanySpecific' | 'Optional';
   description: string;
   isOptional: boolean;
 }
@@ -28,7 +56,7 @@ const holidays2026: Holiday[] = [
   { key: '4', name: 'Good Friday', date: '2026-04-03', day: 'Friday', type: 'Religious', description: 'Christian observance of crucifixion of Jesus', isOptional: false },
   { key: '5', name: 'Eid ul-Fitr', date: '2026-04-21', day: 'Tuesday', type: 'Religious', description: 'End of Ramadan', isOptional: false },
   { key: '6', name: 'May Day', date: '2026-05-01', day: 'Friday', type: 'Public', description: 'International Workers Day', isOptional: false },
-  { key: '7', name: 'Company Foundation Day', date: '2026-06-15', day: 'Monday', type: 'Company', description: 'Annual celebration of company founding', isOptional: false },
+  { key: '7', name: 'Company Foundation Day', date: '2026-06-15', day: 'Monday', type: 'CompanySpecific', description: 'Annual celebration of company founding', isOptional: false },
   { key: '8', name: 'Independence Day', date: '2026-08-15', day: 'Saturday', type: 'Public', description: 'National independence day', isOptional: false },
   { key: '9', name: 'Janmashtami', date: '2026-08-25', day: 'Tuesday', type: 'Religious', description: 'Birth of Lord Krishna', isOptional: true },
   { key: '10', name: 'Gandhi Jayanti', date: '2026-10-02', day: 'Friday', type: 'Public', description: 'Birthday of Mahatma Gandhi', isOptional: false },
@@ -36,21 +64,28 @@ const holidays2026: Holiday[] = [
   { key: '12', name: 'Diwali', date: '2026-11-08', day: 'Sunday', type: 'Religious', description: 'Festival of lights', isOptional: false },
   { key: '13', name: 'Guru Nanak Jayanti', date: '2026-11-18', day: 'Wednesday', type: 'Religious', description: 'Birth anniversary of Guru Nanak Dev Ji', isOptional: true },
   { key: '14', name: 'Christmas', date: '2026-12-25', day: 'Friday', type: 'Public', description: 'Christian celebration of birth of Jesus', isOptional: false },
-  { key: '15', name: 'Year End Holiday', date: '2026-12-31', day: 'Thursday', type: 'Company', description: 'Company holiday for year-end celebrations', isOptional: false },
+  { key: '15', name: 'Year End Holiday', date: '2026-12-31', day: 'Thursday', type: 'CompanySpecific', description: 'Company holiday for year-end celebrations', isOptional: false },
 ];
 
-const typeColors: Record<string, string> = {
-  Public: 'blue',
-  Religious: 'purple',
-  Company: 'green',
-  Optional: 'orange',
+const typeBadgeMap: Record<string, string> = {
+  Public: 'bg-blue-100 text-blue-700 border-blue-200',
+  Religious: 'bg-purple-100 text-purple-700 border-purple-200',
+  CompanySpecific: 'bg-green-100 text-green-700 border-green-200',
+  Optional: 'bg-orange-100 text-orange-700 border-orange-200',
 };
 
 const typeDotColors: Record<string, string> = {
-  Public: '#2563eb',
-  Religious: '#7c3aed',
-  Company: '#059669',
-  Optional: '#d97706',
+  Public: 'bg-blue-500',
+  Religious: 'bg-purple-500',
+  CompanySpecific: 'bg-green-500',
+  Optional: 'bg-orange-500',
+};
+
+const typeTextColors: Record<string, string> = {
+  Public: 'text-blue-600 font-bold',
+  Religious: 'text-purple-600 font-bold',
+  CompanySpecific: 'text-green-600 font-bold',
+  Optional: 'text-orange-600 font-bold',
 };
 
 const monthNames = [
@@ -60,59 +95,124 @@ const monthNames = [
 
 const HolidayCalendar: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
+  const [selectedYear] = useState<number>(2026);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
-  const [form] = Form.useForm();
 
-  const filteredHolidays = holidays2026;
-  const publicCount = filteredHolidays.filter(h => h.type === 'Public').length;
-  const optionalCount = filteredHolidays.filter(h => h.isOptional).length;
+  // API integration
+  const { data: holidayData, isLoading } = useHolidayList({ year: selectedYear });
+  const createMutation = useCreateHoliday();
+  const deleteMutation = useDeleteHoliday();
+  const allHolidays: Holiday[] = holidayData?.data ?? holidays2026;
+
+  const [form, setForm] = useState({
+    name: '',
+    date: undefined as Date | undefined,
+    type: '',
+    description: '',
+    isOptional: false,
+    applicableFor: 'All',
+  });
+
+  const filteredHolidays = allHolidays;
+  const publicCount = filteredHolidays.filter((h) => h.type === 'Public').length;
+  const optionalCount = filteredHolidays.filter((h) => h.isOptional).length;
   const now = new Date('2026-04-08');
-  const upcomingCount = filteredHolidays.filter(h => new Date(h.date) >= now).length;
+  const upcomingCount = filteredHolidays.filter((h) => new Date(h.date) >= now).length;
 
-  const columns = [
-    { title: 'Holiday', dataIndex: 'name', key: 'name', render: (text: string) => <Text strong>{text}</Text> },
-    { title: 'Date', dataIndex: 'date', key: 'date' },
-    { title: 'Day', dataIndex: 'day', key: 'day', render: (d: string) => <Text type="secondary">{d}</Text> },
+  const stats = [
+    { title: 'Total Holidays', value: filteredHolidays.length, icon: <CalendarIcon className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { title: 'Public Holidays', value: publicCount, icon: <Globe className="h-5 w-5" />, color: 'text-green-600', bgColor: 'bg-green-100' },
+    { title: 'Optional Holidays', value: optionalCount, icon: <Star className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-100' },
+    { title: 'Upcoming', value: upcomingCount, icon: <PartyPopper className="h-5 w-5" />, color: 'text-violet-600', bgColor: 'bg-violet-100' },
+  ];
+
+  const columns: ColumnDef<Holiday>[] = [
     {
-      title: 'Type', dataIndex: 'type', key: 'type',
-      render: (type: string) => <Tag color={typeColors[type]}>{type}</Tag>,
+      accessorKey: 'name',
+      header: 'Holiday',
+      cell: ({ row }) => (
+        <span className="font-medium">{row.original.name}</span>
+      ),
     },
-    { title: 'Description', dataIndex: 'description', key: 'description', render: (d: string) => <Text type="secondary">{d}</Text> },
     {
-      title: 'Optional', dataIndex: 'isOptional', key: 'isOptional',
-      render: (opt: boolean) => opt ? <Badge status="warning" text="Optional" /> : <Badge status="success" text="Mandatory" />,
+      accessorKey: 'date',
+      header: 'Date',
+    },
+    {
+      accessorKey: 'day',
+      header: 'Day',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{row.original.day}</span>
+      ),
+    },
+    {
+      accessorKey: 'type',
+      header: 'Type',
+      cell: ({ row }) => (
+        <Badge variant="outline" className={typeBadgeMap[row.original.type] || ''}>
+          {row.original.type}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: 'Description',
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">{row.original.description}</span>
+      ),
+    },
+    {
+      accessorKey: 'isOptional',
+      header: 'Optional',
+      cell: ({ row }) => (
+        <StatusBadge status={row.original.isOptional ? 'pending' : 'active'} />
+      ),
     },
   ];
 
-  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+  const getDaysInMonth = (year: number, month: number) =>
+    new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) =>
+    new Date(year, month, 1).getDay();
 
   const getHolidaysForDate = (year: number, month: number, day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return filteredHolidays.filter(h => h.date === dateStr);
+    return filteredHolidays.filter((h) => h.date === dateStr);
+  };
+
+  const handleAddHoliday = () => {
+    if (!form.name || !form.date || !form.type) return;
+    createMutation.mutate(form, {
+      onSuccess: () => {
+        toast.success('Holiday added successfully');
+        setIsModalOpen(false);
+        setForm({ name: '', date: undefined, type: '', description: '', isOptional: false, applicableFor: 'All' });
+      },
+      onError: (err: any) => toast.error(err?.message || 'Failed to add holiday'),
+    });
   };
 
   const renderCalendarView = () => (
-    <Row gutter={[16, 16]}>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {monthNames.map((monthName, monthIndex) => {
         const daysInMonth = getDaysInMonth(selectedYear, monthIndex);
         const firstDay = getFirstDayOfMonth(selectedYear, monthIndex);
         const dayLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
         return (
-          <Col xs={24} sm={12} lg={8} xl={6} key={monthIndex}>
-            <Card
-              bordered={false}
-              style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-              styles={{ body: { padding: 16 } }}
-            >
-              <Text strong style={{ display: 'block', textAlign: 'center', marginBottom: 8, fontSize: 14 }}>
+          <Card key={monthIndex}>
+            <CardContent className="p-4">
+              <p className="mb-2 text-center text-sm font-semibold">
                 {monthName} {selectedYear}
-              </Text>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, textAlign: 'center' }}>
-                {dayLabels.map(d => (
-                  <div key={d} style={{ fontSize: 10, color: '#9ca3af', fontWeight: 600, padding: '2px 0' }}>{d}</div>
+              </p>
+              <div className="grid grid-cols-7 gap-0.5 text-center">
+                {dayLabels.map((d) => (
+                  <div
+                    key={d}
+                    className="py-0.5 text-[10px] font-semibold text-muted-foreground"
+                  >
+                    {d}
+                  </div>
                 ))}
                 {Array.from({ length: firstDay }).map((_, i) => (
                   <div key={`empty-${i}`} />
@@ -121,189 +221,243 @@ const HolidayCalendar: React.FC = () => {
                   const day = i + 1;
                   const dayHolidays = getHolidaysForDate(selectedYear, monthIndex, day);
                   const isToday = selectedYear === 2026 && monthIndex === 3 && day === 8;
-                  return (
-                    <Tooltip
-                      key={day}
-                      title={dayHolidays.length > 0 ? dayHolidays.map(h => h.name).join(', ') : undefined}
+                  const hasHoliday = dayHolidays.length > 0;
+
+                  const cell = (
+                    <div
+                      className={cn(
+                        'relative rounded-md py-1 text-xs transition-colors',
+                        isToday && 'bg-primary text-primary-foreground font-bold',
+                        !isToday && hasHoliday && typeTextColors[dayHolidays[0].type],
+                        !isToday && !hasHoliday && 'text-foreground',
+                        hasHoliday && 'cursor-pointer',
+                      )}
                     >
-                      <div style={{
-                        padding: '3px 0',
-                        fontSize: 12,
-                        borderRadius: 6,
-                        cursor: dayHolidays.length > 0 ? 'pointer' : 'default',
-                        background: isToday ? '#1a56db' : 'transparent',
-                        color: isToday ? '#fff' : dayHolidays.length > 0 ? typeDotColors[dayHolidays[0].type] : undefined,
-                        fontWeight: dayHolidays.length > 0 || isToday ? 700 : 400,
-                        position: 'relative',
-                      }}>
-                        {day}
-                        {dayHolidays.length > 0 && (
-                          <div style={{
-                            position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-                            display: 'flex', gap: 2,
-                          }}>
-                            {dayHolidays.map((h, idx) => (
-                              <div key={idx} style={{
-                                width: 4, height: 4, borderRadius: '50%',
-                                backgroundColor: typeDotColors[h.type],
-                              }} />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </Tooltip>
+                      {day}
+                      {hasHoliday && (
+                        <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 gap-0.5">
+                          {dayHolidays.map((h, idx) => (
+                            <div
+                              key={idx}
+                              className={cn(
+                                'h-1 w-1 rounded-full',
+                                typeDotColors[h.type],
+                              )}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   );
+
+                  if (hasHoliday) {
+                    return (
+                      <TooltipProvider key={day}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>{cell}</TooltipTrigger>
+                          <TooltipContent>
+                            {dayHolidays.map((h) => h.name).join(', ')}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  }
+
+                  return <React.Fragment key={day}>{cell}</React.Fragment>;
                 })}
               </div>
-            </Card>
-          </Col>
+            </CardContent>
+          </Card>
         );
       })}
-    </Row>
+    </div>
   );
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Holiday Calendar</Title>
-          <Text type="secondary">Manage public, religious and company holidays</Text>
+    <div className="space-y-6">
+      <PageHeader
+        title="Holiday Calendar"
+        description="Manage public, religious and company holidays"
+        actions={
+          <>
+            <Select value={String(selectedYear)}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2026">2026</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Holiday
+            </Button>
+          </>
+        }
+      />
+
+      <StatsGrid stats={stats} />
+
+      {/* View toggle + type legend */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {Object.entries(typeBadgeMap).map(([type, className]) => (
+            <Badge key={type} variant="outline" className={className}>
+              {type}
+            </Badge>
+          ))}
         </div>
-        <Space>
-          <Select
-            value={selectedYear}
-            onChange={setSelectedYear}
-            style={{ width: 100 }}
-            options={[
-              { value: 2024, label: '2024' },
-              { value: 2025, label: '2025' },
-              { value: 2026, label: '2026' },
-            ]}
-          />
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsModalOpen(true)}>
-            Add Holiday
+        <div className="flex items-center gap-1">
+          <Button
+            variant={viewMode === 'calendar' ? 'default' : 'outline'}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setViewMode('calendar')}
+          >
+            <CalendarIcon className="h-4 w-4" />
           </Button>
-        </Space>
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {[
-          { title: 'Total Holidays', value: filteredHolidays.length, icon: <CalendarIcon size={20} />, color: '#1a56db' },
-          { title: 'Public Holidays', value: publicCount, icon: <Globe size={20} />, color: '#059669' },
-          { title: 'Optional Holidays', value: optionalCount, icon: <Star size={20} />, color: '#d97706' },
-          { title: 'Upcoming', value: upcomingCount, icon: <PartyPopper size={20} />, color: '#7c3aed' },
-        ].map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {viewMode === 'list' ? (
+        <DataTable
+          columns={columns}
+          data={filteredHolidays}
+          searchKey="name"
+          searchPlaceholder="Search holidays..."
+          onSearchChange={() => {}}
+          pagination={{
+            page: 1,
+            limit: 15,
+            total: filteredHolidays.length,
+            totalPages: 1,
+          }}
+          onPaginationChange={() => {}}
+        />
+      ) : (
+        renderCalendarView()
+      )}
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24 }}>
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-          <Space>
-            <Tag color={typeColors.Public}>Public</Tag>
-            <Tag color={typeColors.Religious}>Religious</Tag>
-            <Tag color={typeColors.Company}>Company</Tag>
-            <Tag color={typeColors.Optional}>Optional</Tag>
-          </Space>
-          <Space>
-            <Tooltip title="Calendar View">
-              <Button
-                type={viewMode === 'calendar' ? 'primary' : 'default'}
-                icon={<CalendarIcon size={16} />}
-                onClick={() => setViewMode('calendar')}
-              />
-            </Tooltip>
-            <Tooltip title="List View">
-              <Button
-                type={viewMode === 'list' ? 'primary' : 'default'}
-                icon={<List size={16} />}
-                onClick={() => setViewMode('list')}
-              />
-            </Tooltip>
-          </Space>
-        </Space>
-
-        {viewMode === 'list' ? (
-          <Table
-            dataSource={filteredHolidays}
-            columns={columns}
-            pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} holidays` }}
-          />
-        ) : (
-          renderCalendarView()
-        )}
-      </Card>
-
-      <Modal
-        title="Add Holiday"
+      {/* Add Holiday Dialog */}
+      <FormDialog
         open={isModalOpen}
-        onCancel={() => { setIsModalOpen(false); form.resetFields(); }}
-        onOk={() => { form.validateFields().then(() => { setIsModalOpen(false); form.resetFields(); }); }}
-        okText="Add Holiday"
-        width={560}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setIsModalOpen(false);
+            setForm({ name: '', date: undefined, type: '', description: '', isOptional: false, applicableFor: 'All' });
+          }
+        }}
+        title="Add Holiday"
+        description="Create a new holiday entry for the calendar."
+        className="sm:max-w-[560px]"
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="name" label="Holiday Name" rules={[{ required: true, message: 'Please enter holiday name' }]}>
-            <Input placeholder="Enter holiday name" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="date" label="Date" rules={[{ required: true, message: 'Please select a date' }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="type" label="Type" rules={[{ required: true, message: 'Please select type' }]}>
-                <Select placeholder="Select type" options={[
-                  { value: 'Public', label: 'Public' },
-                  { value: 'Religious', label: 'Religious' },
-                  { value: 'Company', label: 'Company' },
-                  { value: 'Optional', label: 'Optional' },
-                ]} />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={2} placeholder="Brief description" />
-          </Form.Item>
-          <Form.Item name="isOptional" valuePropName="checked">
-            <Checkbox>This is an optional holiday</Checkbox>
-          </Form.Item>
-          <Form.Item name="applicableFor" label="Applicable For">
-            <Select defaultValue="all" options={[
-              { value: 'all', label: 'All Departments' },
-              { value: 'specific', label: 'Specific Departments' },
-            ]} />
-          </Form.Item>
-          <Form.Item name="departments" label="Departments" hidden>
-            <Select mode="multiple" placeholder="Select departments" options={[
-              { value: 'Engineering', label: 'Engineering' },
-              { value: 'Marketing', label: 'Marketing' },
-              { value: 'Finance', label: 'Finance' },
-              { value: 'HR', label: 'HR' },
-              { value: 'Sales', label: 'Sales' },
-            ]} />
-          </Form.Item>
-        </Form>
-      </Modal>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>
+              Holiday Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              placeholder="Enter holiday name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>
+                Date <span className="text-destructive">*</span>
+              </Label>
+              <DatePicker
+                value={form.date}
+                onChange={(date) => setForm({ ...form, date })}
+                placeholder="Select date"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                Type <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.type}
+                onValueChange={(val) => setForm({ ...form, type: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Public">Public</SelectItem>
+                  <SelectItem value="Religious">Religious</SelectItem>
+                  <SelectItem value="CompanySpecific">Company Specific</SelectItem>
+                  <SelectItem value="Optional">Optional</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea
+              rows={2}
+              placeholder="Brief description"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isOptional"
+              checked={form.isOptional}
+              onCheckedChange={(checked) =>
+                setForm({ ...form, isOptional: checked === true })
+              }
+            />
+            <Label htmlFor="isOptional" className="cursor-pointer">
+              This is an optional holiday
+            </Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Applicable For</Label>
+            <Select
+              value={form.applicableFor}
+              onValueChange={(val) => setForm({ ...form, applicableFor: val })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Departments</SelectItem>
+                <SelectItem value="SpecificDepartments">Specific Departments</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsModalOpen(false);
+                setForm({ name: '', date: undefined, type: '', description: '', isOptional: false, applicableFor: 'All' });
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAddHoliday}>Add Holiday</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

@@ -1,253 +1,379 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from 'react';
-import {
-  Card, Table, Button, Input, Space, Tag, Avatar, Typography, Modal, Form,
-  Select, Row, Col, DatePicker, TimePicker, Statistic, Tabs,
-} from 'antd';
+import React, { useState, useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 import {
   Plus,
-  Search,
   CheckCircle2,
   XCircle,
   Clock3,
   Palmtree,
-  Users,
-  Laptop,
-  MoreHorizontal,
-  Edit2,
   Eye,
+  Edit2,
 } from 'lucide-react';
+import PageHeader from '@/components/shared/PageHeader';
+import StatsGrid from '@/components/shared/StatsGrid';
+import type { StatsCardProps } from '@/components/shared/StatsCard';
+import DataTable from '@/components/shared/DataTable/DataTable';
+import StatusBadge from '@/components/shared/StatusBadge';
+import FormDialog from '@/components/shared/FormDialog';
+import DatePicker from '@/components/shared/DatePicker';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { getInitials } from '@/lib/formatters';
+import { useAttendanceList, useMarkAttendance } from '@/hooks/queries/useAttendance';
 
-const { Title, Text } = Typography;
+interface AttendanceRecord {
+  key: string;
+  name: string;
+  department: string;
+  checkIn: string;
+  checkOut: string;
+  workHours: string;
+  status: string;
+  overtime: string;
+}
 
-const attendanceData = [
-  { key: '1', name: 'Rahul Sharma', department: 'Engineering', checkIn: '09:02 AM', checkOut: '06:15 PM', workHours: '9h 13m', status: 'Present', overtime: '0h 13m' },
-  { key: '2', name: 'Priya Singh', department: 'Marketing', checkIn: '09:28 AM', checkOut: '06:30 PM', workHours: '9h 02m', status: 'Present', overtime: '0h 02m' },
-  { key: '3', name: 'Amit Patel', department: 'Finance', checkIn: '-', checkOut: '-', workHours: '-', status: 'Absent', overtime: '-' },
-  { key: '4', name: 'Sneha Gupta', department: 'HR', checkIn: '09:45 AM', checkOut: '06:00 PM', workHours: '8h 15m', status: 'Late', overtime: '-' },
-  { key: '5', name: 'Vikram Joshi', department: 'Sales', checkIn: '-', checkOut: '-', workHours: '-', status: 'OnLeave', overtime: '-' },
-  { key: '6', name: 'Ananya Reddy', department: 'Engineering', checkIn: '09:00 AM', checkOut: '06:20 PM', workHours: '9h 20m', status: 'Present', overtime: '0h 20m' },
-  { key: '7', name: 'Karan Mehta', department: 'Sales', checkIn: '09:05 AM', checkOut: '06:00 PM', workHours: '8h 55m', status: 'Present', overtime: '-' },
-  { key: '8', name: 'Deepika Nair', department: 'Engineering', checkIn: '09:15 AM', checkOut: '01:00 PM', workHours: '3h 45m', status: 'HalfDay', overtime: '-' },
-  { key: '9', name: 'Rajesh Kumar', department: 'Finance', checkIn: '09:10 AM', checkOut: '06:25 PM', workHours: '9h 15m', status: 'Present', overtime: '0h 15m' },
-  { key: '10', name: 'Meera Iyer', department: 'Marketing', checkIn: '09:00 AM', checkOut: '06:00 PM', workHours: '9h 00m', status: 'WFH', overtime: '-' },
-  { key: '11', name: 'Suresh Pillai', department: 'HR', checkIn: '-', checkOut: '-', workHours: '-', status: 'Absent', overtime: '-' },
-  { key: '12', name: 'Neha Deshmukh', department: 'Engineering', checkIn: '09:50 AM', checkOut: '06:30 PM', workHours: '8h 40m', status: 'Late', overtime: '-' },
-  { key: '13', name: 'Arjun Malhotra', department: 'Sales', checkIn: '09:08 AM', checkOut: '06:10 PM', workHours: '9h 02m', status: 'Present', overtime: '0h 02m' },
-  { key: '14', name: 'Pooja Verma', department: 'Finance', checkIn: '-', checkOut: '-', workHours: '-', status: 'OnLeave', overtime: '-' },
+const attendanceData: AttendanceRecord[] = [
+  { key: '1', name: 'Rahul Sharma', department: 'Engineering', checkIn: '09:02 AM', checkOut: '06:15 PM', workHours: '9h 13m', status: 'present', overtime: '0h 13m' },
+  { key: '2', name: 'Priya Singh', department: 'Marketing', checkIn: '09:28 AM', checkOut: '06:30 PM', workHours: '9h 02m', status: 'present', overtime: '0h 02m' },
+  { key: '3', name: 'Amit Patel', department: 'Finance', checkIn: '-', checkOut: '-', workHours: '-', status: 'absent', overtime: '-' },
+  { key: '4', name: 'Sneha Gupta', department: 'HR', checkIn: '09:45 AM', checkOut: '06:00 PM', workHours: '8h 15m', status: 'late', overtime: '-' },
+  { key: '5', name: 'Vikram Joshi', department: 'Sales', checkIn: '-', checkOut: '-', workHours: '-', status: 'on_leave', overtime: '-' },
+  { key: '6', name: 'Ananya Reddy', department: 'Engineering', checkIn: '09:00 AM', checkOut: '06:20 PM', workHours: '9h 20m', status: 'present', overtime: '0h 20m' },
+  { key: '7', name: 'Karan Mehta', department: 'Sales', checkIn: '09:05 AM', checkOut: '06:00 PM', workHours: '8h 55m', status: 'present', overtime: '-' },
+  { key: '8', name: 'Deepika Nair', department: 'Engineering', checkIn: '09:15 AM', checkOut: '01:00 PM', workHours: '3h 45m', status: 'half_day', overtime: '-' },
+  { key: '9', name: 'Rajesh Kumar', department: 'Finance', checkIn: '09:10 AM', checkOut: '06:25 PM', workHours: '9h 15m', status: 'present', overtime: '0h 15m' },
+  { key: '10', name: 'Meera Iyer', department: 'Marketing', checkIn: '09:00 AM', checkOut: '06:00 PM', workHours: '9h 00m', status: 'work_from_home', overtime: '-' },
+  { key: '11', name: 'Suresh Pillai', department: 'HR', checkIn: '-', checkOut: '-', workHours: '-', status: 'absent', overtime: '-' },
+  { key: '12', name: 'Neha Deshmukh', department: 'Engineering', checkIn: '09:50 AM', checkOut: '06:30 PM', workHours: '8h 40m', status: 'late', overtime: '-' },
+  { key: '13', name: 'Arjun Malhotra', department: 'Sales', checkIn: '09:08 AM', checkOut: '06:10 PM', workHours: '9h 02m', status: 'present', overtime: '0h 02m' },
+  { key: '14', name: 'Pooja Verma', department: 'Finance', checkIn: '-', checkOut: '-', workHours: '-', status: 'on_leave', overtime: '-' },
 ];
 
-const statusColorMap: Record<string, string> = {
-  Present: 'green',
-  Absent: 'red',
-  Late: 'orange',
-  HalfDay: 'gold',
-  OnLeave: 'blue',
-  WFH: 'purple',
-};
-
 const statusLabelMap: Record<string, string> = {
-  Present: 'Present',
-  Absent: 'Absent',
-  Late: 'Late',
-  HalfDay: 'Half Day',
-  OnLeave: 'On Leave',
-  WFH: 'WFH',
+  present: 'Present',
+  absent: 'Absent',
+  late: 'Late',
+  half_day: 'Half Day',
+  on_leave: 'On Leave',
+  work_from_home: 'WFH',
+  holiday: 'Holiday',
+  week_off: 'Week Off',
 };
 
 const AttendanceList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const [form] = Form.useForm();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
 
-  const filteredData = attendanceData.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.department.toLowerCase().includes(searchText.toLowerCase());
-    const matchesTab = activeTab === 'All' || item.status === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  const queryParams = {
+    page,
+    limit,
+    date: selectedDate?.toISOString().split('T')[0],
+    status: activeTab !== 'All' ? activeTab : undefined,
+  };
 
-  const presentCount = attendanceData.filter(a => a.status === 'Present').length;
-  const absentCount = attendanceData.filter(a => a.status === 'Absent').length;
-  const lateCount = attendanceData.filter(a => a.status === 'Late').length;
-  const onLeaveCount = attendanceData.filter(a => a.status === 'OnLeave').length;
+  const { data, isLoading } = useAttendanceList(queryParams);
+  const markAttendanceMutation = useMarkAttendance();
 
-  const statsCards = [
-    { title: 'Present Today', value: presentCount, icon: <CheckCircle2 size={20} />, color: '#059669' },
-    { title: 'Absent', value: absentCount, icon: <XCircle size={20} />, color: '#dc2626' },
-    { title: 'Late', value: lateCount, icon: <Clock3 size={20} />, color: '#d97706' },
-    { title: 'On Leave', value: onLeaveCount, icon: <Palmtree size={20} />, color: '#2563eb' },
+  const allAttendance: AttendanceRecord[] = data?.data ?? attendanceData;
+  const paginationData = data?.pagination;
+
+  // Form state
+  const [formEmployee, setFormEmployee] = useState('');
+  const [formDate, setFormDate] = useState<Date | undefined>(undefined);
+  const [formStatus, setFormStatus] = useState('');
+  const [formCheckIn, setFormCheckIn] = useState('');
+  const [formCheckOut, setFormCheckOut] = useState('');
+
+  const presentCount = allAttendance.filter(a => a.status === 'present').length;
+  const absentCount = allAttendance.filter(a => a.status === 'absent').length;
+  const lateCount = allAttendance.filter(a => a.status === 'late').length;
+  const onLeaveCount = allAttendance.filter(a => a.status === 'on_leave').length;
+  const wfhCount = allAttendance.filter(a => a.status === 'work_from_home').length;
+
+  const statsCards: StatsCardProps[] = [
+    { title: 'Present Today', value: presentCount, icon: <CheckCircle2 className="h-5 w-5" />, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { title: 'Absent', value: absentCount, icon: <XCircle className="h-5 w-5" />, color: 'text-red-600', bgColor: 'bg-red-50' },
+    { title: 'Late', value: lateCount, icon: <Clock3 className="h-5 w-5" />, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { title: 'On Leave', value: onLeaveCount, icon: <Palmtree className="h-5 w-5" />, color: 'text-blue-600', bgColor: 'bg-blue-50' },
   ];
 
-  const columns = [
+  const filteredData = useMemo(() => {
+    // If API data is used with status filter in query, no client-side filtering needed
+    if (data?.data) return allAttendance;
+    return allAttendance.filter(item => {
+      return activeTab === 'All' || item.status === activeTab;
+    });
+  }, [activeTab, allAttendance, data?.data]);
+
+  const columns: ColumnDef<AttendanceRecord>[] = [
     {
-      title: 'Employee', dataIndex: 'name', key: 'name',
-      render: (text: string) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#1a56db' }}>{text[0]}</Avatar>
-          <Text strong>{text}</Text>
-        </Space>
+      accessorKey: 'name',
+      header: 'Employee',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+              {getInitials(row.original.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-medium">{row.original.name}</span>
+        </div>
       ),
     },
-    { title: 'Department', dataIndex: 'department', key: 'department', render: (d: string) => <Tag color="blue">{d}</Tag> },
-    { title: 'Check In', dataIndex: 'checkIn', key: 'checkIn' },
-    { title: 'Check Out', dataIndex: 'checkOut', key: 'checkOut' },
-    { title: 'Work Hours', dataIndex: 'workHours', key: 'workHours', render: (h: string) => <Text strong>{h}</Text> },
     {
-      title: 'Status', dataIndex: 'status', key: 'status',
-      render: (status: string) => <Tag color={statusColorMap[status]}>{statusLabelMap[status]}</Tag>,
+      accessorKey: 'department',
+      header: 'Department',
+      cell: ({ row }) => (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          {row.original.department}
+        </Badge>
+      ),
     },
     {
-      title: 'Overtime', dataIndex: 'overtime', key: 'overtime',
-      render: (ot: string) => ot !== '-' ? <Text style={{ color: '#059669' }}>{ot}</Text> : <Text type="secondary">-</Text>,
+      accessorKey: 'checkIn',
+      header: 'Check In',
     },
     {
-      title: 'Actions', key: 'actions',
-      render: () => (
-        <Space>
-          <Button type="text" size="small" icon={<Eye size={16} />} />
-          <Button type="text" size="small" icon={<Edit2 size={16} />} />
-        </Space>
+      accessorKey: 'checkOut',
+      header: 'Check Out',
+    },
+    {
+      accessorKey: 'workHours',
+      header: 'Work Hours',
+      cell: ({ row }) => (
+        <span className="font-semibold">{row.original.workHours}</span>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => (
+        <StatusBadge status={statusLabelMap[row.original.status] || row.original.status} />
+      ),
+    },
+    {
+      accessorKey: 'overtime',
+      header: 'Overtime',
+      cell: ({ row }) =>
+        row.original.overtime !== '-' ? (
+          <span className="text-emerald-600 font-medium">{row.original.overtime}</span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: () => (
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Edit2 className="h-4 w-4" />
+          </Button>
+        </div>
       ),
     },
   ];
+
+  const resetForm = () => {
+    setFormEmployee('');
+    setFormDate(undefined);
+    setFormStatus('');
+    setFormCheckIn('');
+    setFormCheckOut('');
+  };
+
+  const handleSubmit = () => {
+    if (!formEmployee || !formStatus) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+    markAttendanceMutation.mutate(
+      {
+        employeeId: formEmployee,
+        date: formDate?.toISOString().split('T')[0],
+        status: formStatus,
+        checkIn: formCheckIn,
+        checkOut: formCheckOut,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Attendance marked successfully');
+          setIsModalOpen(false);
+          resetForm();
+        },
+        onError: (err: any) => toast.error(err?.message || 'Failed to mark attendance'),
+      }
+    );
+  };
 
   const tabItems = [
-    { key: 'All', label: `All (${attendanceData.length})` },
-    { key: 'Present', label: `Present (${presentCount})` },
-    { key: 'Absent', label: `Absent (${absentCount})` },
-    { key: 'Late', label: `Late (${lateCount})` },
-    { key: 'OnLeave', label: `On Leave (${onLeaveCount})` },
-    { key: 'WFH', label: `WFH (${attendanceData.filter(a => a.status === 'WFH').length})` },
+    { value: 'All', label: `All (${allAttendance.length})` },
+    { value: 'present', label: `Present (${presentCount})` },
+    { value: 'absent', label: `Absent (${absentCount})` },
+    { value: 'late', label: `Late (${lateCount})` },
+    { value: 'on_leave', label: `On Leave (${onLeaveCount})` },
+    { value: 'work_from_home', label: `WFH (${wfhCount})` },
   ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Attendance Management</Title>
-          <Text type="secondary">Track and manage employee attendance</Text>
-        </div>
-        <Space>
-          <DatePicker style={{ width: 200 }} />
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsModalOpen(true)}>
-            Mark Attendance
-          </Button>
-        </Space>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Attendance Management"
+        description="Track and manage employee attendance"
+        actions={
+          <>
+            <div className="w-[200px]">
+              <DatePicker
+                value={selectedDate}
+                onChange={setSelectedDate}
+                placeholder="Select date"
+              />
+            </div>
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Mark Attendance
+            </Button>
+          </>
+        }
+      />
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        {statsCards.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Statistic
-                  title={<Text type="secondary">{stat.title}</Text>}
-                  value={stat.value}
-                  valueStyle={{ fontSize: 28, fontWeight: 700 }}
-                />
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12,
-                  background: `${stat.color}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: stat.color,
-                }}>
-                  {stat.icon}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <StatsGrid stats={statsCards} />
 
-      <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={tabItems}
-          style={{ marginBottom: 16 }}
-        />
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
-          <Input
-            placeholder="Search employees..."
-            prefix={<Search size={16} />}
-            value={searchText}
-            onChange={e => setSearchText(e.target.value)}
-            style={{ width: 300 }}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="flex-wrap">
+          {tabItems.map(tab => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value={activeTab} className="mt-4">
+          <DataTable
+            columns={columns}
+            data={filteredData}
+            isLoading={isLoading}
+            searchKey="name"
+            searchPlaceholder="Search employees..."
+            onSearchChange={() => {}}
+            filterContent={
+              <Select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="HR">HR</SelectItem>
+                  <SelectItem value="Sales">Sales</SelectItem>
+                </SelectContent>
+              </Select>
+            }
           />
-          <Select
-            placeholder="Department"
-            allowClear
-            style={{ width: 180 }}
-            options={[
-              { value: 'Engineering', label: 'Engineering' },
-              { value: 'Marketing', label: 'Marketing' },
-              { value: 'Finance', label: 'Finance' },
-              { value: 'HR', label: 'HR' },
-              { value: 'Sales', label: 'Sales' },
-            ]}
-          />
-        </Space>
-        <Table
-          dataSource={filteredData}
-          columns={columns}
-          pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} records` }}
-        />
-      </Card>
+        </TabsContent>
+      </Tabs>
 
-      <Modal
-        title="Mark Attendance"
+      <FormDialog
         open={isModalOpen}
-        onCancel={() => { setIsModalOpen(false); form.resetFields(); }}
-        onOk={() => { form.validateFields().then(() => { setIsModalOpen(false); form.resetFields(); }); }}
-        width={560}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) resetForm();
+        }}
+        title="Mark Attendance"
+        description="Record attendance for an employee"
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="employee" label="Employee" rules={[{ required: true }]}>
-            <Select
-              placeholder="Select employee"
-              showSearch
-              optionFilterProp="label"
-              options={attendanceData.map(e => ({ value: e.key, label: e.name }))}
-            />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="date" label="Date" rules={[{ required: true }]}>
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="status" label="Status" rules={[{ required: true }]}>
-                <Select
-                  placeholder="Select status"
-                  options={[
-                    { value: 'Present', label: 'Present' },
-                    { value: 'Absent', label: 'Absent' },
-                    { value: 'Late', label: 'Late' },
-                    { value: 'HalfDay', label: 'Half Day' },
-                    { value: 'OnLeave', label: 'On Leave' },
-                    { value: 'WFH', label: 'Work From Home' },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="checkIn" label="Check In Time">
-                <TimePicker use12Hours format="h:mm A" style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="checkOut" label="Check Out Time">
-                <TimePicker use12Hours format="h:mm A" style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Modal>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Employee *</Label>
+            <Select value={formEmployee} onValueChange={setFormEmployee}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select employee" />
+              </SelectTrigger>
+              <SelectContent>
+                {attendanceData.map(e => (
+                  <SelectItem key={e.key} value={e.key}>
+                    {e.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Date *</Label>
+              <DatePicker value={formDate} onChange={setFormDate} placeholder="Select date" />
+            </div>
+            <div className="space-y-2">
+              <Label>Status *</Label>
+              <Select value={formStatus} onValueChange={setFormStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Present">Present</SelectItem>
+                  <SelectItem value="Absent">Absent</SelectItem>
+                  <SelectItem value="Late">Late</SelectItem>
+                  <SelectItem value="HalfDay">Half Day</SelectItem>
+                  <SelectItem value="OnLeave">On Leave</SelectItem>
+                  <SelectItem value="WorkFromHome">Work From Home</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Check In Time</Label>
+              <Input
+                type="time"
+                value={formCheckIn}
+                onChange={(e) => setFormCheckIn(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Check Out Time</Label>
+              <Input
+                type="time"
+                value={formCheckOut}
+                onChange={(e) => setFormCheckOut(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsModalOpen(false);
+                resetForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>Save</Button>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 };

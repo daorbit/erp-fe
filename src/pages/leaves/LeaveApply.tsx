@@ -1,20 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import {
-  Card, Button, Typography, Form, Select, DatePicker, Input, Upload, Radio,
-  Row, Col, Space, Checkbox, Tag, Divider, message,
-} from 'antd';
-import {
-  Send,
-  Upload as UploadIcon,
-  Calendar,
-  FileText,
-  Info,
-} from 'lucide-react';
+import { Send, Calendar, Info } from 'lucide-react';
+import { toast } from 'sonner';
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
-const { RangePicker } = DatePicker;
+import PageHeader from '@/components/shared/PageHeader';
+import DatePicker from '@/components/shared/DatePicker';
+import FileUploadZone from '@/components/shared/FileUploadZone';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useApplyLeave, useLeaveBalance } from '@/hooks/queries/useLeaves';
 
 const leaveBalances: Record<string, { allocated: number; used: number; remaining: number }> = {
   'Casual Leave': { allocated: 12, used: 3, remaining: 9 },
@@ -25,243 +26,250 @@ const leaveBalances: Record<string, { allocated: number; used: number; remaining
 };
 
 const LeaveApply: React.FC = () => {
-  const [form] = Form.useForm();
-  const [selectedLeaveType, setSelectedLeaveType] = useState<string | undefined>(undefined);
+  const [selectedLeaveType, setSelectedLeaveType] = useState<string>('');
   const [isHalfDay, setIsHalfDay] = useState(false);
-  const [calculatedDays, setCalculatedDays] = useState<number>(0);
+  const [halfDayPeriod, setHalfDayPeriod] = useState('first');
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [reason, setReason] = useState('');
 
-  const balance = selectedLeaveType ? leaveBalances[selectedLeaveType] : null;
+  // API hooks
+  const applyLeaveMutation = useApplyLeave();
+  const { data: balanceData } = useLeaveBalance('me');
+  const apiBalances = balanceData?.data;
 
-  const handleDateChange = (dates: any) => {
-    if (dates && dates[0] && dates[1]) {
-      const start = dates[0];
-      const end = dates[1];
-      const diff = end.diff(start, 'day') + 1;
-      setCalculatedDays(isHalfDay ? 0.5 : diff);
-    } else {
-      setCalculatedDays(0);
-    }
-  };
+  const balance = selectedLeaveType
+    ? (apiBalances?.[selectedLeaveType] ?? leaveBalances[selectedLeaveType] ?? null)
+    : null;
 
-  const handleHalfDayChange = (checked: boolean) => {
-    setIsHalfDay(checked);
-    const dates = form.getFieldValue('dateRange');
-    if (checked && dates && dates[0] && dates[1]) {
-      setCalculatedDays(0.5);
-    } else if (dates && dates[0] && dates[1]) {
-      const diff = dates[1].diff(dates[0], 'day') + 1;
-      setCalculatedDays(diff);
-    }
-  };
+  const calculatedDays = (() => {
+    if (!startDate || !endDate) return 0;
+    if (isHalfDay) return 0.5;
+    const diff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    return diff > 0 ? diff : 0;
+  })();
 
   const handleSubmit = () => {
-    form.validateFields().then(() => {
-      message.success('Leave application submitted successfully!');
-      form.resetFields();
-      setSelectedLeaveType(undefined);
-      setCalculatedDays(0);
-      setIsHalfDay(false);
-    });
+    if (!selectedLeaveType || !startDate || !endDate || !reason) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    applyLeaveMutation.mutate(
+      {
+        leaveType: selectedLeaveType,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        reason,
+        isHalfDay,
+        halfDayPeriod: isHalfDay ? halfDayPeriod : undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Leave application submitted successfully!');
+          setSelectedLeaveType('');
+          setStartDate(undefined);
+          setEndDate(undefined);
+          setReason('');
+          setIsHalfDay(false);
+        },
+        onError: (err: any) => toast.error(err?.message || 'Failed to submit leave application'),
+      }
+    );
+  };
+
+  const handleReset = () => {
+    setSelectedLeaveType('');
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setReason('');
+    setIsHalfDay(false);
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div>
-          <Title level={3} style={{ margin: 0 }}>Apply for Leave</Title>
-          <Text type="secondary">Submit a new leave application</Text>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Apply for Leave"
+        description="Submit a new leave application"
+      />
 
-      <Row gutter={[24, 24]}>
-        <Col xs={24} lg={16}>
-          <Card bordered={false} style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-            <Form form={form} layout="vertical">
-              <Form.Item
-                name="leaveType"
-                label="Leave Type"
-                rules={[{ required: true, message: 'Please select a leave type' }]}
-              >
-                <Select
-                  placeholder="Select leave type"
-                  size="large"
-                  onChange={(val) => setSelectedLeaveType(val)}
-                  options={[
-                    { value: 'Casual Leave', label: 'Casual Leave' },
-                    { value: 'Sick Leave', label: 'Sick Leave' },
-                    { value: 'Earned Leave', label: 'Earned Leave' },
-                    { value: 'Comp Off', label: 'Comp Off' },
-                    { value: 'Loss of Pay', label: 'Loss of Pay' },
-                  ]}
-                />
-              </Form.Item>
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        {/* Main Form */}
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            {/* Leave Type */}
+            <div className="space-y-2">
+              <Label>Leave Type *</Label>
+              <Select value={selectedLeaveType} onValueChange={setSelectedLeaveType}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select leave type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Casual Leave">Casual Leave</SelectItem>
+                  <SelectItem value="Sick Leave">Sick Leave</SelectItem>
+                  <SelectItem value="Earned Leave">Earned Leave</SelectItem>
+                  <SelectItem value="Comp Off">Comp Off</SelectItem>
+                  <SelectItem value="Loss of Pay">Loss of Pay</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <Form.Item
-                name="dateRange"
-                label="Date Range"
-                rules={[{ required: true, message: 'Please select dates' }]}
-              >
-                <RangePicker
-                  style={{ width: '100%' }}
-                  size="large"
-                  onChange={handleDateChange}
-                />
-              </Form.Item>
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>From Date *</Label>
+                <DatePicker value={startDate} onChange={setStartDate} placeholder="Start date" />
+              </div>
+              <div className="space-y-2">
+                <Label>To Date *</Label>
+                <DatePicker value={endDate} onChange={setEndDate} placeholder="End date" />
+              </div>
+            </div>
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="halfDay" valuePropName="checked">
-                    <Checkbox onChange={(e) => handleHalfDayChange(e.target.checked)}>
-                      Half Day Leave
-                    </Checkbox>
-                  </Form.Item>
-                </Col>
-                {isHalfDay && (
-                  <Col span={12}>
-                    <Form.Item name="halfDayPeriod" rules={[{ required: isHalfDay, message: 'Select period' }]}>
-                      <Radio.Group>
-                        <Radio value="first">First Half</Radio>
-                        <Radio value="second">Second Half</Radio>
-                      </Radio.Group>
-                    </Form.Item>
-                  </Col>
-                )}
-              </Row>
-
-              {calculatedDays > 0 && (
-                <div style={{
-                  background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8,
-                  padding: '12px 16px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8,
-                }}>
-                  <Calendar size={18} style={{ color: '#0284c7' }} />
-                  <Text style={{ color: '#0284c7' }}>
-                    Number of days: <Text strong style={{ color: '#0284c7' }}>{calculatedDays} {calculatedDays === 1 ? 'day' : 'days'}</Text>
-                  </Text>
-                </div>
+            {/* Half Day */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <Switch checked={isHalfDay} onCheckedChange={setIsHalfDay} id="halfDay" />
+                <Label htmlFor="halfDay">Half Day Leave</Label>
+              </div>
+              {isHalfDay && (
+                <RadioGroup value={halfDayPeriod} onValueChange={setHalfDayPeriod} className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="first" id="first" />
+                    <Label htmlFor="first">First Half</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="second" id="second" />
+                    <Label htmlFor="second">Second Half</Label>
+                  </div>
+                </RadioGroup>
               )}
+            </div>
 
-              <Form.Item
-                name="reason"
-                label="Reason"
-                rules={[{ required: true, message: 'Please enter a reason' }]}
-              >
-                <TextArea
-                  rows={4}
-                  placeholder="Enter the reason for your leave..."
-                  showCount
-                  maxLength={500}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="attachment"
-                label="Attachment (Optional)"
-              >
-                <Upload.Dragger
-                  maxCount={1}
-                  beforeUpload={() => false}
-                  style={{ borderRadius: 8 }}
-                >
-                  <p style={{ marginBottom: 8 }}>
-                    <UploadIcon size={32} style={{ color: '#6b7280' }} />
-                  </p>
-                  <p style={{ fontSize: 14, color: '#374151' }}>Click or drag file to upload</p>
-                  <p style={{ fontSize: 12, color: '#9ca3af' }}>
-                    Support PDF, JPG, PNG (Max 5MB)
-                  </p>
-                </Upload.Dragger>
-              </Form.Item>
-
-              <Divider />
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                <Button size="large" onClick={() => { form.resetFields(); setSelectedLeaveType(undefined); setCalculatedDays(0); setIsHalfDay(false); }}>
-                  Cancel
-                </Button>
-                <Button type="primary" size="large" icon={<Send size={16} />} onClick={handleSubmit}>
-                  Submit Application
-                </Button>
+            {/* Calculated Days */}
+            {calculatedDays > 0 && (
+              <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800 p-3">
+                <Calendar size={18} className="text-blue-600 shrink-0" />
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  Number of days: <span className="font-semibold">{calculatedDays} {calculatedDays === 1 ? 'day' : 'days'}</span>
+                </p>
               </div>
-            </Form>
-          </Card>
-        </Col>
+            )}
 
-        <Col xs={24} lg={8}>
+            {/* Reason */}
+            <div className="space-y-2">
+              <Label>Reason *</Label>
+              <Textarea
+                rows={4}
+                placeholder="Enter the reason for your leave..."
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground text-right">{reason.length}/500</p>
+            </div>
+
+            {/* File Upload */}
+            <div className="space-y-2">
+              <Label>Attachment (Optional)</Label>
+              <FileUploadZone
+                accept=".pdf,.jpg,.png"
+                maxSize={5 * 1024 * 1024}
+                onFilesSelected={() => {}}
+                label="Click or drag file to upload"
+                description="Support PDF, JPG, PNG (Max 5MB)"
+              />
+            </div>
+
+            <Separator />
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" size="lg" onClick={handleReset}>Cancel</Button>
+              <Button size="lg" onClick={handleSubmit}>
+                <Send className="mr-2 h-4 w-4" /> Submit Application
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
           {/* Leave Balance Card */}
-          <Card
-            title={<Space><Info size={16} /> <span>Leave Balance</span></Space>}
-            bordered={false}
-            style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 16 }}
-          >
-            {Object.entries(leaveBalances).map(([type, bal]) => (
-              <div
-                key={type}
-                style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 0', borderBottom: '1px solid #f3f4f6',
-                }}
-              >
-                <div>
-                  <Text strong style={{ fontSize: 13 }}>{type}</Text>
-                  <br />
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {bal.allocated} allocated, {bal.used} used
-                  </Text>
-                </div>
-                <Tag
-                  color={bal.remaining > 5 ? 'green' : bal.remaining > 0 ? 'orange' : 'red'}
-                  style={{ fontWeight: 600, fontSize: 14, padding: '2px 12px' }}
-                >
-                  {bal.remaining}
-                </Tag>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Info size={16} /> Leave Balance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y">
+                {Object.entries(apiBalances ?? leaveBalances).map(([type, bal]) => (
+                  <div key={type} className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-sm font-medium">{type}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {bal.allocated} allocated, {bal.used} used
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={`text-sm font-semibold px-3 ${
+                        bal.remaining > 5 ? 'bg-green-100 text-green-700' :
+                        bal.remaining > 0 ? 'bg-orange-100 text-orange-700' :
+                        'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {bal.remaining}
+                    </Badge>
+                  </div>
+                ))}
               </div>
-            ))}
+            </CardContent>
           </Card>
 
           {/* Selected Leave Info */}
           {selectedLeaveType && balance && (
-            <Card
-              title="Selected Leave Info"
-              bordered={false}
-              style={{ borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}
-            >
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Text type="secondary">Leave Type</Text>
-                  <Tag color="blue">{selectedLeaveType}</Tag>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Selected Leave Info</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Leave Type</span>
+                  <Badge variant="outline" className="bg-blue-100 text-blue-700">{selectedLeaveType}</Badge>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Text type="secondary">Allocated</Text>
-                  <Text strong>{balance.allocated}</Text>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Allocated</span>
+                  <span className="font-medium">{balance.allocated}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Text type="secondary">Used</Text>
-                  <Text strong style={{ color: '#dc2626' }}>{balance.used}</Text>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Used</span>
+                  <span className="font-medium text-red-600">{balance.used}</span>
                 </div>
-                <Divider style={{ margin: '8px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Text strong>Available Balance</Text>
-                  <Text strong style={{ fontSize: 18, color: '#059669' }}>{balance.remaining}</Text>
+                <Separator />
+                <div className="flex justify-between text-sm">
+                  <span className="font-semibold">Available Balance</span>
+                  <span className="text-lg font-bold text-green-600">{balance.remaining}</span>
                 </div>
                 {calculatedDays > 0 && (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">Applying for</Text>
-                      <Text strong>{calculatedDays} {calculatedDays === 1 ? 'day' : 'days'}</Text>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Applying for</span>
+                      <span className="font-medium">{calculatedDays} {calculatedDays === 1 ? 'day' : 'days'}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Text type="secondary">Balance after</Text>
-                      <Text strong style={{ color: balance.remaining - calculatedDays >= 0 ? '#059669' : '#dc2626' }}>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Balance after</span>
+                      <span className={`font-medium ${balance.remaining - calculatedDays >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {balance.remaining - calculatedDays}
-                      </Text>
+                      </span>
                     </div>
                   </>
                 )}
-              </Space>
+              </CardContent>
             </Card>
           )}
-        </Col>
-      </Row>
+        </div>
+      </div>
     </div>
   );
 };
