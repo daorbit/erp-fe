@@ -19,7 +19,21 @@ export const fontFamilies = [
   { label: 'Roboto', value: "'Roboto', sans-serif" },
 ];
 
+function hexToRgb(hex: string) {
+  const normalized = hex.replace('#', '');
+  const expanded = normalized.length === 3
+    ? normalized.split('').map((c) => c + c).join('')
+    : normalized;
+  const int = parseInt(expanded, 16);
+  const r = (int >> 16) & 255;
+  const g = (int >> 8) & 255;
+  const b = int & 255;
+  return `${r}, ${g}, ${b}`;
+}
+
 export function getAntdTheme(primaryColor: string, isDark: boolean): ThemeConfig {
+  const primaryRgb = hexToRgb(primaryColor);
+
   return {
     token: {
       colorPrimary: primaryColor,
@@ -41,11 +55,18 @@ export function getAntdTheme(primaryColor: string, isDark: boolean): ThemeConfig
       },
       Menu: {
         darkItemBg: 'transparent',
-        darkItemColor: 'rgba(255,255,255,0.6)',
-        darkItemHoverBg: 'rgba(255,255,255,0.06)',
-        darkItemHoverColor: 'rgba(255,255,255,0.85)',
-        darkItemSelectedBg: 'rgba(255,255,255,0.1)',
+        darkItemColor: 'rgba(255,255,255,0.8)',
+        darkItemHoverBg: 'rgba(255,255,255,0.08)',
+        darkItemHoverColor: 'rgba(255,255,255,0.95)',
+        darkItemSelectedBg: `rgba(${primaryRgb}, 0.16)`,
         darkItemSelectedColor: '#ffffff',
+        itemBg: 'transparent',
+        itemColor: '#475569',
+        itemHoverBg: `rgba(${primaryRgb}, 0.12)`,
+        itemHoverColor: '#1f2937',
+        itemSelectedBg: `rgba(${primaryRgb}, 0.16)`,
+        itemSelectedColor: primaryColor,
+        itemActiveBg: `rgba(${primaryRgb}, 0.16)`,
       },
       Card: {
         paddingLG: 20,
