@@ -1,16 +1,20 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React from 'react';
+import { Card, Typography, Empty } from 'antd';
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const { Title, Text } = Typography;
+
+const Index: React.FC = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="space-y-6">
+      <div>
+        <Title level={4} className="!mb-1">Home</Title>
+        <Text type="secondary">Welcome to ERP</Text>
+      </div>
+      <Card bordered={false}>
+        <Empty description="This module is coming soon" />
+      </Card>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;

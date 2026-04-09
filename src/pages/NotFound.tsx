@@ -1,39 +1,28 @@
 import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Home } from 'lucide-react';
+import { Button, Result } from 'antd';
+import { HomeOutlined } from '@ant-design/icons';
 
 const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error(
-      '404 Error: User attempted to access non-existent route:',
-      location.pathname,
-    );
+    console.error('404 Error: User attempted to access non-existent route:', location.pathname);
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center space-y-6 px-4">
-        <h1 className="text-8xl font-extrabold tracking-tighter text-primary">
-          404
-        </h1>
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Page Not Found
-        </h2>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          The page you are looking for does not exist or has been moved. Please
-          check the URL or navigate back to the dashboard.
-        </p>
-        <Button asChild size="lg">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#111318]">
+      <Result
+        status="404"
+        title="404"
+        subTitle="The page you are looking for does not exist or has been moved."
+        extra={
           <Link to="/admin">
-            <Home className="mr-2 h-4 w-4" />
-            Go Home
+            <Button type="primary" icon={<HomeOutlined />} size="large">Go Home</Button>
           </Link>
-        </Button>
-      </div>
+        }
+      />
     </div>
   );
 };
