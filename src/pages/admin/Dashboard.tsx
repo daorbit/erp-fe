@@ -1,24 +1,18 @@
 import React from 'react';
+import { Card, Statistic, Table, Avatar, Tag, Progress, Typography, Row, Col, List } from 'antd';
 import {
-  Users,
-  UserPlus,
-  CheckCircle2,
-  Clock3,
-  ShieldCheck,
-} from 'lucide-react';
-import { type ColumnDef } from '@tanstack/react-table';
-import PageHeader from '@/components/shared/PageHeader';
-import StatsGrid from '@/components/shared/StatsGrid';
-import DataTable from '@/components/shared/DataTable/DataTable';
-import StatusBadge from '@/components/shared/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { getInitials } from '@/lib/formatters';
+  UserOutlined,
+  TeamOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  SafetyCertificateOutlined,
+  UserAddOutlined,
+  RiseOutlined,
+  FallOutlined,
+} from '@ant-design/icons';
 import { useDashboardStats, useRecentActivities } from '@/hooks/queries/useDashboard';
 
-/* ---------- Mock Data ---------- */
+const { Title, Text } = Typography;
 
 interface OnboardingRecord {
   key: string;
@@ -38,197 +32,174 @@ const recentOnboarding: OnboardingRecord[] = [
 ];
 
 const activities = [
-  { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <ShieldCheck className="h-4 w-4 text-blue-600" />, initials: 'RS', color: 'bg-blue-100 text-blue-700' },
-  { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircle2 className="h-4 w-4 text-green-600" />, initials: 'PS', color: 'bg-green-100 text-green-700' },
-  { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserPlus className="h-4 w-4 text-amber-600" />, initials: 'AP', color: 'bg-amber-100 text-amber-700' },
-  { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <ShieldCheck className="h-4 w-4 text-blue-600" />, initials: 'SG', color: 'bg-blue-100 text-blue-700' },
+  { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <SafetyCertificateOutlined className="text-blue-600" /> },
+  { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircleOutlined className="text-green-600" /> },
+  { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserAddOutlined className="text-amber-600" /> },
+  { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <SafetyCertificateOutlined className="text-blue-600" /> },
 ];
 
-/* ---------- Stats ---------- */
+const statusColorMap: Record<string, string> = {
+  'Completed': 'green',
+  'In Progress': 'orange',
+  'Pending': 'gold',
+};
+
+const columns = [
+  {
+    title: 'Employee',
+    dataIndex: 'name',
+    key: 'name',
+    render: (_: any, record: OnboardingRecord) => (
+      <div className="flex items-center gap-3">
+        <Avatar className="bg-blue-600" size={32}>
+          {record.name.split(' ').map(n => n[0]).join('')}
+        </Avatar>
+        <div>
+          <div className="font-medium text-sm">{record.name}</div>
+          <div className="text-xs text-gray-400">{record.email}</div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Department',
+    dataIndex: 'department',
+    key: 'department',
+    render: (dept: string) => <Tag color="blue">{dept}</Tag>,
+  },
+  {
+    title: 'Status',
+    dataIndex: 'status',
+    key: 'status',
+    render: (status: string) => <Tag color={statusColorMap[status] || 'default'}>{status}</Tag>,
+  },
+  {
+    title: 'KYC Progress',
+    dataIndex: 'progress',
+    key: 'progress',
+    render: (val: number) => (
+      <div className="flex items-center gap-2 min-w-[120px]">
+        <Progress percent={val} size="small" showInfo={false} strokeColor={val === 100 ? '#10b981' : '#3b82f6'} className="flex-1" />
+        <span className="text-xs text-gray-500 w-9 text-right">{val}%</span>
+      </div>
+    ),
+  },
+];
 
 const stats = [
   {
     title: 'Total Employees',
     value: 248,
-    icon: <Users className="h-5 w-5" />,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-    change: '+12% from last month',
+    icon: <TeamOutlined />,
+    color: '#3b82f6',
+    bg: 'bg-blue-50 dark:bg-blue-950',
+    change: '+12%',
+    changeType: 'up' as const,
+    sub: 'from last month',
   },
   {
     title: 'Pending Onboarding',
     value: 15,
-    icon: <UserPlus className="h-5 w-5" />,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
-    change: '+3 from last month',
+    icon: <UserAddOutlined />,
+    color: '#f59e0b',
+    bg: 'bg-amber-50 dark:bg-amber-950',
+    change: '+3',
+    changeType: 'up' as const,
+    sub: 'from last month',
   },
   {
     title: 'KYC Completed',
     value: 230,
-    icon: <CheckCircle2 className="h-5 w-5" />,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
-    change: '93% completion rate',
+    icon: <CheckCircleOutlined />,
+    color: '#10b981',
+    bg: 'bg-green-50 dark:bg-green-950',
+    change: '93%',
+    changeType: 'up' as const,
+    sub: 'completion rate',
   },
   {
     title: 'Pending Approvals',
     value: 8,
-    icon: <Clock3 className="h-5 w-5" />,
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
-    change: '-2 from last month',
+    icon: <ClockCircleOutlined />,
+    color: '#ef4444',
+    bg: 'bg-red-50 dark:bg-red-950',
+    change: '-2',
+    changeType: 'down' as const,
+    sub: 'from last month',
   },
 ];
-
-/* ---------- Table Columns ---------- */
-
-const columns: ColumnDef<OnboardingRecord, unknown>[] = [
-  {
-    accessorKey: 'name',
-    header: 'Employee',
-    cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-            {getInitials(row.original.name)}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="font-medium text-sm">{row.original.name}</p>
-          <p className="text-xs text-muted-foreground">{row.original.email}</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    accessorKey: 'department',
-    header: 'Department',
-    cell: ({ row }) => (
-      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800">
-        {row.original.department}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
-  },
-  {
-    accessorKey: 'progress',
-    header: 'KYC Progress',
-    cell: ({ row }) => {
-      const val = row.original.progress;
-      return (
-        <div className="flex items-center gap-2 min-w-[120px]">
-          <Progress value={val} className="h-2 flex-1" />
-          <span className="text-xs text-muted-foreground w-9 text-right">{val}%</span>
-        </div>
-      );
-    },
-  },
-];
-
-/* ---------- Component ---------- */
 
 const Dashboard: React.FC = () => {
-  const { data: statsData, isLoading: statsLoading } = useDashboardStats();
-  const { data: activitiesData, isLoading: activitiesLoading } = useRecentActivities();
-
-  const dashboardStats = statsData?.data;
-  const apiStats = dashboardStats ? [
-    {
-      title: 'Total Employees',
-      value: dashboardStats.totalEmployees ?? 248,
-      icon: <Users className="h-5 w-5" />,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-      change: dashboardStats.employeeChange ?? '+12% from last month',
-    },
-    {
-      title: 'Pending Onboarding',
-      value: dashboardStats.pendingOnboarding ?? 15,
-      icon: <UserPlus className="h-5 w-5" />,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-100',
-      change: dashboardStats.onboardingChange ?? '+3 from last month',
-    },
-    {
-      title: 'KYC Completed',
-      value: dashboardStats.kycCompleted ?? 230,
-      icon: <CheckCircle2 className="h-5 w-5" />,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100',
-      change: dashboardStats.kycRate ?? '93% completion rate',
-    },
-    {
-      title: 'Pending Approvals',
-      value: dashboardStats.pendingApprovals ?? 8,
-      icon: <Clock3 className="h-5 w-5" />,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100',
-      change: dashboardStats.approvalChange ?? '-2 from last month',
-    },
-  ] : stats;
-
-  const recentActivities = activitiesData?.data ?? activities;
-
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="HR Dashboard"
-        description="Welcome back, Admin. Here's what's happening today."
-      />
+      {/* Page Header */}
+      <div>
+        <Title level={4} className="!mb-1">HR Dashboard</Title>
+        <Text type="secondary">Welcome back, Admin. Here's what's happening today.</Text>
+      </div>
 
-      {/* KPI Stats */}
-      <StatsGrid stats={apiStats} />
+      {/* Stats Cards - like reference image */}
+      <Row gutter={[16, 16]}>
+        {stats.map((stat, index) => (
+          <Col key={index} xs={24} sm={12} lg={6}>
+            <Card className="h-full hover:shadow-md transition-shadow" bordered={false}>
+              <div className="flex items-start justify-between">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${stat.bg}`}>
+                  <span style={{ color: stat.color, fontSize: 20 }}>{stat.icon}</span>
+                </div>
+                <Tag
+                  color={stat.changeType === 'up' ? 'green' : 'red'}
+                  className="!m-0 !rounded-full !text-xs !px-2"
+                >
+                  {stat.changeType === 'up' ? <RiseOutlined /> : <FallOutlined />} {stat.change}
+                </Tag>
+              </div>
+              <div className="mt-4">
+                <Text type="secondary" className="text-xs">{stat.title}</Text>
+                <div className="text-2xl font-bold mt-0.5">{stat.value.toLocaleString()}</div>
+                <Text type="secondary" className="text-xs">{stat.sub}</Text>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
 
-      {/* Main Content: Table + Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Onboarding Table */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Onboarding</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DataTable columns={columns} data={recentOnboarding} />
-            </CardContent>
+      {/* Main Content */}
+      <Row gutter={[16, 16]}>
+        {/* Table */}
+        <Col xs={24} lg={16}>
+          <Card title="Recent Onboarding" bordered={false}>
+            <Table
+              columns={columns}
+              dataSource={recentOnboarding}
+              pagination={false}
+              size="middle"
+            />
           </Card>
-        </div>
+        </Col>
 
         {/* Activity Feed */}
-        <div className="lg:col-span-1">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                {recentActivities.map((activity: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <Avatar className="h-9 w-9 shrink-0">
-                      <AvatarFallback className="bg-muted text-xs">
+        <Col xs={24} lg={8}>
+          <Card title="Recent Activity" bordered={false} className="h-full">
+            <List
+              dataSource={activities}
+              renderItem={(activity) => (
+                <List.Item className="!px-0">
+                  <List.Item.Meta
+                    avatar={
+                      <Avatar size={36} className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                         {activity.icon}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm leading-snug">{activity.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
+                      </Avatar>
+                    }
+                    title={<Text className="text-sm">{activity.title}</Text>}
+                    description={<Text type="secondary" className="text-xs">{activity.time}</Text>}
+                  />
+                </List.Item>
+              )}
+            />
           </Card>
-        </div>
-      </div>
+        </Col>
+      </Row>
     </div>
   );
 };

@@ -1,31 +1,15 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../store';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const location = useLocation();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
+  if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
   return <>{children}</>;
 }
 
-interface GuestRouteProps {
-  children: React.ReactNode;
-}
-
-export function GuestRoute({ children }: GuestRouteProps) {
+export function GuestRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-
-  if (isAuthenticated) {
-    return <Navigate to="/admin" replace />;
-  }
-
+  if (isAuthenticated) return <Navigate to="/admin" replace />;
   return <>{children}</>;
 }

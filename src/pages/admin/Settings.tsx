@@ -1,42 +1,26 @@
 import React, { useState } from 'react';
 import {
-  Save,
-  Bell,
-  Lock,
-  Palette,
-  Check,
-  Sun,
-  Moon,
-  Building2,
-} from 'lucide-react';
-import PageHeader from '@/components/shared/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+  Card, Tabs, Input, Select, Switch, Button, Typography, Radio, Divider, Space,
+} from 'antd';
+import {
+  SaveOutlined,
+  CheckOutlined,
+  SunOutlined,
+  MoonOutlined,
+  BgColorsOutlined,
+  BankOutlined,
+  BellOutlined,
+  LockOutlined,
+  FontSizeOutlined,
+} from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setThemeMode, setThemeColor } from '@/store/uiSlice';
-import { cn } from '@/lib/utils';
+import { setThemeMode, setThemeColor, setFontFamily } from '@/store/uiSlice';
+import { colorPalettes, fontFamilies, type ThemeColor } from '@/config/theme';
+import { App } from 'antd';
 
-type ThemeMode = 'light' | 'dark';
-type ThemeColor = 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'teal';
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
-const colorPalettes: Record<ThemeColor, { label: string; primary: string; colors: string[] }> = {
-  blue: { label: 'Blue', primary: '#3b82f6', colors: ['#3b82f6', '#2563eb', '#1d4ed8'] },
-  green: { label: 'Green', primary: '#10b981', colors: ['#10b981', '#059669', '#047857'] },
-  purple: { label: 'Purple', primary: '#8b5cf6', colors: ['#8b5cf6', '#7c3aed', '#6d28d9'] },
-  orange: { label: 'Orange', primary: '#f97316', colors: ['#f97316', '#ea580c', '#c2410c'] },
-  red: { label: 'Red', primary: '#ef4444', colors: ['#ef4444', '#dc2626', '#b91c1c'] },
-  teal: { label: 'Teal', primary: '#14b8a6', colors: ['#14b8a6', '#0d9488', '#0f766e'] },
-};
-
-/* ---------- Notification items ---------- */
 const notificationItems = [
   { id: 'onboarding', label: 'Email notifications for new onboarding', desc: 'Receive email when a new employee starts KYC', defaultOn: true },
   { id: 'kyc-complete', label: 'KYC completion alerts', desc: 'Get notified when KYC is fully completed', defaultOn: true },
@@ -44,354 +28,261 @@ const notificationItems = [
   { id: 'doc-expiry', label: 'Document expiry reminders', desc: 'Alert when employee documents are about to expire', defaultOn: true },
 ];
 
-/* ---------- Mode cards ---------- */
-const modeOptions: {
-  value: ThemeMode;
-  label: string;
-  desc: string;
-  icon: React.ReactNode;
-}[] = [
-  { value: 'light', label: 'Light', desc: 'Clean bright interface', icon: <Sun className="h-5 w-5" /> },
-  { value: 'dark', label: 'Dark', desc: 'Easy on the eyes', icon: <Moon className="h-5 w-5" /> },
-];
-
-/* ---------- Component ---------- */
-
 const Settings: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { message } = App.useApp();
   const mode = useAppSelector((s) => s.ui.themeMode);
   const colorTheme = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
-  const palettes = colorPalettes;
+  const fontFamily = useAppSelector((s) => s.ui.fontFamily);
 
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
     Object.fromEntries(notificationItems.map((n) => [n.id, n.defaultOn])),
   );
 
-  const handleModeChange = (m: ThemeMode) => {
-    dispatch(setThemeMode(m));
-  };
+  const tabItems = [
+    {
+      key: 'appearance',
+      label: (
+        <span className="flex items-center gap-2">
+          <BgColorsOutlined /> Appearance
+        </span>
+      ),
+      children: (
+        <div className="space-y-6">
+          {/* Display Mode */}
+          <Card size="small" title="Display Mode" className="!rounded-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {(['light', 'dark'] as const).map((m) => {
+                const isSelected = mode === m;
+                return (
+                  <button
+                    key={m}
+                    onClick={() => dispatch(setThemeMode(m))}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm ${
+                      isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`rounded-lg border p-3 mb-3 ${
+                      m === 'dark' ? 'bg-[#1a1d23] border-[#2d3140]' : 'bg-[#f8fafc] border-[#e2e8f0]'
+                    }`}>
+                      <div className="flex gap-1.5 mb-2">
+                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                      </div>
+                      <div className="flex gap-2">
+                        <div className={`w-10 h-10 rounded-md ${m === 'dark' ? 'bg-[#22262e]' : 'bg-gray-200'}`} />
+                        <div className="flex-1 space-y-1.5">
+                          <div className={`h-1.5 rounded-full w-3/4 ${m === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`} />
+                          <div className={`h-1.5 rounded-full w-1/2 ${m === 'dark' ? 'bg-gray-700' : 'bg-gray-300'}`} />
+                        </div>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                        <CheckOutlined className="text-white text-[10px]" />
+                      </div>
+                    )}
+                    <div className="mb-1">{m === 'dark' ? <MoonOutlined /> : <SunOutlined />}</div>
+                    <div className="font-semibold text-sm capitalize">{m}</div>
+                    <div className="text-xs text-gray-500">{m === 'dark' ? 'Easy on the eyes' : 'Clean bright interface'}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
 
-  const handleColorChange = (c: ThemeColor) => {
-    dispatch(setThemeColor(c));
-  };
+          {/* Color Theme */}
+          <Card size="small" title="Color Theme" className="!rounded-xl">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {(Object.entries(colorPalettes) as [ThemeColor, typeof colorPalettes[ThemeColor]][]).map(([key, palette]) => {
+                const isSelected = colorTheme === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => dispatch(setThemeColor(key))}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm ${
+                      isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex gap-1.5 mb-3">
+                      {palette.colors.map((c, i) => (
+                        <div key={i} className="w-6 h-6 rounded-md" style={{ background: c, opacity: 1 - i * 0.2 }} />
+                      ))}
+                    </div>
+                    <div className="text-sm font-semibold">{palette.label}</div>
+                    {isSelected && (
+                      <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: palette.primary }}>
+                        <CheckOutlined className="text-white text-[10px]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Font Family */}
+          <Card size="small" title={<span className="flex items-center gap-2"><FontSizeOutlined /> Font Family</span>} className="!rounded-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {fontFamilies.map((font) => {
+                const isSelected = fontFamily === font.value;
+                return (
+                  <button
+                    key={font.value}
+                    onClick={() => dispatch(setFontFamily(font.value))}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm ${
+                      isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="mb-2" style={{ fontFamily: font.value }}>
+                      <div className="text-2xl font-bold">Aa</div>
+                      <div className="text-sm mt-1">The quick brown fox</div>
+                    </div>
+                    <div className="text-sm font-semibold">{font.label}</div>
+                    {isSelected && (
+                      <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                        <CheckOutlined className="text-white text-[10px]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Preview */}
+          <Card size="small" title="Preview" className="!rounded-xl">
+            <Space wrap>
+              <Button type="primary">Primary Button</Button>
+              <Button>Default Button</Button>
+              <Button type="dashed">Dashed</Button>
+              <Button type="text">Text</Button>
+              <Button type="link">Link</Button>
+            </Space>
+          </Card>
+        </div>
+      ),
+    },
+    {
+      key: 'company',
+      label: (
+        <span className="flex items-center gap-2">
+          <BankOutlined /> Company
+        </span>
+      ),
+      children: (
+        <Card size="small" title="Company Information" className="!rounded-xl">
+          <div className="space-y-4 max-w-2xl">
+            <div>
+              <label className="block text-sm font-medium mb-1">Company Name</label>
+              <Input defaultValue="Acme Corp Pvt Ltd" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Industry</label>
+                <Select defaultValue="technology" className="w-full" options={[
+                  { value: 'technology', label: 'Technology' },
+                  { value: 'finance', label: 'Finance' },
+                  { value: 'healthcare', label: 'Healthcare' },
+                ]} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Company Size</label>
+                <Select defaultValue="200-500" className="w-full" options={[
+                  { value: '1-50', label: '1-50' },
+                  { value: '50-200', label: '50-200' },
+                  { value: '200-500', label: '200-500' },
+                  { value: '500+', label: '500+' },
+                ]} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Address</label>
+              <TextArea rows={3} defaultValue="123 Tech Park, Bangalore, India" />
+            </div>
+            <Button type="primary" icon={<SaveOutlined />} onClick={() => message.success('Company settings saved')}>
+              Save Changes
+            </Button>
+          </div>
+        </Card>
+      ),
+    },
+    {
+      key: 'notifications',
+      label: (
+        <span className="flex items-center gap-2">
+          <BellOutlined /> Notifications
+        </span>
+      ),
+      children: (
+        <Card size="small" title="Notification Preferences" className="!rounded-xl">
+          <div className="max-w-2xl divide-y">
+            {notificationItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
+                <div className="pr-4">
+                  <div className="text-sm font-medium">{item.label}</div>
+                  <div className="text-sm text-gray-500">{item.desc}</div>
+                </div>
+                <Switch
+                  checked={notifications[item.id]}
+                  onChange={(checked) => setNotifications((prev) => ({ ...prev, [item.id]: checked }))}
+                />
+              </div>
+            ))}
+          </div>
+        </Card>
+      ),
+    },
+    {
+      key: 'security',
+      label: (
+        <span className="flex items-center gap-2">
+          <LockOutlined /> Security
+        </span>
+      ),
+      children: (
+        <Card size="small" title="Security Settings" className="!rounded-xl">
+          <div className="space-y-4 max-w-2xl">
+            <div>
+              <label className="block text-sm font-medium mb-1">Password Policy</label>
+              <Select defaultValue="strong" className="w-full" options={[
+                { value: 'basic', label: 'Basic (8+ characters)' },
+                { value: 'strong', label: 'Strong (8+ chars, uppercase, number, symbol)' },
+              ]} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Session Timeout</label>
+              <Select defaultValue="30" className="w-full" options={[
+                { value: '15', label: '15 minutes' },
+                { value: '30', label: '30 minutes' },
+                { value: '60', label: '1 hour' },
+              ]} />
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <div className="pr-4">
+                <div className="text-sm font-medium">Two-Factor Authentication</div>
+                <div className="text-sm text-gray-500">Require 2FA for all admin users</div>
+              </div>
+              <Switch defaultChecked />
+            </div>
+            <Divider />
+            <Button type="primary" icon={<SaveOutlined />} onClick={() => message.success('Security settings saved')}>
+              Save Security Settings
+            </Button>
+          </div>
+        </Card>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Settings"
-        description="Manage your organization settings and preferences"
-      />
-
-      <Tabs defaultValue="appearance" className="flex flex-col lg:flex-row gap-6">
-        {/* Tab list - sidebar on desktop, top on mobile */}
-        <TabsList className="flex lg:flex-col lg:h-auto lg:w-52 lg:justify-start lg:bg-muted/50 lg:p-2 shrink-0">
-          <TabsTrigger value="appearance" className="lg:w-full lg:justify-start gap-2">
-            <Palette className="h-4 w-4" /> Appearance
-          </TabsTrigger>
-          <TabsTrigger value="company" className="lg:w-full lg:justify-start gap-2">
-            <Building2 className="h-4 w-4" /> Company
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="lg:w-full lg:justify-start gap-2">
-            <Bell className="h-4 w-4" /> Notifications
-          </TabsTrigger>
-          <TabsTrigger value="security" className="lg:w-full lg:justify-start gap-2">
-            <Lock className="h-4 w-4" /> Security
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Content area */}
-        <div className="flex-1 min-w-0">
-          {/* ----- Appearance Tab ----- */}
-          <TabsContent value="appearance" className="mt-0 space-y-6">
-            {/* Display Mode */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Display Mode</CardTitle>
-                <CardDescription>Choose between light and dark interface</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {modeOptions.map((item) => {
-                    const isSelected = mode === item.value;
-                    return (
-                      <button
-                        key={item.value}
-                        onClick={() => handleModeChange(item.value)}
-                        className={cn(
-                          'relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm',
-                          isSelected
-                            ? 'border-primary shadow-sm'
-                            : 'border-border hover:border-muted-foreground/40',
-                        )}
-                      >
-                        {/* Mini preview */}
-                        <div
-                          className={cn(
-                            'rounded-lg border p-3 mb-3',
-                            item.value === 'dark'
-                              ? 'bg-[#1a1d23] border-[#2d3140]'
-                              : 'bg-[#f8fafc] border-[#e2e8f0]',
-                          )}
-                        >
-                          <div className="flex gap-1.5 mb-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500" />
-                            <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                            <div className="w-2 h-2 rounded-full bg-green-500" />
-                          </div>
-                          <div className="flex gap-2">
-                            <div
-                              className={cn(
-                                'w-10 h-10 rounded-md',
-                                item.value === 'dark' ? 'bg-[#22262e]' : 'bg-slate-200',
-                              )}
-                            />
-                            <div className="flex-1 space-y-1.5">
-                              <div
-                                className={cn(
-                                  'h-1.5 rounded-full w-3/4',
-                                  item.value === 'dark' ? 'bg-gray-700' : 'bg-slate-300',
-                                )}
-                              />
-                              <div
-                                className={cn(
-                                  'h-1.5 rounded-full w-1/2',
-                                  item.value === 'dark' ? 'bg-gray-700' : 'bg-slate-300',
-                                )}
-                              />
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <div className="absolute top-6 right-6 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                              <Check className="h-3 w-3 text-primary-foreground" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="mb-1">{item.icon}</div>
-                        <p className="font-semibold text-sm">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{item.desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Color Theme */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Color Theme</CardTitle>
-                <CardDescription>Pick a primary color for the interface</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {(
-                    Object.entries(palettes) as [ThemeColor, (typeof palettes)[ThemeColor]][]
-                  ).map(([key, palette]) => {
-                    const isSelected = colorTheme === key;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => handleColorChange(key)}
-                        className={cn(
-                          'relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm',
-                          isSelected
-                            ? 'border-primary shadow-sm'
-                            : 'border-border hover:border-muted-foreground/40',
-                        )}
-                      >
-                        <div
-                          className="w-full h-2 rounded-full mb-3"
-                          style={{ background: palette.gradient }}
-                        />
-                        <div className="flex gap-1.5 mb-2">
-                          <div className="w-5 h-5 rounded-md" style={{ background: palette.primary }} />
-                          <div className="w-5 h-5 rounded-md opacity-70" style={{ background: palette.primaryLight }} />
-                          <div className="w-5 h-5 rounded-md opacity-30" style={{ background: palette.primaryLight }} />
-                        </div>
-                        <p className="text-sm font-semibold">{palette.label}</p>
-                        {isSelected && (
-                          <div
-                            className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center"
-                            style={{ background: palette.primary }}
-                          >
-                            <Check className="h-3 w-3 text-white" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Preview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-3 rounded-xl bg-muted/50 p-5 border">
-                  <Button>Primary Button</Button>
-                  <Button variant="outline">Outline Button</Button>
-                  <Button variant="secondary">Secondary</Button>
-                  <Button variant="ghost">Ghost</Button>
-                  <Button variant="link">Link</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* ----- Company Tab ----- */}
-          <TabsContent value="company" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Company Information</CardTitle>
-                <CardDescription>Update your organization details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6 max-w-2xl">
-                <div className="space-y-2">
-                  <Label htmlFor="company-name">Company Name</Label>
-                  <Input id="company-name" defaultValue="Acme Corp Pvt Ltd" />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="industry">Industry</Label>
-                    <Select defaultValue="technology">
-                      <SelectTrigger id="industry">
-                        <SelectValue placeholder="Select industry" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="technology">Technology</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="healthcare">Healthcare</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="size">Company Size</Label>
-                    <Select defaultValue="200-500">
-                      <SelectTrigger id="size">
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1-50">1-50</SelectItem>
-                        <SelectItem value="50-200">50-200</SelectItem>
-                        <SelectItem value="200-500">200-500</SelectItem>
-                        <SelectItem value="500+">500+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    rows={3}
-                    defaultValue="123 Tech Park, Bangalore, India"
-                  />
-                </div>
-
-                <Button
-                  onClick={() => toast.success('Company settings saved')}
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* ----- Notifications Tab ----- */}
-          <TabsContent value="notifications" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>Configure how you receive alerts and updates</CardDescription>
-              </CardHeader>
-              <CardContent className="max-w-2xl">
-                <div className="divide-y">
-                  {notificationItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between py-4 first:pt-0 last:pb-0"
-                    >
-                      <div className="space-y-0.5 pr-4">
-                        <p className="text-sm font-medium">{item.label}</p>
-                        <p className="text-sm text-muted-foreground">{item.desc}</p>
-                      </div>
-                      <Switch
-                        checked={notifications[item.id]}
-                        onCheckedChange={(checked) =>
-                          setNotifications((prev) => ({ ...prev, [item.id]: checked }))
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* ----- Security Tab ----- */}
-          <TabsContent value="security" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>Manage authentication and access policies</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6 max-w-2xl">
-                <div className="space-y-2">
-                  <Label htmlFor="password-policy">Password Policy</Label>
-                  <Select defaultValue="strong">
-                    <SelectTrigger id="password-policy">
-                      <SelectValue placeholder="Select policy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="basic">Basic (8+ characters)</SelectItem>
-                      <SelectItem value="strong">Strong (8+ chars, uppercase, number, symbol)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="session-timeout">Session Timeout</Label>
-                  <Select defaultValue="30">
-                    <SelectTrigger id="session-timeout">
-                      <SelectValue placeholder="Select timeout" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center justify-between py-2">
-                  <div className="space-y-0.5 pr-4">
-                    <p className="text-sm font-medium">Two-Factor Authentication</p>
-                    <p className="text-sm text-muted-foreground">
-                      Require 2FA for all admin users
-                    </p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <Separator />
-
-                <Button
-                  onClick={() => toast.success('Security settings saved')}
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Security Settings
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </div>
-      </Tabs>
+      <div>
+        <Title level={4} className="!mb-1">Settings</Title>
+        <Text type="secondary">Manage your organization settings and preferences</Text>
+      </div>
+      <Tabs items={tabItems} tabPosition="left" className="settings-tabs" />
     </div>
   );
 };
