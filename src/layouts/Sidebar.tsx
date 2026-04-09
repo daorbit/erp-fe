@@ -99,7 +99,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
       </div>
 
       {/* Menu */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-2">
+      <div className="sidebar-scrollbar-hidden flex-1 overflow-y-auto overflow-x-hidden py-2">
         <Menu
           mode="inline"
           theme={isDark ? 'dark' : 'light'}

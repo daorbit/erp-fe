@@ -36,6 +36,14 @@ body {
   background: #374151;
 }
 
+.sidebar-scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.sidebar-scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 /* Ant Design dark mode overrides */
 .dark .ant-layout {
   background: #111318;
