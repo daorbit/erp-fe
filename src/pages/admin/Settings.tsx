@@ -44,7 +44,7 @@ const Settings: React.FC = () => {
       key: 'appearance',
       label: (
         <span className="flex items-center gap-2">
-          <Droplet size={16} /> Appearance
+          <Droplet size={18} /> Appearance
         </span>
       ),
       children: (
@@ -83,7 +83,7 @@ const Settings: React.FC = () => {
                         <Check size={10} />
                       </div>
                     )}
-                    <div className="mb-1">{m === 'dark' ? <Moon size={16} /> : <Sun size={16} />}</div>
+                    <div className="mb-1">{m === 'dark' ? <Moon size={18} /> : <Sun size={18} />}</div>
                     <div className="font-semibold text-sm capitalize">{m}</div>
                     <div className="text-xs text-gray-500">{m === 'dark' ? 'Easy on the eyes' : 'Clean bright interface'}</div>
                   </button>
@@ -123,7 +123,7 @@ const Settings: React.FC = () => {
           </Card>
 
           {/* Font Family */}
-          <Card size="small" title={<span className="flex items-center gap-2"><Type size={16} /> Font Family</span>} className="!rounded-xl">
+          <Card size="small" title={<span className="flex items-center gap-2"><Type size={18} /> Font Family</span>} className="!rounded-xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {fontFamilies.map((font) => {
                 const isSelected = fontFamily === font.value;
@@ -168,7 +168,7 @@ const Settings: React.FC = () => {
       key: 'company',
       label: (
         <span className="flex items-center gap-2">
-          <Banknote size={16} /> Company
+          <Banknote size={18} /> Company
         </span>
       ),
       children: (
@@ -201,7 +201,7 @@ const Settings: React.FC = () => {
               <label className="block text-sm font-medium mb-1">Address</label>
               <TextArea rows={3} defaultValue="123 Tech Park, Bangalore, India" />
             </div>
-            <Button type="primary" icon={<Save size={16} />} onClick={() => message.success('Company settings saved')}>
+            <Button type="primary" icon={<Save size={18} />} onClick={() => message.success('Company settings saved')}>
               Save Changes
             </Button>
           </div>
@@ -212,7 +212,7 @@ const Settings: React.FC = () => {
       key: 'notifications',
       label: (
         <span className="flex items-center gap-2">
-          <Bell /> Notifications
+          <Bell size={18} /> Notifications
         </span>
       ),
       children: (
@@ -238,7 +238,7 @@ const Settings: React.FC = () => {
       key: 'security',
       label: (
         <span className="flex items-center gap-2">
-          <Lock /> Security
+          <Lock size={18} /> Security
         </span>
       ),
       children: (
@@ -267,7 +267,7 @@ const Settings: React.FC = () => {
               <Switch defaultChecked />
             </div>
             <Divider />
-            <Button type="primary" icon={<Save size={16} />} onClick={() => message.success('Security settings saved')}>
+            <Button type="primary" icon={<Save size={18} />} onClick={() => message.success('Security settings saved')}>
               Save Security Settings
             </Button>
           </div>

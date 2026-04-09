@@ -83,12 +83,12 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   );
 
   const userMenuItems = [
-    { key: "profile", icon: <User />, label: "My Profile" },
-    { key: "settings", icon: <Settings2 />, label: "Account Settings" },
+    { key: "profile", icon: <User size={18} />, label: "My Profile" },
+    { key: "settings", icon: <Settings2 size={18} />, label: "Account Settings" },
     { type: "divider" as const },
     {
       key: "logout",
-      icon: <LogOut />,
+      icon: <LogOut size={18} />,
       label: "Sign Out",
       danger: true,
     },
@@ -102,14 +102,14 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
       <div className="flex items-center gap-3">
         <AntButton
           type="text"
-          icon={<Menu />}
+          icon={<Menu size={18} />}
           onClick={onMobileMenuToggle}
           className="md:hidden"
         />
         <Tooltip title="Toggle sidebar">
           <AntButton
             type="text"
-            icon={collapsed ? <PanelLeftOpen /> : <PanelRightOpen />}
+            icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelRightOpen size={18} />}
             onClick={toggleSidebar}
             className="hidden md:inline-flex"
           />
@@ -124,13 +124,13 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
       {/* Right */}
       <Space size={4}>
         <Tooltip title="Language">
-          <AntButton type="text" icon={<Globe />} />
+          <AntButton type="text" icon={<Globe size={18} />} />
         </Tooltip>
 
         <Tooltip title="Fullscreen">
           <AntButton
             type="text"
-            icon={<Maximize2 />}
+            icon={<Maximize2 size={18} />}
             onClick={toggleFullscreen}
             className="hidden sm:inline-flex"
           />
@@ -142,7 +142,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           placement="bottomRight"
         >
           <Badge count={3} size="small">
-            <AntButton type="text" icon={<Bell />} />
+            <AntButton type="text" icon={<Bell size={18} />} />
           </Badge>
         </Popover>
       </Space>
