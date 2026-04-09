@@ -9,6 +9,8 @@ import {
   Popover,
   Space,
 } from "antd";
+import { localeMap } from '@/config/i18n';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Menu,
   PanelRightOpen,
@@ -35,6 +37,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const themeMode = useSelector((state: any) => state.ui?.themeMode ?? "light");
   const isDark = themeMode === "dark";
 
+  const { t, language } = useTranslation();
   const toggleSidebar = () => dispatch({ type: "ui/toggleSidebar" });
   const toggleTheme = () =>
     dispatch({ type: "ui/setThemeMode", payload: isDark ? "light" : "dark" });
@@ -44,7 +47,8 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
     else document.exitFullscreen();
   };
 
-  const dateString = new Date().toLocaleDateString("en-US", {
+  const locale = localeMap[language] ?? 'en-US';
+  const dateString = new Date().toLocaleDateString(locale, {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -67,7 +71,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
   const notificationContent = (
     <div className="w-72">
-      <div className="font-semibold text-sm mb-2">Notifications</div>
+      <div className="font-semibold text-sm mb-2">{t('notifications')}</div>
       {notifications.map((n, i) => (
         <div
           key={i}
@@ -106,7 +110,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           onClick={onMobileMenuToggle}
           className="md:hidden"
         />
-        <Tooltip title="Toggle sidebar">
+        <Tooltip title={t('toggle_sidebar')}>
           <AntButton
             type="text"
             icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelRightOpen size={18} />}
@@ -123,11 +127,11 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
       {/* Right */}
       <Space size={4}>
-        <Tooltip title="Language">
+        <Tooltip title={t('language')}>
           <AntButton type="text" icon={<Globe size={18} />} />
         </Tooltip>
 
-        <Tooltip title="Fullscreen">
+        <Tooltip title={t('fullscreen')}>
           <AntButton
             type="text"
             icon={<Maximize2 size={18} />}

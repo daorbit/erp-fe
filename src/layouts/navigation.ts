@@ -33,6 +33,7 @@ import {
 
 export interface NavItem {
   title: string;
+  titleKey?: string;
   href?: string;
   icon: LucideIcon;
   children?: NavItem[];
@@ -41,112 +42,129 @@ export interface NavItem {
 export const navigationItems: NavItem[] = [
   {
     title: 'Dashboard',
+    titleKey: 'dashboard',
     href: '/admin',
     icon: LayoutDashboard,
   },
   {
     title: 'Admin Panel',
+    titleKey: 'admin_panel',
     icon: LayoutGrid,
     children: [
-      { title: 'User Management', href: '/admin/users', icon: Users },
-      { title: 'Settings', href: '/admin/settings', icon: Settings },
+      { title: 'User Management', titleKey: 'user_management', href: '/admin/users', icon: Users },
+      { title: 'Settings', titleKey: 'settings', href: '/admin/settings', icon: Settings },
     ],
   },
   {
     title: 'HR Management',
+    titleKey: 'hr_management',
     icon: Contact,
     children: [
-      { title: 'Employees', href: '/employees', icon: Users },
-      { title: 'Departments', href: '/departments', icon: Building2 },
-      { title: 'Designations', href: '/designations', icon: Award },
+      { title: 'Employees', titleKey: 'employees', href: '/employees', icon: Users },
+      { title: 'Departments', titleKey: 'departments', href: '/departments', icon: Building2 },
+      { title: 'Designations', titleKey: 'designations', href: '/designations', icon: Award },
     ],
   },
   {
     title: 'Onboarding',
+    titleKey: 'onboarding',
     icon: UserPlus,
     children: [
-      { title: 'New Employee KYC', href: '/onboarding/new', icon: IdCard },
-      { title: 'Onboarding List', href: '/onboarding/list', icon: Users },
+      { title: 'New Employee KYC', titleKey: 'new_employee_kyc', href: '/onboarding/new', icon: IdCard },
+      { title: 'Onboarding List', titleKey: 'onboarding_list', href: '/onboarding/list', icon: Users },
     ],
   },
   {
     title: 'Attendance',
+    titleKey: 'attendance',
     icon: Clock,
     children: [
-      { title: 'Attendance List', href: '/attendance', icon: ClipboardList },
-      { title: 'My Attendance', href: '/attendance/my', icon: CalendarDays },
+      { title: 'Attendance List', titleKey: 'attendance_list', href: '/attendance', icon: ClipboardList },
+      { title: 'My Attendance', titleKey: 'my_attendance', href: '/attendance/my', icon: CalendarDays },
     ],
   },
   {
     title: 'Leave Management',
+    titleKey: 'leave_management',
     icon: Palmtree,
     children: [
-      { title: 'Leave Requests', href: '/leaves', icon: FileText },
-      { title: 'Apply Leave', href: '/leaves/apply', icon: CalendarDays },
+      { title: 'Leave Requests', titleKey: 'leave_requests', href: '/leaves', icon: FileText },
+      { title: 'Apply Leave', titleKey: 'apply_leave', href: '/leaves/apply', icon: CalendarDays },
     ],
   },
   {
     title: 'Payroll',
+    titleKey: 'payroll',
     icon: IndianRupee,
     children: [
-      { title: 'Payroll Management', href: '/payroll', icon: Wallet },
+      { title: 'Payroll Management', titleKey: 'payroll_management', href: '/payroll', icon: Wallet },
     ],
   },
   {
     title: 'Recruitment',
+    titleKey: 'recruitment',
     icon: Briefcase,
     children: [
-      { title: 'Job Postings', href: '/recruitment', icon: FileSearch },
-      { title: 'Applications', href: '/recruitment/applications', icon: Users },
+      { title: 'Job Postings', titleKey: 'job_postings', href: '/recruitment', icon: FileSearch },
+      { title: 'Applications', titleKey: 'applications', href: '/recruitment/applications', icon: Users },
     ],
   },
   {
     title: 'Performance',
+    titleKey: 'performance',
     icon: Star,
     children: [
-      { title: 'Reviews & Goals', href: '/performance', icon: Target },
-      { title: 'Review Form', href: '/performance/review', icon: ClipboardList },
+      { title: 'Reviews & Goals', titleKey: 'reviews_goals', href: '/performance', icon: Target },
+      { title: 'Review Form', titleKey: 'review_form', href: '/performance/review', icon: ClipboardList },
     ],
   },
   {
     title: 'Training',
+    titleKey: 'training',
     icon: GraduationCap,
     children: [
-      { title: 'Programs', href: '/training', icon: BookOpen },
+      { title: 'Programs', titleKey: 'training_programs', href: '/training', icon: BookOpen },
     ],
   },
   {
     title: 'Documents',
+    titleKey: 'documents',
     href: '/documents',
     icon: FolderOpen,
   },
   {
     title: 'Holidays',
+    titleKey: 'holidays',
     href: '/holidays',
     icon: PartyPopper,
   },
   {
     title: 'Announcements',
+    titleKey: 'announcements',
     href: '/announcements',
     icon: Megaphone,
   },
   {
     title: 'Expenses',
+    titleKey: 'expenses',
     href: '/expenses',
     icon: Receipt,
   },
   {
     title: 'Assets',
+    titleKey: 'assets',
     href: '/assets',
     icon: Package,
   },
   {
     title: 'Helpdesk',
+    titleKey: 'helpdesk',
     href: '/helpdesk',
     icon: LifeBuoy,
   },
   {
     title: 'Reports',
+    titleKey: 'reports',
     href: '/reports',
     icon: BarChart3,
   },

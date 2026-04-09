@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Layout, Menu, Avatar, Tooltip, Drawer } from 'antd';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   LayoutDashboard, LayoutGrid, Users, Settings, Contact, Building2, Award,
   UserPlus, IdCard, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
@@ -19,28 +20,30 @@ interface SidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
 }
 
-function buildMenuItems(items: NavItem[]): MenuProps['items'] {
+function buildMenuItems(items: NavItem[], t: (key: string) => string): MenuProps['items'] {
   return items.map((item) => {
     const Icon = item.icon;
+    const title = item.titleKey ? t(item.titleKey) : item.title;
     if (item.children) {
       return {
-        key: item.title,
+        key: title,
         icon: <Icon size={18} />,
-        label: item.title,
+        label: title,
         children: item.children.map((child) => {
           const ChildIcon = child.icon;
+          const childTitle = child.titleKey ? t(child.titleKey) : child.title;
           return {
-            key: child.href || child.title,
+            key: child.href || childTitle,
             icon: <ChildIcon size={16} />,
-            label: child.title,
+            label: childTitle,
           };
         }),
       };
     }
     return {
-      key: item.href || item.title,
+      key: item.href || title,
       icon: <Icon size={18} />,
-      label: item.title,
+      label: title,
     };
   });
 }
@@ -52,7 +55,8 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems = useMemo(() => buildMenuItems(navigationItems), []);
+  const { t } = useTranslation();
+  const menuItems = useMemo(() => buildMenuItems(navigationItems, t), [t]);
 
   const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
 
@@ -60,11 +64,11 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
     const keys: string[] = [];
     navigationItems.forEach((item) => {
       if (item.children?.some((c) => c.href === location.pathname)) {
-        keys.push(item.title);
+        keys.push(item.titleKey ? t(item.titleKey) : item.title);
       }
     });
     return keys;
-  }, [location.pathname]);
+  }, [location.pathname, t]);
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key.startsWith('/')) {
@@ -115,8 +119,8 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
           <div className={`flex items-center gap-2.5 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-100'}`}>
             <Avatar size={36} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
-              <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>Admin User</span>
-              <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>Super Admin</span>
+              <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>{t('admin_user')}</span>
+              <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>{t('super_admin')}</span>
             </div>
             <button className={`transition-colors ${isDark ? 'text-white/30 hover:text-white/60' : 'text-slate-500 hover:text-slate-700'}`}>
               <LogOut size={14} />
