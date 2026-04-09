@@ -4,30 +4,24 @@ interface UIState {
   sidebarCollapsed: boolean;
   themeMode: 'light' | 'dark';
   themeColor: string;
+  fontFamily: string;
 }
 
 function loadUIState(): UIState {
   try {
     const stored = localStorage.getItem('ui');
-    if (stored) {
-      return JSON.parse(stored) as UIState;
-    }
-  } catch {
-    // ignore parse errors
-  }
+    if (stored) return JSON.parse(stored) as UIState;
+  } catch { /* ignore */ }
   return {
     sidebarCollapsed: false,
     themeMode: 'light',
-    themeColor: '#1677ff',
+    themeColor: 'green',
+    fontFamily: "'Inter', sans-serif",
   };
 }
 
 function persistUIState(state: UIState) {
-  try {
-    localStorage.setItem('ui', JSON.stringify(state));
-  } catch {
-    // ignore storage errors
-  }
+  try { localStorage.setItem('ui', JSON.stringify(state)); } catch { /* ignore */ }
 }
 
 const initialState: UIState = loadUIState();
@@ -52,8 +46,12 @@ const uiSlice = createSlice({
       state.themeColor = action.payload;
       persistUIState(state);
     },
+    setFontFamily(state, action: PayloadAction<string>) {
+      state.fontFamily = action.payload;
+      persistUIState(state);
+    },
   },
 });
 
-export const { toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor } = uiSlice.actions;
+export const { toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor, setFontFamily } = uiSlice.actions;
 export default uiSlice.reducer;
