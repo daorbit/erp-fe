@@ -2,7 +2,7 @@ import { store } from '../store';
 import { logout } from '../store/authSlice';
 import type { IApiResponse } from '../types/api';
 
-const API_BASE = process.env.BACKEND_URL || 'http://localhost:5000/api/v1';
+const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api/v1';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, any>;
