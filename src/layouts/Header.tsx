@@ -96,7 +96,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6"
+      className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 bg-white dark:bg-[#111318]"
     >
       {/* Left */}
       <div className="flex items-center gap-3">
