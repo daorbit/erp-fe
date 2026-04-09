@@ -52,16 +52,18 @@ const ReportView: React.FC<{ reportKey: string; chartType: 'bar' | 'line' | 'pie
   const [department, setDepartment] = useState<string | undefined>();
   const useHook = hookMap[reportKey];
   const { data, isLoading } = useHook({ department });
-  const reportData: any[] = data?.data ?? [];
+  const reportData: any[] = Array.isArray(data?.data) ? data.data : [];
+  const firstRow = reportData.find(row => row && typeof row === 'object');
+  const rowKeys = firstRow ? Object.keys(firstRow).filter(k => k !== '_id' && k !== 'id') : [];
+  const stringKey = firstRow ? Object.keys(firstRow).find(k => typeof firstRow[k] === 'string') : undefined;
+  const numberKeys = firstRow ? Object.keys(firstRow).filter(k => typeof firstRow[k] === 'number') : [];
 
-  const columns = reportData.length > 0
-    ? Object.keys(reportData[0]).filter(k => k !== '_id' && k !== 'id').map(k => ({
-        title: k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1'),
-        dataIndex: k,
-        key: k,
-        render: (v: any) => typeof v === 'number' ? v.toLocaleString('en-IN') : v ?? '-',
-      }))
-    : [];
+  const columns = rowKeys.map(k => ({
+    title: k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g, ' $1'),
+    dataIndex: k,
+    key: k,
+    render: (v: any) => typeof v === 'number' ? v.toLocaleString('en-IN') : v ?? '-',
+  }));
 
   return (
     <div className="space-y-6">
@@ -84,7 +86,7 @@ const ReportView: React.FC<{ reportKey: string; chartType: 'bar' | 'line' | 'pie
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'pie' ? (
                   <PieChart>
-                    <Pie data={reportData} dataKey={Object.keys(reportData[0]).find(k => typeof reportData[0][k] === 'number') ?? 'value'} nameKey={Object.keys(reportData[0]).find(k => typeof reportData[0][k] === 'string') ?? 'name'} cx="50%" cy="50%" outerRadius={100} label>
+                    <Pie data={reportData} dataKey={numberKeys[0] ?? 'value'} nameKey={stringKey ?? 'name'} cx="50%" cy="50%" outerRadius={100} label>
                       {reportData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                     <Tooltip />
@@ -92,20 +94,20 @@ const ReportView: React.FC<{ reportKey: string; chartType: 'bar' | 'line' | 'pie
                 ) : chartType === 'line' ? (
                   <LineChart data={reportData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={Object.keys(reportData[0]).find(k => typeof reportData[0][k] === 'string') ?? 'name'} />
+                    <XAxis dataKey={stringKey ?? 'name'} />
                     <YAxis />
                     <Tooltip />
-                    {Object.keys(reportData[0]).filter(k => typeof reportData[0][k] === 'number').slice(0, 3).map((k, i) => (
+                    {numberKeys.slice(0, 3).map((k, i) => (
                       <Line key={k} type="monotone" dataKey={k} stroke={COLORS[i]} strokeWidth={2} />
                     ))}
                   </LineChart>
                 ) : (
                   <BarChart data={reportData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={Object.keys(reportData[0]).find(k => typeof reportData[0][k] === 'string') ?? 'name'} />
+                    <XAxis dataKey={stringKey ?? 'name'} />
                     <YAxis />
                     <Tooltip />
-                    {Object.keys(reportData[0]).filter(k => typeof reportData[0][k] === 'number').slice(0, 3).map((k, i) => (
+                    {numberKeys.slice(0, 3).map((k, i) => (
                       <Bar key={k} dataKey={k} fill={COLORS[i]} radius={[4, 4, 0, 0]} />
                     ))}
                   </BarChart>
