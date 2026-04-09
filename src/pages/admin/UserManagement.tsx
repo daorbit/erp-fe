@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { Card, Table, Avatar, Tag, Button, Input, Select, Modal, Form, Dropdown, Typography, Space } from 'antd';
 import {
-  PlusOutlined, ExportOutlined, EditOutlined, DeleteOutlined,
-  MoreOutlined, SearchOutlined, FilterOutlined,
-} from '@ant-design/icons';
+  Plus,
+  Download,
+  Edit2,
+  Trash2,
+  MoreVertical,
+  Search,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { useEmployeeList, useCreateEmployee } from '@/hooks/queries/useEmployees';
 import { App } from 'antd';
 
@@ -62,10 +67,10 @@ const UserManagement: React.FC = () => {
       title: 'Actions', key: 'actions',
       render: () => (
         <Dropdown menu={{ items: [
-          { key: 'edit', icon: <EditOutlined />, label: 'Edit' },
-          { key: 'delete', icon: <DeleteOutlined />, label: 'Delete', danger: true, onClick: () => message.success('User deleted (mock)') },
+          { key: 'edit', icon: <Edit2 size={16} />, label: 'Edit' },
+          { key: 'delete', icon: <Trash2 size={16} />, label: 'Delete', danger: true, onClick: () => message.success('User deleted (mock)') },
         ]}} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
+          <Button type="text" icon={<MoreVertical size={16} />} />
         </Dropdown>
       ),
     },
@@ -79,15 +84,15 @@ const UserManagement: React.FC = () => {
           <Text type="secondary">Manage all employees and their access</Text>
         </div>
         <Space>
-          <Button icon={<ExportOutlined />}>Export</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>Add Employee</Button>
+          <Button icon={<Download size={16} />}>Export</Button>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => setIsModalOpen(true)}>Add Employee</Button>
         </Space>
       </div>
 
       <Card bordered={false}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <Input prefix={<SearchOutlined />} placeholder="Search employees..." value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
-          <Button icon={<FilterOutlined />}>Filters</Button>
+          <Input prefix={<Search size={16} />} placeholder="Search employees..." value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
+          <Button icon={<SlidersHorizontal size={16} />}>Filters</Button>
         </div>
         <Table columns={columns} dataSource={filteredUsers} pagination={{ pageSize: 10 }} />
       </Card>

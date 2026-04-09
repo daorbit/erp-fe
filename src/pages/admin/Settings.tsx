@@ -3,16 +3,16 @@ import {
   Card, Tabs, Input, Select, Switch, Button, Typography, Radio, Divider, Space,
 } from 'antd';
 import {
-  SaveOutlined,
-  CheckOutlined,
-  SunOutlined,
-  MoonOutlined,
-  BgColorsOutlined,
-  BankOutlined,
-  BellOutlined,
-  LockOutlined,
-  FontSizeOutlined,
-} from '@ant-design/icons';
+  Save,
+  Check,
+  Sun,
+  Moon,
+  Droplet,
+  Banknote,
+  Bell,
+  Lock,
+  Type,
+} from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setThemeMode, setThemeColor, setFontFamily } from '@/store/uiSlice';
 import { colorPalettes, fontFamilies, type ThemeColor } from '@/config/theme';
@@ -44,7 +44,7 @@ const Settings: React.FC = () => {
       key: 'appearance',
       label: (
         <span className="flex items-center gap-2">
-          <BgColorsOutlined /> Appearance
+          <Droplet size={16} /> Appearance
         </span>
       ),
       children: (
@@ -80,10 +80,10 @@ const Settings: React.FC = () => {
                     </div>
                     {isSelected && (
                       <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                        <CheckOutlined className="text-white text-[10px]" />
+                        <Check size={10} />
                       </div>
                     )}
-                    <div className="mb-1">{m === 'dark' ? <MoonOutlined /> : <SunOutlined />}</div>
+                    <div className="mb-1">{m === 'dark' ? <Moon size={16} /> : <Sun size={16} />}</div>
                     <div className="font-semibold text-sm capitalize">{m}</div>
                     <div className="text-xs text-gray-500">{m === 'dark' ? 'Easy on the eyes' : 'Clean bright interface'}</div>
                   </button>
@@ -113,7 +113,7 @@ const Settings: React.FC = () => {
                     <div className="text-sm font-semibold">{palette.label}</div>
                     {isSelected && (
                       <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: palette.primary }}>
-                        <CheckOutlined className="text-white text-[10px]" />
+                        <Check size={10} />
                       </div>
                     )}
                   </button>
@@ -123,7 +123,7 @@ const Settings: React.FC = () => {
           </Card>
 
           {/* Font Family */}
-          <Card size="small" title={<span className="flex items-center gap-2"><FontSizeOutlined /> Font Family</span>} className="!rounded-xl">
+          <Card size="small" title={<span className="flex items-center gap-2"><Type size={16} /> Font Family</span>} className="!rounded-xl">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {fontFamilies.map((font) => {
                 const isSelected = fontFamily === font.value;
@@ -142,7 +142,7 @@ const Settings: React.FC = () => {
                     <div className="text-sm font-semibold">{font.label}</div>
                     {isSelected && (
                       <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                        <CheckOutlined className="text-white text-[10px]" />
+                        <Check size={10} />
                       </div>
                     )}
                   </button>
@@ -168,7 +168,7 @@ const Settings: React.FC = () => {
       key: 'company',
       label: (
         <span className="flex items-center gap-2">
-          <BankOutlined /> Company
+          <Banknote size={16} /> Company
         </span>
       ),
       children: (
@@ -201,7 +201,7 @@ const Settings: React.FC = () => {
               <label className="block text-sm font-medium mb-1">Address</label>
               <TextArea rows={3} defaultValue="123 Tech Park, Bangalore, India" />
             </div>
-            <Button type="primary" icon={<SaveOutlined />} onClick={() => message.success('Company settings saved')}>
+            <Button type="primary" icon={<Save size={16} />} onClick={() => message.success('Company settings saved')}>
               Save Changes
             </Button>
           </div>
@@ -212,7 +212,7 @@ const Settings: React.FC = () => {
       key: 'notifications',
       label: (
         <span className="flex items-center gap-2">
-          <BellOutlined /> Notifications
+          <Bell /> Notifications
         </span>
       ),
       children: (
@@ -238,7 +238,7 @@ const Settings: React.FC = () => {
       key: 'security',
       label: (
         <span className="flex items-center gap-2">
-          <LockOutlined /> Security
+          <Lock /> Security
         </span>
       ),
       children: (
@@ -267,7 +267,7 @@ const Settings: React.FC = () => {
               <Switch defaultChecked />
             </div>
             <Divider />
-            <Button type="primary" icon={<SaveOutlined />} onClick={() => message.success('Security settings saved')}>
+            <Button type="primary" icon={<Save size={16} />} onClick={() => message.success('Security settings saved')}>
               Save Security Settings
             </Button>
           </div>

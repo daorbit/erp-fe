@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { Card, Statistic, Table, Avatar, Tag, Progress, Typography, Row, Col, List } from 'antd';
 import {
-  UserOutlined,
-  TeamOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  SafetyCertificateOutlined,
-  UserAddOutlined,
-  RiseOutlined,
-  FallOutlined,
-} from '@ant-design/icons';
+  User,
+  Users,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  UserPlus,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react';
 import { useDashboardStats, useRecentActivities } from '@/hooks/queries/useDashboard';
 
 const { Title, Text } = Typography;
@@ -32,12 +33,11 @@ const recentOnboarding: OnboardingRecord[] = [
 ];
 
 const activities = [
-  { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <SafetyCertificateOutlined className="text-blue-600" /> },
-  { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircleOutlined className="text-green-600" /> },
-  { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserAddOutlined className="text-amber-600" /> },
-  { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <SafetyCertificateOutlined className="text-blue-600" /> },
-];
-
+    { title: 'Rahul Sharma uploaded Aadhaar card', time: '2 min ago', icon: <ShieldCheck className="text-blue-600" size={16} /> },
+    { title: 'Priya Singh completed onboarding', time: '15 min ago', icon: <CheckCircle2 className="text-green-600" size={16} /> },
+    { title: 'Amit Patel started KYC process', time: '1 hour ago', icon: <UserPlus className="text-amber-600" size={16} /> },
+    { title: 'Sneha Gupta submitted bank details', time: '3 hours ago', icon: <ShieldCheck className="text-blue-600" size={16} /> },
+]
 const statusColorMap: Record<string, string> = {
   'Completed': 'green',
   'In Progress': 'orange',
@@ -90,7 +90,7 @@ const stats = [
   {
     title: 'Total Employees',
     value: 248,
-    icon: <TeamOutlined />,
+    icon: <Users size={20} />,
     color: '#3b82f6',
     bg: 'bg-blue-50 dark:bg-blue-950',
     change: '+12%',
@@ -100,7 +100,7 @@ const stats = [
   {
     title: 'Pending Onboarding',
     value: 15,
-    icon: <UserAddOutlined />,
+    icon: <UserPlus size={20} />,
     color: '#f59e0b',
     bg: 'bg-amber-50 dark:bg-amber-950',
     change: '+3',
@@ -110,7 +110,7 @@ const stats = [
   {
     title: 'KYC Completed',
     value: 230,
-    icon: <CheckCircleOutlined />,
+    icon: <CheckCircle2 size={20} />,
     color: '#10b981',
     bg: 'bg-green-50 dark:bg-green-950',
     change: '93%',
@@ -120,7 +120,7 @@ const stats = [
   {
     title: 'Pending Approvals',
     value: 8,
-    icon: <ClockCircleOutlined />,
+    icon: <Clock size={20} />,
     color: '#ef4444',
     bg: 'bg-red-50 dark:bg-red-950',
     change: '-2',
@@ -151,7 +151,7 @@ const Dashboard: React.FC = () => {
                   color={stat.changeType === 'up' ? 'green' : 'red'}
                   className="!m-0 !rounded-full !text-xs !px-2"
                 >
-                  {stat.changeType === 'up' ? <RiseOutlined /> : <FallOutlined />} {stat.change}
+                  {stat.changeType === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {stat.change}
                 </Tag>
               </div>
               <div className="mt-4">

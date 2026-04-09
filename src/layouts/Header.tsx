@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -10,18 +11,18 @@ import {
   Space,
 } from "antd";
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  BellOutlined,
-  GlobalOutlined,
-  FullscreenOutlined,
-  UserOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  SunOutlined,
-  MoonOutlined,
-  MenuOutlined,
-} from "@ant-design/icons";
+  Menu,
+  PanelRightOpen,
+  PanelLeftOpen,
+  Bell,
+  Globe,
+  Maximize2,
+  User,
+  Settings2,
+  LogOut,
+  Sun,
+  Moon,
+} from "lucide-react";
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -83,12 +84,12 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   );
 
   const userMenuItems = [
-    { key: "profile", icon: <UserOutlined />, label: "My Profile" },
-    { key: "settings", icon: <SettingOutlined />, label: "Account Settings" },
+    { key: "profile", icon: <User />, label: "My Profile" },
+    { key: "settings", icon: <Settings2 />, label: "Account Settings" },
     { type: "divider" as const },
     {
       key: "logout",
-      icon: <LogoutOutlined />,
+      icon: <LogOut />,
       label: "Sign Out",
       danger: true,
     },
@@ -102,14 +103,14 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
       <div className="flex items-center gap-3">
         <AntButton
           type="text"
-          icon={<MenuOutlined />}
+          icon={<Menu />}
           onClick={onMobileMenuToggle}
           className="md:hidden"
         />
         <Tooltip title="Toggle sidebar">
           <AntButton
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            icon={collapsed ? <PanelLeftOpen /> : <PanelRightOpen />}
             onClick={toggleSidebar}
             className="hidden md:inline-flex"
           />
@@ -124,13 +125,13 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
       {/* Right */}
       <Space size={4}>
         <Tooltip title="Language">
-          <AntButton type="text" icon={<GlobalOutlined />} />
+          <AntButton type="text" icon={<Globe />} />
         </Tooltip>
 
         <Tooltip title="Fullscreen">
           <AntButton
             type="text"
-            icon={<FullscreenOutlined />}
+            icon={<Maximize2 />}
             onClick={toggleFullscreen}
             className="hidden sm:inline-flex"
           />
@@ -142,7 +143,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           placement="bottomRight"
         >
           <Badge count={3} size="small">
-            <AntButton type="text" icon={<BellOutlined />} />
+            <AntButton type="text" icon={<Bell />} />
           </Badge>
         </Popover>
       </Space>

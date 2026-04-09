@@ -3,14 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Layout, Menu, Avatar, Tooltip, Drawer } from 'antd';
 import {
-  LogoutOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
-import {
   LayoutDashboard, LayoutGrid, Users, Settings, Contact, Building2, Award,
   UserPlus, IdCard, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
   IndianRupee, Wallet, Briefcase, FileSearch, Star, Target, GraduationCap,
   BookOpen, FolderOpen, PartyPopper, Megaphone, Receipt, Package, LifeBuoy, BarChart3,
+  User, LogOut,
 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import { navigationItems, type NavItem } from './navigation';
@@ -116,20 +113,20 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
       {!collapsed ? (
         <div className={`shrink-0 p-3 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
           <div className={`flex items-center gap-2.5 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-100'}`}>
-            <Avatar size={36} icon={<UserOutlined />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
+            <Avatar size={36} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
               <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>Admin User</span>
               <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>Super Admin</span>
             </div>
             <button className={`transition-colors ${isDark ? 'text-white/30 hover:text-white/60' : 'text-slate-500 hover:text-slate-700'}`}>
-              <LogoutOutlined style={{ fontSize: 14 }} />
+              <LogOut size={14} />
             </button>
           </div>
         </div>
       ) : (
         <div className={`shrink-0 py-4 flex justify-center ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
           <Tooltip title="Admin User" placement="right">
-            <Avatar size={36} icon={<UserOutlined />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
+            <Avatar size={36} icon={<User size={18} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
           </Tooltip>
         </div>
       )}
