@@ -1,13 +1,11 @@
 import { useEffect } from 'react';
 import { useAppSelector } from '../store';
+import { colorPalettes, type ThemeColor } from '../config/theme';
 
-/**
- * Syncs the Redux themeMode to the <html> class for Tailwind dark mode
- * and applies the themeColor as a CSS custom property.
- */
 export default function ThemeSync() {
   const themeMode = useAppSelector((s) => s.ui.themeMode);
-  const themeColor = useAppSelector((s) => s.ui.themeColor);
+  const themeColor = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
+  const fontFamily = useAppSelector((s) => s.ui.fontFamily);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -19,8 +17,18 @@ export default function ThemeSync() {
   }, [themeMode]);
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--theme-primary', themeColor);
+    const palette = colorPalettes[themeColor];
+    if (palette) {
+      document.documentElement.style.setProperty('--theme-primary', palette.primary);
+    }
   }, [themeColor]);
+
+  useEffect(() => {
+    if (fontFamily) {
+      document.documentElement.style.setProperty('--font-family', fontFamily);
+      document.body.style.fontFamily = fontFamily;
+    }
+  }, [fontFamily]);
 
   return null;
 }
