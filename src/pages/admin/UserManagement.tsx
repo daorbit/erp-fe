@@ -26,15 +26,15 @@ interface UserRecord {
 }
 
 const users: UserRecord[] = [
-  { key: '1', name: 'Rahul Sharma', email: 'rahul@company.com', phone: '+91 9876543210', role: 'Employee', department: 'Engineering', status: 'Active', joinDate: '2024-01-15' },
-  { key: '2', name: 'Priya Singh', email: 'priya@company.com', phone: '+91 9876543211', role: 'Manager', department: 'Marketing', status: 'Active', joinDate: '2023-06-20' },
-  { key: '3', name: 'Amit Patel', email: 'amit@company.com', phone: '+91 9876543212', role: 'Employee', department: 'Finance', status: 'Inactive', joinDate: '2024-03-10' },
-  { key: '4', name: 'Sneha Gupta', email: 'sneha@company.com', phone: '+91 9876543213', role: 'HR Admin', department: 'HR', status: 'Active', joinDate: '2022-11-05' },
-  { key: '5', name: 'Vikram Joshi', email: 'vikram@company.com', phone: '+91 9876543214', role: 'Employee', department: 'Sales', status: 'Active', joinDate: '2024-02-28' },
-  { key: '6', name: 'Ananya Reddy', email: 'ananya@company.com', phone: '+91 9876543215', role: 'Manager', department: 'Engineering', status: 'Active', joinDate: '2023-09-12' },
+  { key: '1', name: 'Rahul Sharma', email: 'rahul@company.com', phone: '+91 9876543210', role: 'employee', department: 'Engineering', status: 'active', joinDate: '2024-01-15' },
+  { key: '2', name: 'Priya Singh', email: 'priya@company.com', phone: '+91 9876543211', role: 'manager', department: 'Marketing', status: 'active', joinDate: '2023-06-20' },
+  { key: '3', name: 'Amit Patel', email: 'amit@company.com', phone: '+91 9876543212', role: 'employee', department: 'Finance', status: 'inactive', joinDate: '2024-03-10' },
+  { key: '4', name: 'Sneha Gupta', email: 'sneha@company.com', phone: '+91 9876543213', role: 'hr_manager', department: 'HR', status: 'active', joinDate: '2022-11-05' },
+  { key: '5', name: 'Vikram Joshi', email: 'vikram@company.com', phone: '+91 9876543214', role: 'employee', department: 'Sales', status: 'active', joinDate: '2024-02-28' },
+  { key: '6', name: 'Ananya Reddy', email: 'ananya@company.com', phone: '+91 9876543215', role: 'manager', department: 'Engineering', status: 'active', joinDate: '2023-09-12' },
 ];
 
-const roleColor: Record<string, string> = { 'HR Admin': 'purple', Manager: 'blue', Employee: 'default' };
+const roleColor: Record<string, string> = { hr_manager: 'purple', manager: 'blue', employee: 'default', admin: 'red', super_admin: 'volcano' };
 
 const UserManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
