@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Layout, Menu, Avatar, Tooltip, Drawer } from 'antd';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppDispatch } from '@/store';
+import { logout } from '@/store/authSlice';
 import {
   LayoutDashboard, LayoutGrid, Users, Settings, Contact, Building2, Award,
   UserPlus, IdCard, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
@@ -69,6 +71,13 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   const isDark = themeMode === 'dark';
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login', { replace: true });
+    onMobileOpenChange?.(false);
+  };
 
   const filteredNav = useMemo(() => filterNavByRole(navigationItems, user?.role), [user?.role]);
   const menuItems = useMemo(() => buildMenuItems(filteredNav, t), [filteredNav, t]);
@@ -136,15 +145,39 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
               <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>Admin User</span>
               <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>Super Admin</span>
             </div>
-            <button className={`transition-colors ${isDark ? 'text-white/30 hover:text-white/60' : 'text-slate-500 hover:text-slate-700'}`}>
+            <button
+              onClick={handleLogout}
+              className={`transition-colors ${isDark ? 'text-white/30 hover:text-white/60' : 'text-slate-500 hover:text-slate-700'}`}
+            >
               <LogOut size={14} />
             </button>
           </div>
+          <button
+            onClick={() => {
+              navigate('/admin/settings');
+              onMobileOpenChange?.(false);
+            }}
+            className={`mt-3 flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition ${isDark ? 'border-white/[0.08] bg-white/[0.04] text-white hover:bg-white/[0.08]' : 'border-slate-200 bg-slate-100 text-slate-950 hover:bg-slate-200'}`}
+          >
+            <Settings size={16} />
+            <span>{t('settings')}</span>
+          </button>
         </div>
       ) : (
-        <div className={`shrink-0 py-4 flex justify-center ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
+        <div className={`shrink-0 py-4 flex flex-col items-center gap-2 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
           <Tooltip title="Admin User" placement="right">
             <Avatar size={36} icon={<User size={18} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
+          </Tooltip>
+          <Tooltip title={t('settings')} placement="right">
+            <button
+              onClick={() => {
+                navigate('/admin/settings');
+                onMobileOpenChange?.(false);
+              }}
+              className={`rounded-full p-2 transition ${isDark ? 'text-white/30 hover:text-white/60 hover:bg-white/[0.08]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+            >
+              <Settings size={16} />
+            </button>
           </Tooltip>
         </div>
       )}

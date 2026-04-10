@@ -91,16 +91,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
         </span>
       </div>
 
-      {/* Center - Search */}
-      <div className="hidden md:block flex-1 max-w-md mx-4">
-        <Input
-          prefix={<Search size={14} className="text-gray-400" />}
-          placeholder="Search anything..."
-          className="!rounded-lg !bg-gray-50 dark:!bg-gray-800/50 !border-gray-200 dark:!border-gray-700"
-          allowClear
-        />
-      </div>
-
+ 
       {/* Right */}
       <Space size={4}>
         <Tooltip title={isDark ? t('light') : t('dark')}>

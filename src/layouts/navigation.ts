@@ -21,7 +21,6 @@ export const navigationItems: NavItem[] = [
     children: [
       { titleKey: 'company_management', href: '/admin/companies', icon: Building2, roles: ['super_admin'] },
       { titleKey: 'user_management', href: '/admin/users', icon: Users },
-      { titleKey: 'settings', href: '/admin/settings', icon: Settings },
     ],
   },
   {
