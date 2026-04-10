@@ -48,6 +48,17 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     throw error;
   }
 
+  if (response.status === 403) {
+    const error = await response.json().catch(() => ({ message: 'Forbidden' }));
+    // If the account was deactivated, force logout
+    if (error.message?.toLowerCase().includes('deactivated')) {
+      store.dispatch(logout());
+      localStorage.setItem('deactivated_message', error.message);
+      window.location.href = '/login';
+    }
+    throw error;
+  }
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({
       success: false,

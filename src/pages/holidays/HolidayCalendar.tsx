@@ -4,6 +4,8 @@ import { App } from 'antd';
 import { Plus, CalendarDays, Globe, Star, Clock, Trash2 } from 'lucide-react';
 import { useHolidayList, useCreateHoliday, useDeleteHoliday } from '@/hooks/queries/useHolidays';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text } = Typography;
 
@@ -17,6 +19,11 @@ const HolidayCalendar: React.FC = () => {
   const [year, setYear] = useState(new Date().getFullYear());
   const { message } = App.useApp();
   const [form] = Form.useForm();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useHolidayList({ year });
   const createMutation = useCreateHoliday();
@@ -61,14 +68,14 @@ const HolidayCalendar: React.FC = () => {
     { title: 'Day', dataIndex: 'date', key: 'day', render: (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { weekday: 'long' }) : '-' },
     { title: t('type'), dataIndex: 'type', key: 'type', render: (t: string) => <Tag color={typeColor[t] ?? 'default'}>{t}</Tag> },
     { title: t('description'), dataIndex: 'description', key: 'description', ellipsis: true },
-    {
+    ...(isAdmin ? [{
       title: t('actions'), key: 'actions', width: 80,
       render: (_: any, r: any) => (
         <Popconfirm title="Delete this holiday?" onConfirm={() => handleDelete(r._id ?? r.id)} okText="Yes" cancelText="No">
           <Button type="text" size="small" danger icon={<Trash2 size={16} />} />
         </Popconfirm>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -80,7 +87,7 @@ const HolidayCalendar: React.FC = () => {
         </div>
         <Space>
           <Select value={year} onChange={setYear} options={[2024, 2025, 2026, 2027].map(y => ({ value: y, label: String(y) }))} />
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>{t('add_holiday')}</Button>
+          {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>{t('add_holiday')}</Button>}
         </Space>
       </div>
 

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Tag, Button, Table, Tabs, Drawer, Form, Input, Select, Row, Col, Typography, Space, Descriptions, Avatar, Progress } from 'antd';
+import { Card, Tag, Button, Table, Tabs, Drawer, Form, Select, Row, Col, Typography, Space, Descriptions, Avatar, Progress } from 'antd';
 import { App } from 'antd';
 import { ArrowLeft, Users, Clock, CalendarDays, UserPlus, BookOpen } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTraining, useEnrollTraining } from '@/hooks/queries/useTraining';
+import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
@@ -19,6 +20,10 @@ const TrainingDetail: React.FC = () => {
   const { message } = App.useApp();
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [enrollForm] = Form.useForm();
+
+  const { data: empData } = useEmployeeList();
+  const employees: any[] = empData?.data ?? [];
+  const employeeOptions = employees.map((e: any) => { const u = e.userId || e; return { value: u._id || e._id, label: `${u.firstName || ''} ${u.lastName || ''} (${e.employeeId || ''})`.trim() }; });
 
   const { data, isLoading } = useTraining(id!);
   const enrollMutation = useEnrollTraining();
@@ -140,11 +145,8 @@ const TrainingDetail: React.FC = () => {
 
       <Drawer title="Enroll Employee" open={enrollOpen} onClose={() => setEnrollOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setEnrollOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={enrollMutation.isPending} onClick={() => enrollForm.submit()}>{t('submit')}</Button></Space>}>
         <Form form={enrollForm} layout="vertical" onFinish={handleEnroll}>
-          <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
-            <Input placeholder="Enter employee ID" />
-          </Form.Item>
-          <Form.Item name="employeeName" label="Employee Name">
-            <Input placeholder="Enter employee name" />
+          <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
+            <Select placeholder="Search employee..." showSearch optionFilterProp="label" options={employeeOptions} />
           </Form.Item>
         </Form>
       </Drawer>

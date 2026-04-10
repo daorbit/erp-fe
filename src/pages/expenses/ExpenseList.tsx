@@ -4,6 +4,8 @@ import { App } from 'antd';
 import { Plus, Search, IndianRupee, Clock, CheckCircle2, Wallet } from 'lucide-react';
 import { useExpenseList, useCreateExpense, useApproveExpense, useRejectExpense } from '@/hooks/queries/useExpenses';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text } = Typography;
 
@@ -20,6 +22,11 @@ const ExpenseList: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const { message } = App.useApp();
   const [form] = Form.useForm();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useExpenseList({ tab: activeTab === 'all' ? undefined : activeTab });
   const createMutation = useCreateExpense();
@@ -99,7 +106,7 @@ const ExpenseList: React.FC = () => {
       onFilter: (value: any, record: any) => record.status === value,
       render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
     },
-    {
+    ...(isManager ? [{
       title: t('actions'), key: 'actions', width: 180,
       render: (_: any, r: any) => (
         <Space>
@@ -115,7 +122,7 @@ const ExpenseList: React.FC = () => {
           )}
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -125,7 +132,7 @@ const ExpenseList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('expenses')}</Title>
           <Text type="secondary">{t('manage_expenses')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_expense')}</Button>
+        {!isViewer && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_expense')}</Button>}
       </div>
 
       <Row gutter={[16, 16]}>

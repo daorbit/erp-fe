@@ -4,6 +4,8 @@ import { App } from 'antd';
 import { Plus, Search, Download, Trash2, Upload as UploadIcon, FileText } from 'lucide-react';
 import { useDocumentList, useUploadDocument, useDeleteDocument } from '@/hooks/queries/useDocuments';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text } = Typography;
 
@@ -18,6 +20,11 @@ const DocumentList: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const { message } = App.useApp();
   const [form] = Form.useForm();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useDocumentList({ category: activeTab === 'all' ? undefined : activeTab });
   const uploadMutation = useUploadDocument();
@@ -79,9 +86,11 @@ const DocumentList: React.FC = () => {
       render: (_: any, r: any) => (
         <Space>
           {r.fileUrl && <Button type="text" size="small" icon={<Download size={16} />} href={r.fileUrl} target="_blank" />}
-          <Popconfirm title="Delete this document?" onConfirm={() => handleDelete(r._id ?? r.id)} okText="Yes" cancelText="No">
-            <Button type="text" size="small" danger icon={<Trash2 size={16} />} />
-          </Popconfirm>
+          {isAdmin && (
+            <Popconfirm title="Delete this document?" onConfirm={() => handleDelete(r._id ?? r.id)} okText="Yes" cancelText="No">
+              <Button type="text" size="small" danger icon={<Trash2 size={16} />} />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -94,7 +103,7 @@ const DocumentList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('documents')}</Title>
           <Text type="secondary">{t('manage_documents')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setUploadOpen(true)}>{t('upload_document')}</Button>
+        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setUploadOpen(true)}>{t('upload_document')}</Button>}
       </div>
 
       <Card bordered={false}>

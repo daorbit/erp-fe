@@ -4,6 +4,8 @@ import { App } from 'antd';
 import { Plus, Search, BookOpen, CheckCircle2, Users, CalendarDays, Clock } from 'lucide-react';
 import { useTrainingList, useCreateTraining } from '@/hooks/queries/useTraining';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text } = Typography;
 
@@ -30,6 +32,11 @@ const TrainingList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const { message } = App.useApp();
   const [form] = Form.useForm();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useTrainingList({ status: statusFilter });
   const createMutation = useCreateTraining();
@@ -71,7 +78,7 @@ const TrainingList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('training')}</Title>
           <Text type="secondary">{t('manage_training')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>Create Program</Button>
+        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>Create Program</Button>}
       </div>
 
       <Row gutter={[16, 16]}>

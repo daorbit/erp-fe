@@ -18,8 +18,9 @@ function AuthBootstrap({ children }: { children: React.ReactNode }) {
   const token = useAppSelector((s) => s.auth.token);
   const user = useAppSelector((s) => s.auth.user);
 
+  // Fetch latest user data on app load (handles stale localStorage)
   useEffect(() => {
-    if (token && !user) {
+    if (token) {
       authService.me()
         .then((res: any) => {
           const me = res?.data;
@@ -31,7 +32,8 @@ function AuthBootstrap({ children }: { children: React.ReactNode }) {
           dispatch(logout());
         });
     }
-  }, [token, user, dispatch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   return <>{children}</>;
 }

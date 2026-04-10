@@ -1,27 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, Table, Tag, Button, Typography, Row, Col, Spin, Space, App } from 'antd';
 import { LogIn, LogOut, Clock, CheckCircle2, XCircle, CalendarDays } from 'lucide-react';
-import { useMyAttendance, useCheckIn, useCheckOut, useAttendanceSummary } from '@/hooks/queries/useAttendance';
+import { useMyAttendance, useCheckIn, useCheckOut } from '@/hooks/queries/useAttendance';
 import dayjs from 'dayjs';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
-const statusColor: Record<string, string> = { present: 'green', absent: 'red', late: 'orange', half_day: 'blue', on_leave: 'purple' };
+const statusColor: Record<string, string> = { present: 'green', absent: 'red', late: 'orange', half_day: 'blue', on_leave: 'purple', work_from_home: 'cyan' };
 
 const MyAttendance: React.FC = () => {
   const { t } = useTranslation();
   const { message } = App.useApp();
-  const [checkedIn, setCheckedIn] = useState(false);
 
   const { data: myData, isLoading } = useMyAttendance();
   const checkInMutation = useCheckIn();
   const checkOutMutation = useCheckOut();
 
   const records: any[] = myData?.data ?? [];
-  const todayRecord = records.find((r: any) => r.date === dayjs().format('YYYY-MM-DD'));
+  // Match today's record by comparing date strings
+  const today = dayjs().format('YYYY-MM-DD');
+  const todayRecord = records.find((r: any) => dayjs(r.date).format('YYYY-MM-DD') === today);
 
-  const isCheckedIn = checkedIn || !!todayRecord?.checkIn;
+  const isCheckedIn = !!todayRecord?.checkIn;
   const isCheckedOut = !!todayRecord?.checkOut;
 
   const presentDays = records.filter((r: any) => r.status === 'present').length;
@@ -32,10 +33,9 @@ const MyAttendance: React.FC = () => {
   const handleCheckIn = async () => {
     try {
       await checkInMutation.mutateAsync({ timestamp: new Date().toISOString() });
-      setCheckedIn(true);
       message.success('Checked in successfully');
-    } catch {
-      message.error('Failed to check in');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to check in');
     }
   };
 
@@ -56,11 +56,11 @@ const MyAttendance: React.FC = () => {
   ];
 
   const columns = [
-    { title: t('date'), dataIndex: 'date', key: 'date', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
-    { title: t('check_in'), dataIndex: 'checkIn', key: 'checkIn', render: (v: string) => v || '-' },
-    { title: t('check_out'), dataIndex: 'checkOut', key: 'checkOut', render: (v: string) => v || '-' },
-    { title: t('work_hours'), dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h}h` : '-' },
-    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag> },
+    { title: t('date'), dataIndex: 'date', key: 'date', render: (d: string) => d ? dayjs(d).format('DD MMM YYYY') : '-' },
+    { title: t('check_in'), dataIndex: 'checkIn', key: 'checkIn', render: (v: string) => v ? dayjs(v).format('h:mm A') : '-' },
+    { title: t('check_out'), dataIndex: 'checkOut', key: 'checkOut', render: (v: string) => v ? dayjs(v).format('h:mm A') : '-' },
+    { title: t('work_hours'), dataIndex: 'workHours', key: 'workHours', render: (h: number) => h ? `${h.toFixed(1)}h` : '-' },
+    { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s?.replace('_', ' ')}</Tag> },
   ];
 
   return (
@@ -88,7 +88,7 @@ const MyAttendance: React.FC = () => {
             </Button>
           </Space>
           {todayRecord?.checkIn && (
-            <Text type="secondary">Checked in at {todayRecord.checkIn}{todayRecord.checkOut ? ` | Checked out at ${todayRecord.checkOut}` : ''}</Text>
+            <Text type="secondary">Checked in at {dayjs(todayRecord.checkIn).format('h:mm A')}{todayRecord.checkOut ? ` | Checked out at ${dayjs(todayRecord.checkOut).format('h:mm A')}` : ''}</Text>
           )}
         </div>
       </Card>

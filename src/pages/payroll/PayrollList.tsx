@@ -3,7 +3,9 @@ import { Card, Table, Tag, Button, Tabs, Drawer, Form, Input, InputNumber, Selec
 import { App } from 'antd';
 import { IndianRupee, CheckCircle2, CreditCard, Plus, Download } from 'lucide-react';
 import { usePayslipList, useSalaryStructureList, useCreateSalaryStructure, useApprovePayslip, useMarkPayslipPaid } from '@/hooks/queries/usePayroll';
+import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import { useTranslation } from '@/hooks/useTranslation';
+import { exportToCsv } from '@/lib/exportCsv';
 
 const { Title, Text } = Typography;
 
@@ -25,6 +27,10 @@ const PayrollList: React.FC = () => {
   const [form] = Form.useForm();
   const { message } = App.useApp();
 
+  const { data: empData } = useEmployeeList();
+  const employees: any[] = empData?.data ?? [];
+  const employeeOptions = employees.map((e: any) => { const u = e.userId || e; return { value: u._id || e._id, label: `${u.firstName || ''} ${u.lastName || ''} (${e.employeeId || ''})`.trim() }; });
+
   const { data: payslipData, isLoading: payslipsLoading } = usePayslipList();
   const { data: structureData, isLoading: structuresLoading } = useSalaryStructureList();
   const createStructureMutation = useCreateSalaryStructure();
@@ -44,22 +50,32 @@ const PayrollList: React.FC = () => {
     { title: 'Paid', value: paid, icon: <CreditCard size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
   ];
 
+  // Helper to extract employee name from populated object
+  const getEmpName = (r: any) => {
+    const e = r.employee;
+    if (typeof e === 'object' && e) return `${e.firstName || ''} ${e.lastName || ''}`.trim();
+    return r.employeeName || 'N/A';
+  };
+
   const payslipColumns = [
     {
-      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
-      render: (_: any, r: any) => (
-        <div className="flex items-center gap-3">
-          <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
-          <div>
-            <div className="font-medium text-sm">{r.employeeName}</div>
-            <div className="text-xs text-gray-400">{r.employeeId}</div>
+      title: t('employee'), key: 'employee',
+      render: (_: any, r: any) => {
+        const name = getEmpName(r);
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="bg-blue-600" size={32}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            <div>
+              <div className="font-medium text-sm">{name}</div>
+              <div className="text-xs text-gray-400">{typeof r.employee === 'object' ? r.employee?.email : ''}</div>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     { title: 'Month', dataIndex: 'month', key: 'month' },
-    { title: 'Basic', dataIndex: 'basicPay', key: 'basicPay', render: (v: number) => formatINR(v || 0) },
-    { title: t('gross'), dataIndex: 'grossPay', key: 'grossPay', render: (v: number) => formatINR(v || 0) },
+    { title: 'Year', dataIndex: 'year', key: 'year' },
+    { title: t('gross'), dataIndex: 'grossEarnings', key: 'grossEarnings', render: (v: number) => formatINR(v || 0) },
     { title: t('deductions'), dataIndex: 'totalDeductions', key: 'totalDeductions', render: (v: number) => formatINR(v || 0) },
     { title: t('net_pay'), dataIndex: 'netPay', key: 'netPay', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
     {
@@ -96,19 +112,23 @@ const PayrollList: React.FC = () => {
 
   const structureColumns = [
     {
-      title: t('employee'), dataIndex: 'employeeName', key: 'employeeName',
-      render: (_: any, r: any) => (
-        <div className="flex items-center gap-3">
-          <Avatar className="bg-blue-600" size={32}>{(r.employeeName || 'U').charAt(0)}</Avatar>
-          <span className="font-medium">{r.employeeName}</span>
-        </div>
-      ),
+      title: t('employee'), key: 'employee',
+      render: (_: any, r: any) => {
+        const name = getEmpName(r);
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="bg-blue-600" size={32}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            <span className="font-medium">{name}</span>
+          </div>
+        );
+      },
     },
     { title: 'Basic', dataIndex: 'basic', key: 'basic', render: (v: number) => formatINR(v || 0) },
     { title: 'HRA', dataIndex: 'hra', key: 'hra', render: (v: number) => formatINR(v || 0) },
     { title: 'DA', dataIndex: 'da', key: 'da', render: (v: number) => formatINR(v || 0) },
-    { title: 'Special Allowance', dataIndex: 'specialAllowance', key: 'specialAllowance', render: (v: number) => formatINR(v || 0) },
-    { title: t('gross'), dataIndex: 'gross', key: 'gross', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
+    { title: 'Special', dataIndex: 'specialAllowance', key: 'specialAllowance', render: (v: number) => formatINR(v || 0) },
+    { title: 'Gross', dataIndex: 'grossSalary', key: 'grossSalary', render: (v: number) => <span className="font-semibold">{formatINR(v || 0)}</span> },
+    { title: 'Net', dataIndex: 'netSalary', key: 'netSalary', render: (v: number) => formatINR(v || 0) },
   ];
 
   const handleCreateStructure = (values: any) => {
@@ -180,14 +200,22 @@ const PayrollList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('payroll')}</Title>
           <Text type="secondary">{t('manage_payroll')}</Text>
         </div>
-        <Button icon={<Download size={16} />}>{t('export')}</Button>
+        <Button icon={<Download size={16} />} onClick={() => exportToCsv(payslips, [
+          { key: 'employee', title: 'Employee', render: (_: any, r: any) => getEmpName(r) },
+          { key: 'month', title: 'Month' },
+          { key: 'year', title: 'Year' },
+          { key: 'grossEarnings', title: 'Gross' },
+          { key: 'totalDeductions', title: 'Deductions' },
+          { key: 'netPay', title: 'Net Pay' },
+          { key: 'status', title: 'Status' },
+        ], 'payroll')}>{t('export')}</Button>
       </div>
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
 
       <Drawer title={t('add') + ' ' + t('salary')} open={structureModalOpen} onClose={() => setStructureModalOpen(false)} width={560} destroyOnClose extra={<Space><Button onClick={() => setStructureModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createStructureMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleCreateStructure}>
-          <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
-            <Input placeholder="Employee ID" />
+          <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
+            <Select placeholder="Search employee..." showSearch optionFilterProp="label" options={employeeOptions} />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="basic" label="Basic" rules={[{ required: true }]}>

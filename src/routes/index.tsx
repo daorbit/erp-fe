@@ -6,15 +6,18 @@ import { ProtectedRoute, GuestRoute, RoleGuard } from './guards';
 import ComingSoon from '../components/ComingSoon';
 
 // Toggle to show "Coming Soon" on modules that are not yet ready
-const COMING_SOON_ENABLED = true;
+const COMING_SOON_ENABLED = false;
 
 const Login = lazy(() => import('../pages/auth/Login'));
+const AcceptInvitation = lazy(() => import('../pages/auth/AcceptInvitation'));
 const CompanyManagement = lazy(() => import('../pages/admin/CompanyManagement'));
 const DashboardRouter = lazy(() => import('../pages/admin/DashboardRouter'));
 const UserManagement = lazy(() => import('../pages/admin/UserManagement'));
+const AuditLogs = lazy(() => import('../pages/admin/AuditLogs'));
 const Settings = lazy(() => import('../pages/admin/Settings'));
 const KYCOnboarding = lazy(() => import('../pages/onboarding/KYCOnboarding'));
 const OnboardingList = lazy(() => import('../pages/onboarding/OnboardingList'));
+const AdminFillOnboarding = lazy(() => import('../pages/onboarding/AdminFillOnboarding'));
 const EmployeeList = lazy(() => import('../pages/employees/EmployeeList'));
 const EmployeeProfile = lazy(() => import('../pages/employees/EmployeeProfile'));
 const DepartmentList = lazy(() => import('../pages/departments/DepartmentList'));
@@ -65,7 +68,7 @@ function Protected({ children }: { children: React.ReactNode }) {
 }
 
 // Role groups matching navigation.ts
-const ALL_COMPANY = ['admin', 'hr_manager', 'manager', 'employee'];
+const ALL_COMPANY = ['admin', 'hr_manager', 'manager', 'employee', 'viewer'];
 const ADMINS = ['admin', 'hr_manager'];
 const MANAGEMENT = ['admin', 'hr_manager', 'manager'];
 
@@ -81,10 +84,12 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<GuestRoute><Suspense><Login /></Suspense></GuestRoute>} />
+      <Route path="/invite/:token" element={<Suspense><AcceptInvitation /></Suspense>} />
       <Route path="/" element={<Navigate to="/admin" replace />} />
 
       {/* All authenticated */}
       <Route path="/admin" element={<Protected><DashboardRouter /></Protected>} />
+      <Route path="/admin/audit-logs" element={<R roles={['super_admin', 'admin']}><AuditLogs /></R>} />
       <Route path="/admin/settings" element={<Protected><Settings /></Protected>} />
 
       {/* Platform admin only */}
@@ -92,8 +97,9 @@ export default function AppRoutes() {
 
       {/* Admin & HR */}
       <Route path="/admin/users" element={<R roles={['super_admin', ...ADMINS]}><UserManagement /></R>} />
-      <Route path="/onboarding/new" element={<R roles={ADMINS}><KYCOnboarding /></R>} />
+      <Route path="/onboarding/new" element={<Protected><KYCOnboarding /></Protected>} />
       <Route path="/onboarding/list" element={<R roles={ADMINS}><OnboardingList /></R>} />
+      <Route path="/onboarding/:userId/fill" element={<R roles={ADMINS}><AdminFillOnboarding /></R>} />
       <Route path="/employees" element={<R roles={ADMINS}><EmployeeList /></R>} />
       <Route path="/employees/:id" element={<R roles={ADMINS}><EmployeeProfile /></R>} />
       <Route path="/departments" element={<R roles={ADMINS}><DepartmentList /></R>} />
@@ -112,7 +118,7 @@ export default function AppRoutes() {
       <Route path="/attendance/my" element={<R roles={ALL_COMPANY}><CS moduleName="Attendance"><MyAttendance /></CS></R>} />
       <Route path="/leaves/apply" element={<R roles={ALL_COMPANY}><CS moduleName="Leave Management"><LeaveApply /></CS></R>} />
       <Route path="/performance" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><PerformanceList /></CS></R>} />
-      <Route path="/performance/review" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><ReviewForm /></CS></R>} />
+      <Route path="/performance/review/:id" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><ReviewForm /></CS></R>} />
       <Route path="/training" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingList /></CS></R>} />
       <Route path="/training/:id" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingDetail /></CS></R>} />
       <Route path="/documents" element={<R roles={ALL_COMPANY}><CS moduleName="Documents"><DocumentList /></CS></R>} />

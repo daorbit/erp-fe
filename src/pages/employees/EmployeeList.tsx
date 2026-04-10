@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Card, Table, Avatar, Tag, Button, Input, Select, Drawer, Form, Tabs, Dropdown, Typography, Row, Col, Statistic, Space, Popconfirm, DatePicker, App } from 'antd';
+import { Card, Table, Avatar, Tag, Button, Input, Select, Drawer, Form, Tabs, Dropdown, Typography, Row, Col, Statistic, Space, Popconfirm, DatePicker, App, Modal } from 'antd';
 import {
   Plus, Download, Edit2, Trash2, MoreVertical, Search, Users, UserCheck, UserMinus, UserPlus, Eye,
+  Mail, ChevronDown, Copy, Link2,
 } from 'lucide-react';
 import { useEmployeeList, useCreateEmployee, useDeleteEmployee } from '@/hooks/queries/useEmployees';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
+import { useCreateInvitation } from '@/hooks/queries/useInvitations';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
+import { exportToCsv } from '@/lib/exportCsv';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +26,10 @@ const EmployeeList: React.FC = () => {
   const { message } = App.useApp();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const [inviteDrawerOpen, setInviteDrawerOpen] = useState(false);
+  const [invitationLink, setInvitationLink] = useState<string | null>(null);
+  const [inviteForm] = Form.useForm();
+  const createInviteMutation = useCreateInvitation();
 
   const params: any = {};
   if (search) params.search = search;
@@ -40,7 +47,7 @@ const EmployeeList: React.FC = () => {
   const designations: any[] = desigData?.data ?? [];
 
   const totalEmployees = employees.length;
-  const activeCount = employees.filter((e: any) => e.status === 'active').length;
+  const activeCount = employees.filter((e: any) => e.isActive).length;
   const onLeaveCount = employees.filter((e: any) => e.status === 'on_leave').length;
   const newJoiners = employees.filter((e: any) => {
     if (!e.joinDate) return false;
@@ -104,41 +111,69 @@ const EmployeeList: React.FC = () => {
     }
   };
 
+  // Extract user data from populated userId field
+  const getUser = (r: any) => r.userId || {};
+  const getName = (r: any) => {
+    const u = getUser(r);
+    return `${u.firstName || r.firstName || ''} ${u.lastName || r.lastName || ''}`.trim() || 'N/A';
+  };
+  const getEmail = (r: any) => getUser(r).email || r.email || '';
+  const getDept = (r: any) => {
+    const d = getUser(r).department;
+    return typeof d === 'object' ? d?.name : d;
+  };
+  const getDesig = (r: any) => {
+    const d = getUser(r).designation;
+    return typeof d === 'object' ? d?.title : d;
+  };
+
   const columns = [
     {
-      title: t('employee'), dataIndex: 'name', key: 'name',
-      render: (_: any, r: any) => (
-        <div className="flex items-center gap-3">
-          <Avatar className="bg-blue-600" src={r.avatar}>{(r.name || r.firstName || '').split(' ').map((n: string) => n[0]).join('')}</Avatar>
-          <div>
-            <div className="font-medium">{r.name || `${r.firstName ?? ''} ${r.lastName ?? ''}`}</div>
-            <div className="text-xs text-gray-400">{r.email}</div>
+      title: t('employee'), key: 'name',
+      render: (_: any, r: any) => {
+        const name = getName(r);
+        const email = getEmail(r);
+        const avatar = getUser(r).avatar;
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="bg-blue-600" src={avatar}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            <div>
+              <div className="font-medium text-sm">{name}</div>
+              <div className="text-xs text-gray-400">{email}</div>
+            </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      title: t('department'), dataIndex: 'department', key: 'department',
-      filters: departments.map((d: any) => ({ text: d.name, value: d.name })),
-      onFilter: (value: any, record: any) => {
-        const dept = typeof record.department === 'object' ? record.department?.name : record.department;
-        return dept === value;
+        );
       },
-      render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : d}</Tag>,
     },
-    { title: t('designation'), dataIndex: 'designation', key: 'designation', render: (d: any) => typeof d === 'object' ? d?.title : (d || '-') },
-    { title: t('join_date'), dataIndex: 'joinDate', key: 'joinDate', render: (d: string) => d ? new Date(d).toLocaleDateString() : '-' },
     {
-      title: t('status'), dataIndex: 'status', key: 'status',
-      filters: [
-        { text: 'Active', value: 'active' },
-        { text: 'Inactive', value: 'inactive' },
-        { text: 'On Leave', value: 'on_leave' },
-        { text: 'Probation', value: 'probation' },
-        { text: 'Terminated', value: 'terminated' },
-      ],
-      onFilter: (value: any, record: any) => record.status === value,
-      render: (s: string) => <Tag color={statusColor[s] || 'default'}>{s}</Tag>,
+      title: 'Employee ID', dataIndex: 'employeeId', key: 'employeeId',
+      render: (id: string) => <span className="text-xs font-mono text-gray-500">{id || '-'}</span>,
+    },
+    {
+      title: t('department'), key: 'department',
+      filters: departments.map((d: any) => ({ text: d.name, value: d.name })),
+      onFilter: (value: any, record: any) => getDept(record) === value,
+      render: (_: any, r: any) => {
+        const dept = getDept(r);
+        return dept ? <Tag color="blue">{dept}</Tag> : <span className="text-gray-400">-</span>;
+      },
+    },
+    {
+      title: t('designation'), key: 'designation',
+      render: (_: any, r: any) => {
+        const desig = getDesig(r);
+        return desig ? <span className="text-sm">{desig}</span> : <span className="text-gray-400">-</span>;
+      },
+    },
+    {
+      title: t('join_date'), dataIndex: 'joinDate', key: 'joinDate',
+      render: (d: string) => d ? <span className="text-sm">{new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span> : <span className="text-gray-400">-</span>,
+    },
+    {
+      title: t('status'), dataIndex: 'isActive', key: 'status',
+      filters: [{ text: 'Active', value: true }, { text: 'Inactive', value: false }],
+      onFilter: (value: any, record: any) => record.isActive === value,
+      render: (active: boolean) => <Tag color={active ? 'green' : 'red'}>{active ? 'Active' : 'Inactive'}</Tag>,
     },
     {
       title: t('type'), dataIndex: 'employmentType', key: 'employmentType',
@@ -149,14 +184,14 @@ const EmployeeList: React.FC = () => {
         { text: 'Intern', value: 'intern' },
       ],
       onFilter: (value: any, record: any) => record.employmentType === value,
-      render: (t: string) => <Tag color={typeColor[t] || 'default'}>{t || '-'}</Tag>,
+      render: (t: string) => t ? <Tag color={typeColor[t] || 'default'}>{t.replace('_', ' ')}</Tag> : <span className="text-gray-400">-</span>,
     },
     {
       title: t('actions'), key: 'actions', width: 80,
       render: (_: any, r: any) => (
         <Dropdown menu={{ items: [
           { key: 'view', icon: <Eye size={14} />, label: t('view'), onClick: () => navigate(`/employees/${r._id || r.id}`) },
-          { key: 'edit', icon: <Edit2 size={14} />, label: t('edit') },
+          { key: 'edit', icon: <Edit2 size={14} />, label: t('edit'), onClick: () => navigate(`/employees/${r._id || r.id}?edit=true`) },
           { key: 'delete', icon: <Trash2 size={14} />, label: t('delete'), danger: true, onClick: () => handleDelete(r._id || r.id) },
         ]}} trigger={['click']}>
           <Button type="text" icon={<MoreVertical size={16} />} />
@@ -173,8 +208,18 @@ const EmployeeList: React.FC = () => {
           <Text type="secondary">{t('manage_employees')}</Text>
         </div>
         <Space>
-          <Button icon={<Download size={16} />}>{t('export')}</Button>
+          <Button icon={<Download size={16} />} onClick={() => exportToCsv(employees, [
+            { key: 'name', title: 'Name', render: (_: any, r: any) => `${r.userId?.firstName || ''} ${r.userId?.lastName || ''}`.trim() },
+            { key: 'email', title: 'Email', render: (_: any, r: any) => r.userId?.email || '' },
+            { key: 'employeeId', title: 'Employee ID' },
+            { key: 'department', title: 'Department', render: (_: any, r: any) => { const d = r.userId?.department; return typeof d === 'object' ? d?.name : (d || ''); } },
+            { key: 'designation', title: 'Designation', render: (_: any, r: any) => { const d = r.userId?.designation; return typeof d === 'object' ? d?.title : (d || ''); } },
+            { key: 'employmentType', title: 'Type', render: (v: string) => v?.replace('_', ' ') || '' },
+            { key: 'joinDate', title: 'Join Date' },
+            { key: 'isActive', title: 'Status', render: (v: boolean) => v ? 'Active' : 'Inactive' },
+          ], 'employees')}>{t('export')}</Button>
           <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('add_employee')}</Button>
+          <Button icon={<Mail size={16} />} onClick={() => { inviteForm.resetFields(); setInviteDrawerOpen(true); }}>Invite User</Button>
         </Space>
       </div>
 
@@ -263,6 +308,62 @@ const EmployeeList: React.FC = () => {
           </div>
         </Form>
       </Drawer>
+
+      {/* Invite User Drawer */}
+      <Drawer
+        title={<span className="flex items-center gap-2"><Mail size={18} /> Invite User</span>}
+        open={inviteDrawerOpen}
+        onClose={() => setInviteDrawerOpen(false)}
+        width={480}
+        destroyOnClose
+        extra={<Space><Button onClick={() => setInviteDrawerOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createInviteMutation.isPending} onClick={() => inviteForm.submit()}>Send Invite</Button></Space>}
+      >
+        <div className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-700 dark:text-blue-300">
+          A unique invitation link will be generated. Share it with the user — they'll set up their own name and password.
+        </div>
+        <Form form={inviteForm} layout="vertical" onFinish={async (values: any) => {
+          try {
+            const result = await createInviteMutation.mutateAsync(values);
+            const link = result?.data?.invitationLink;
+            inviteForm.resetFields();
+            setInviteDrawerOpen(false);
+            if (link) setInvitationLink(link);
+            else message.success('Invitation created');
+          } catch (err: any) {
+            message.error(err?.message || 'Failed to create invitation');
+          }
+        }}>
+          <Form.Item name="email" label={t('email')} rules={[{ required: true, type: 'email', message: 'Please enter a valid email' }]}>
+            <Input placeholder="user@company.com" />
+          </Form.Item>
+          <Form.Item name="role" label={t('role')} rules={[{ required: true }]} initialValue="employee">
+            <Select placeholder="Select role" options={[
+              { value: 'viewer', label: 'Viewer (Read-only)' },
+              { value: 'employee', label: 'Employee' },
+              { value: 'manager', label: 'Manager' },
+              { value: 'hr_manager', label: 'HR Manager' },
+              { value: 'admin', label: 'Company Admin' },
+            ]} />
+          </Form.Item>
+        </Form>
+      </Drawer>
+
+      {/* Invitation Link Modal */}
+      <Modal
+        title={<span className="flex items-center gap-2"><Link2 size={18} /> Invitation Link Created</span>}
+        open={!!invitationLink}
+        onCancel={() => setInvitationLink(null)}
+        footer={<Button onClick={() => setInvitationLink(null)}>Done</Button>}
+        width={560}
+      >
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-gray-500">Share this link with the user. It expires in <strong>48 hours</strong>.</p>
+          <div className="flex gap-2">
+            <Input value={invitationLink || ''} readOnly className="font-mono text-xs" />
+            <Button type="primary" icon={<Copy size={14} />} onClick={() => { navigator.clipboard.writeText(invitationLink!); message.success('Link copied'); }}>Copy</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

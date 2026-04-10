@@ -76,15 +76,21 @@ const LeaveApply: React.FC = () => {
               <Text type="secondary">No balance data available</Text>
             ) : (
               <div className="space-y-3">
-                {balances.map((b: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <div>
-                      <div className="font-medium text-sm">{b.leaveType || b.name}</div>
-                      <Text type="secondary" className="text-xs">Used: {b.used ?? 0} / {b.total ?? 0}</Text>
+                {balances.map((b: any, i: number) => {
+                  // leaveType can be ObjectId string or populated object
+                  const ltId = typeof b.leaveType === 'object' ? b.leaveType?._id : b.leaveType;
+                  const ltName = typeof b.leaveType === 'object' ? b.leaveType?.name : leaveTypes.find((lt: any) => (lt._id || lt.id) === ltId)?.name || ltId;
+                  const remaining = b.remaining ?? (b.allocated ?? 0) - (b.used ?? 0);
+                  return (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                      <div>
+                        <div className="font-medium text-sm">{ltName}</div>
+                        <Text type="secondary" className="text-xs">Used: {b.used ?? 0} / Allocated: {b.allocated ?? b.total ?? 0}</Text>
+                      </div>
+                      <Tag color={remaining > 0 ? 'green' : 'red'} className="!text-lg !px-3">{remaining}</Tag>
                     </div>
-                    <Tag color={(b.balance ?? 0) > 0 ? 'green' : 'red'} className="!text-lg !px-3">{b.balance ?? 0}</Tag>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Card>

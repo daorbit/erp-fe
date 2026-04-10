@@ -19,6 +19,8 @@ export interface IUser {
   department?: string;
   designation?: string;
   avatar?: string;
+  onboardingRequired: boolean;
+  onboardingCompleted: boolean;
   isActive: boolean;
   lastLogin?: string;
   createdAt: string;

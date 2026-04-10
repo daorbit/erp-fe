@@ -6,6 +6,7 @@ export enum UserRole {
   HR_MANAGER = 'hr_manager',
   MANAGER = 'manager',
   EMPLOYEE = 'employee',
+  VIEWER = 'viewer',
 }
 
 // ─── Employee ───────────────────────────────────────────────────────────────

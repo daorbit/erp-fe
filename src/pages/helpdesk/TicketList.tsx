@@ -4,6 +4,8 @@ import { App } from 'antd';
 import { Plus, Search, AlertCircle, Clock, CheckCircle2, MessageSquare, Send } from 'lucide-react';
 import { useTicketList, useCreateTicket, useAddTicketComment, useUpdateTicketStatus } from '@/hooks/queries/useHelpdesk';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +25,11 @@ const TicketList: React.FC = () => {
   const [comment, setComment] = useState('');
   const { message } = App.useApp();
   const [form] = Form.useForm();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useTicketList();
   const createMutation = useCreateTicket();
@@ -118,13 +125,13 @@ const TicketList: React.FC = () => {
       onFilter: (value: any, record: any) => record.status === value,
       render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
     },
-    {
+    ...(isAdmin ? [{
       title: t('actions'), key: 'actions', width: 150,
       render: (_: any, r: any) => (
         <Select size="small" value={r.status} onChange={(v: string) => handleStatusChange(r._id ?? r.id, v)} className="min-w-[120px]"
           options={['open', 'in_progress', 'resolved', 'closed'].map(s => ({ value: s, label: s }))} />
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -134,7 +141,7 @@ const TicketList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('helpdesk')}</Title>
           <Text type="secondary">{t('manage_helpdesk')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>{t('create_ticket')}</Button>
+        {!isViewer && <Button type="primary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>{t('create_ticket')}</Button>}
       </div>
 
       <Row gutter={[16, 16]}>

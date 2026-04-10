@@ -3,7 +3,10 @@ import { Card, Table, Tag, Button, Input, Drawer, Form, Select, Row, Col, Typogr
 import { App } from 'antd';
 import { Plus, Search, Monitor, CheckCircle2, Package, Wrench, UserPlus, RotateCcw } from 'lucide-react';
 import { useAssetList, useCreateAsset, useAssignAsset, useReturnAsset } from '@/hooks/queries/useAssets';
+import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +26,15 @@ const AssetList: React.FC = () => {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [assignForm] = Form.useForm();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
+
+  const { data: empData } = useEmployeeList();
+  const employees: any[] = empData?.data ?? [];
+  const employeeOptions = employees.map((e: any) => { const u = e.userId || e; return { value: u._id || e._id, label: `${u.firstName || ''} ${u.lastName || ''} (${e.employeeId || ''})`.trim() }; });
 
   const { data, isLoading } = useAssetList();
   const createMutation = useCreateAsset();
@@ -124,7 +136,7 @@ const AssetList: React.FC = () => {
       onFilter: (value: any, record: any) => record.status === value,
       render: (s: string) => <Tag color={statusColor[s] ?? 'default'}>{s}</Tag>,
     },
-    {
+    ...(isAdmin ? [{
       title: t('actions'), key: 'actions', width: 180,
       render: (_: any, r: any) => (
         <Space>
@@ -138,7 +150,7 @@ const AssetList: React.FC = () => {
           )}
         </Space>
       ),
-    },
+    }] : []),
   ];
 
   return (
@@ -148,7 +160,7 @@ const AssetList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('assets')}</Title>
           <Text type="secondary">{t('manage_assets')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('add_asset')}</Button>
+        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('add_asset')}</Button>}
       </div>
 
       <Row gutter={[16, 16]}>
@@ -219,11 +231,8 @@ const AssetList: React.FC = () => {
           <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
             <Text type="secondary">Assigning: </Text><Text strong>{selectedAsset?.name}</Text>
           </div>
-          <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
-            <Input placeholder="Enter employee ID" />
-          </Form.Item>
-          <Form.Item name="employeeName" label="Employee Name">
-            <Input placeholder="Enter employee name" />
+          <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
+            <Select placeholder="Search employee..." showSearch optionFilterProp="label" options={employeeOptions} />
           </Form.Item>
           <Form.Item name="notes" label="Notes">
             <Input.TextArea rows={2} placeholder="Assignment notes" />

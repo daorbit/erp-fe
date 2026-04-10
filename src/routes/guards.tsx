@@ -3,8 +3,22 @@ import { useAppSelector } from '../store';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const user = useAppSelector((state) => state.auth.user);
   const location = useLocation();
+
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
+
+  // If onboarding is pending, redirect to onboarding (admin & HR are exempt)
+  const onboardingExempt = ['super_admin', 'admin', 'hr_manager'];
+  if (
+    user?.onboardingRequired &&
+    !user?.onboardingCompleted &&
+    !onboardingExempt.includes(user.role) &&
+    location.pathname !== '/onboarding/new'
+  ) {
+    return <Navigate to="/onboarding/new" replace />;
+  }
+
   return <>{children}</>;
 }
 

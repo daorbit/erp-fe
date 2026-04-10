@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Form, Input, Button, Rate, Typography, Divider, Spin, Tag, Descriptions, Space } from 'antd';
+import { Card, Form, Input, Button, Select, Typography, Spin, Tag, Descriptions, Space } from 'antd';
 import { App } from 'antd';
 import { ArrowLeft, Send, Save } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -8,6 +8,19 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+const ratingOptions = [
+  { value: 'outstanding', label: 'Outstanding' },
+  { value: 'exceeds_expectations', label: 'Exceeds Expectations' },
+  { value: 'meets_expectations', label: 'Meets Expectations' },
+  { value: 'needs_improvement', label: 'Needs Improvement' },
+  { value: 'unsatisfactory', label: 'Unsatisfactory' },
+];
+
+const ratingColor: Record<string, string> = {
+  outstanding: 'green', exceeds_expectations: 'blue', meets_expectations: 'default',
+  needs_improvement: 'orange', unsatisfactory: 'red',
+};
 
 const ReviewForm: React.FC = () => {
   const { t } = useTranslation();
@@ -23,21 +36,30 @@ const ReviewForm: React.FC = () => {
   const review: any = reviewData?.data ?? {};
   const goals: any[] = review.goals ?? [];
 
+  // Extract employee/reviewer from populated objects
+  const empName = review.employee
+    ? `${review.employee.firstName || ''} ${review.employee.lastName || ''}`.trim()
+    : review.employeeName || '-';
+  const reviewerName = review.reviewer
+    ? `${review.reviewer.firstName || ''} ${review.reviewer.lastName || ''}`.trim()
+    : review.reviewerName || '-';
+
   const handleSave = (values: any) => {
-    updateMutation.mutate({ id: id!, data: values }, {
+    if (!id) return;
+    updateMutation.mutate({ id, data: values }, {
       onSuccess: () => message.success('Review saved'),
+      onError: (err: any) => message.error(err?.message || 'Failed to save'),
     });
   };
 
   const handleSubmit = () => {
+    if (!id) return;
     form.validateFields().then(values => {
-      updateMutation.mutate({ id: id!, data: values }, {
+      updateMutation.mutate({ id, data: values }, {
         onSuccess: () => {
-          submitMutation.mutate(id!, {
-            onSuccess: () => {
-              message.success('Review submitted');
-              navigate(-1);
-            },
+          submitMutation.mutate(id, {
+            onSuccess: () => { message.success('Review submitted'); navigate(-1); },
+            onError: (err: any) => message.error(err?.message || 'Failed to submit'),
           });
         },
       });
@@ -48,6 +70,10 @@ const ReviewForm: React.FC = () => {
     return <div className="flex items-center justify-center h-64"><Spin size="large" /></div>;
   }
 
+  if (!id) {
+    return <div className="text-center py-20"><Text type="secondary">No review selected. Go back and select a review.</Text></div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -55,22 +81,21 @@ const ReviewForm: React.FC = () => {
           <Button type="text" icon={<ArrowLeft size={16} />} onClick={() => navigate(-1)} />
           <div>
             <Title level={4} className="!mb-1">{t('review_form')}</Title>
-            <Text type="secondary">{review.employeeName} - {review.period}</Text>
+            <Text type="secondary">{empName} — {review.reviewPeriod?.start ? `${review.reviewPeriod.start} to ${review.reviewPeriod.end}` : review.period || ''}</Text>
           </div>
         </div>
         <Space>
-          <Tag color={review.status === 'completed' ? 'green' : 'orange'}>{review.status}</Tag>
+          <Tag color={review.status === 'completed' ? 'green' : 'orange'}>{review.status?.replace('_', ' ')}</Tag>
         </Space>
       </div>
 
       {/* Employee Info */}
       <Card bordered={false}>
         <Descriptions size="small" column={{ xs: 1, sm: 2, md: 3 }}>
-          <Descriptions.Item label={t('employee')}>{review.employeeName}</Descriptions.Item>
-          <Descriptions.Item label={t('department')}>{review.department}</Descriptions.Item>
-          <Descriptions.Item label="Type"><Tag>{review.type}</Tag></Descriptions.Item>
-          <Descriptions.Item label="Period">{review.period}</Descriptions.Item>
-          <Descriptions.Item label="Reviewer">{review.reviewerName}</Descriptions.Item>
+          <Descriptions.Item label={t('employee')}>{empName}</Descriptions.Item>
+          <Descriptions.Item label="Type"><Tag>{review.type?.replace('_', ' ')}</Tag></Descriptions.Item>
+          <Descriptions.Item label="Reviewer">{reviewerName}</Descriptions.Item>
+          <Descriptions.Item label={t('status')}><Tag color={ratingColor[review.overallRating] || 'default'}>{review.overallRating?.replace('_', ' ') || 'Not rated'}</Tag></Descriptions.Item>
         </Descriptions>
       </Card>
 
@@ -85,14 +110,8 @@ const ReviewForm: React.FC = () => {
                     <div className="font-medium">{goal.title}</div>
                     <Text type="secondary" className="text-xs">{goal.description}</Text>
                   </div>
-                  <Tag color={goal.status === 'completed' ? 'green' : 'blue'}>{goal.status}</Tag>
+                  <Tag color={goal.status === 'completed' ? 'green' : 'blue'}>{goal.status?.replace('_', ' ')}</Tag>
                 </div>
-                <Form.Item name={['goalRatings', i, 'rating']} label="Rating" className="!mb-1">
-                  <Rate count={5} />
-                </Form.Item>
-                <Form.Item name={['goalRatings', i, 'comment']} className="!mb-0">
-                  <Input placeholder="Comment on this goal..." />
-                </Form.Item>
               </div>
             ))}
           </Card>
@@ -100,10 +119,10 @@ const ReviewForm: React.FC = () => {
 
         {/* Overall Rating */}
         <Card title="Overall Assessment" bordered={false} className="mb-6">
-          <Form.Item name="overallRating" label="Overall Rating" rules={[{ required: true, message: 'Please provide a rating' }]}>
-            <Rate count={5} />
+          <Form.Item name="overallRating" label="Overall Rating" rules={[{ required: true, message: 'Please select a rating' }]}>
+            <Select placeholder="Select rating" options={ratingOptions} />
           </Form.Item>
-          <Form.Item name="comments" label="Overall Comments" rules={[{ required: true, message: 'Please provide comments' }]}>
+          <Form.Item name="managerComments" label="Manager Comments" rules={[{ required: true, message: 'Please provide comments' }]}>
             <TextArea rows={4} placeholder="Overall performance comments..." />
           </Form.Item>
         </Card>
@@ -113,7 +132,7 @@ const ReviewForm: React.FC = () => {
           <Form.Item name="strengths" label="Key Strengths">
             <TextArea rows={3} placeholder="List key strengths..." />
           </Form.Item>
-          <Form.Item name="improvements" label="Areas for Improvement">
+          <Form.Item name="areasOfImprovement" label="Areas for Improvement">
             <TextArea rows={3} placeholder="Areas that need improvement..." />
           </Form.Item>
         </Card>

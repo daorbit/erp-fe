@@ -3,7 +3,10 @@ import { Card, Table, Tag, Button, Tabs, Drawer, Form, Input, Select, Progress, 
 import { App } from 'antd';
 import { Target, Star, Plus } from 'lucide-react';
 import { useReviewList, useGoalList, useCreateGoal } from '@/hooks/queries/usePerformance';
+import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text } = Typography;
 
@@ -35,6 +38,15 @@ const PerformanceList: React.FC = () => {
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [form] = Form.useForm();
   const { message } = App.useApp();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
+
+  const { data: empData } = useEmployeeList();
+  const employees: any[] = empData?.data ?? [];
+  const employeeOptions = employees.map((e: any) => { const u = e.userId || e; return { value: u._id || e._id, label: `${u.firstName || ''} ${u.lastName || ''} (${e.employeeId || ''})`.trim() }; });
 
   const { data: reviewData, isLoading: reviewsLoading } = useReviewList();
   const { data: goalData, isLoading: goalsLoading } = useGoalList();
@@ -129,7 +141,7 @@ const PerformanceList: React.FC = () => {
       key: 'goals',
       label: 'Goals',
       children: (
-        <Card bordered={false} extra={<Button type="primary" icon={<Plus size={16} />} onClick={() => setGoalModalOpen(true)}>Add Goal</Button>}>
+        <Card bordered={false} extra={isManager ? <Button type="primary" icon={<Plus size={16} />} onClick={() => setGoalModalOpen(true)}>Add Goal</Button> : undefined}>
           <Table columns={goalColumns} dataSource={goals} loading={goalsLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
         </Card>
       ),
@@ -177,8 +189,8 @@ const PerformanceList: React.FC = () => {
           <Form.Item name="dueDate" label="Due Date" rules={[{ required: true }]}>
             <Input type="date" />
           </Form.Item>
-          <Form.Item name="employeeId" label="Employee ID" rules={[{ required: true }]}>
-            <Input placeholder="Employee ID" />
+          <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
+            <Select placeholder="Search employee..." showSearch optionFilterProp="label" options={employeeOptions} />
           </Form.Item>
         </Form>
       </Drawer>

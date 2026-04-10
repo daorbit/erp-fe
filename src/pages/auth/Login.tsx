@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input, Button, Checkbox, Typography } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
@@ -28,6 +28,15 @@ export default function Login() {
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
   const { message } = App.useApp();
+
+  // Show deactivation message if redirected from a disabled account
+  useEffect(() => {
+    const deactivatedMsg = localStorage.getItem('deactivated_message');
+    if (deactivatedMsg) {
+      message.error(deactivatedMsg);
+      localStorage.removeItem('deactivated_message');
+    }
+  }, [message]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

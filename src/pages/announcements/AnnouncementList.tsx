@@ -4,6 +4,8 @@ import { App } from 'antd';
 import { Plus, Search, Pin, Megaphone, Eye } from 'lucide-react';
 import { useAnnouncementList, useCreateAnnouncement, useMarkAnnouncementRead } from '@/hooks/queries/useAnnouncements';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -12,7 +14,7 @@ const categoryColor: Record<string, string> = {
 };
 
 const priorityColor: Record<string, string> = {
-  low: 'default', medium: 'blue', high: 'orange', critical: 'red',
+  low: 'default', normal: 'blue', high: 'orange', critical: 'red',
 };
 
 const AnnouncementList: React.FC = () => {
@@ -21,6 +23,11 @@ const AnnouncementList: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const { message } = App.useApp();
   const [form] = Form.useForm();
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
+  const isManager = isAdmin || currentUser?.role === UserRole.MANAGER;
+  const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useAnnouncementList();
   const createMutation = useCreateAnnouncement();
@@ -37,8 +44,7 @@ const AnnouncementList: React.FC = () => {
 
   const handleCreate = async (values: any) => {
     try {
-      const { isPinned, ...payload } = values;
-      await createMutation.mutateAsync(payload);
+      await createMutation.mutateAsync(values);
       message.success('Announcement created');
       form.resetFields();
       setDrawerOpen(false);
@@ -87,7 +93,7 @@ const AnnouncementList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('announcements')}</Title>
           <Text type="secondary">{t('manage_announcements')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_announcement')}</Button>
+        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_announcement')}</Button>}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -130,7 +136,7 @@ const AnnouncementList: React.FC = () => {
               <Select placeholder="Category" options={['general', 'hr', 'event', 'policy', 'urgent'].map(c => ({ value: c, label: c }))} />
             </Form.Item>
             <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
-              <Select placeholder="Priority" options={['low', 'medium', 'high', 'critical'].map(p => ({ value: p, label: p }))} />
+              <Select placeholder="Priority" options={['low', 'normal', 'high', 'critical'].map(p => ({ value: p, label: p }))} />
             </Form.Item>
           </div>
           <Form.Item name="content" label="Content" rules={[{ required: true }]}>
