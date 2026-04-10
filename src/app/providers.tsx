@@ -28,8 +28,11 @@ function AuthBootstrap({ children }: { children: React.ReactNode }) {
             dispatch(setUser(me));
           }
         })
-        .catch(() => {
-          dispatch(logout());
+        .catch((err: any) => {
+          // Only logout on auth errors (401/403), not network failures
+          if (err?.status === 401 || err?.message?.includes('deactivated')) {
+            dispatch(logout());
+          }
         });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

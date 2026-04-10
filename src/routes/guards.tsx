@@ -11,8 +11,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // If onboarding is pending, redirect to onboarding (admin & HR are exempt)
   const onboardingExempt = ['super_admin', 'admin', 'hr_manager'];
   if (
-    user?.onboardingRequired &&
-    !user?.onboardingCompleted &&
+    user &&
+    user.onboardingRequired &&
+    !user.onboardingCompleted &&
     !onboardingExempt.includes(user.role) &&
     location.pathname !== '/onboarding/new'
   ) {

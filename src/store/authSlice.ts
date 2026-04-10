@@ -11,7 +11,11 @@ interface AuthState {
 function loadUser(): IUser | null {
   try {
     const stored = localStorage.getItem('user');
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+    const user = JSON.parse(stored);
+    // Validate required fields to prevent stale/corrupted data
+    if (!user._id || !user.email || !user.role) return null;
+    return user;
   } catch {
     return null;
   }
