@@ -85,6 +85,15 @@ const en: Record<string, string> = {
   country: 'Country',
   zip_code: 'Zip Code',
   deactivate: 'Deactivate',
+  basic_info: 'Basic Information',
+  contact_info: 'Contact Information',
+  contact_person: 'Contact Person',
+  tax_legal: 'Tax & Legal',
+  gst_number: 'GST Number',
+  pan_number: 'PAN Number',
+  subscription: 'Subscription',
+  plan: 'Plan',
+  max_employees: 'Max Employees',
 
   // Page titles & descriptions
   welcome_back: 'Welcome back, Admin',
@@ -118,6 +127,11 @@ const en: Record<string, string> = {
   present_today: 'Present Today',
   absent_today: 'Absent Today',
   late_today: 'Late Today',
+  pending_leaves: 'Pending Leaves',
+  upcoming_holidays: 'Upcoming Holidays',
+  recent_hires: 'Recent Hires',
+  pending_payroll: 'Pending Payroll',
+  attendance_today: 'Attendance Today',
 
   // Table headers
   name: 'Name',
@@ -153,6 +167,7 @@ const en: Record<string, string> = {
 
   // Buttons & actions
   add: 'Add',
+  add_user: 'Add User',
   add_employee: 'Add Employee',
   add_department: 'Add Department',
   add_designation: 'Add Designation',
@@ -280,6 +295,15 @@ const es: Record<string, string> = {
   country: 'País',
   zip_code: 'Código Postal',
   deactivate: 'Desactivar',
+  basic_info: 'Información Básica',
+  contact_info: 'Información de Contacto',
+  contact_person: 'Persona de Contacto',
+  tax_legal: 'Impuestos y Legal',
+  gst_number: 'Número GST',
+  pan_number: 'Número PAN',
+  subscription: 'Suscripción',
+  plan: 'Plan',
+  max_employees: 'Máx. Empleados',
 
   welcome_back: 'Bienvenido, Administrador',
   heres_whats_happening: 'Esto es lo que está pasando hoy.',
@@ -311,6 +335,11 @@ const es: Record<string, string> = {
   present_today: 'Presentes Hoy',
   absent_today: 'Ausentes Hoy',
   late_today: 'Tarde Hoy',
+  pending_leaves: 'Permisos Pendientes',
+  upcoming_holidays: 'Festivos Próximos',
+  recent_hires: 'Nuevas Contrataciones',
+  pending_payroll: 'Nómina Pendiente',
+  attendance_today: 'Asistencia Hoy',
 
   name: 'Nombre',
   email: 'Correo',
@@ -344,6 +373,7 @@ const es: Record<string, string> = {
   deductions: 'Deducciones',
 
   add: 'Agregar',
+  add_user: 'Agregar Usuario',
   add_employee: 'Agregar Empleado',
   add_department: 'Agregar Departamento',
   add_designation: 'Agregar Designación',
@@ -469,6 +499,15 @@ const hi: Record<string, string> = {
   country: 'देश',
   zip_code: 'पिन कोड',
   deactivate: 'निष्क्रिय करें',
+  basic_info: 'मूल जानकारी',
+  contact_info: 'संपर्क जानकारी',
+  contact_person: 'संपर्क व्यक्ति',
+  tax_legal: 'कर और कानूनी',
+  gst_number: 'GST नंबर',
+  pan_number: 'PAN नंबर',
+  subscription: 'सदस्यता',
+  plan: 'योजना',
+  max_employees: 'अधिकतम कर्मचारी',
 
   welcome_back: 'स्वागत है, व्यवस्थापक',
   heres_whats_happening: 'आज क्या हो रहा है।',
@@ -500,6 +539,11 @@ const hi: Record<string, string> = {
   present_today: 'आज उपस्थित',
   absent_today: 'आज अनुपस्थित',
   late_today: 'आज देरी',
+  pending_leaves: 'लंबित छुट्टियां',
+  upcoming_holidays: 'आगामी अवकाश',
+  recent_hires: 'हाल की भर्तियां',
+  pending_payroll: 'लंबित वेतन',
+  attendance_today: 'आज उपस्थिति',
 
   name: 'नाम',
   email: 'ईमेल',
@@ -533,6 +577,7 @@ const hi: Record<string, string> = {
   deductions: 'कटौती',
 
   add: 'जोड़ें',
+  add_user: 'उपयोगकर्ता जोड़ें',
   add_employee: 'कर्मचारी जोड़ें',
   add_department: 'विभाग जोड़ें',
   add_designation: 'पदनाम जोड़ें',

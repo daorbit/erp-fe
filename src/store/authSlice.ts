@@ -8,8 +8,17 @@ interface AuthState {
   loading: boolean;
 }
 
+function loadUser(): IUser | null {
+  try {
+    const stored = localStorage.getItem('user');
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
 const initialState: AuthState = {
-  user: null,
+  user: loadUser(),
   token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
@@ -28,6 +37,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.loading = false;
       localStorage.setItem('token', action.payload.token);
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
     },
     logout(state) {
       state.user = null;
@@ -35,9 +45,11 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.loading = false;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     setUser(state, action: PayloadAction<IUser>) {
       state.user = action.payload;
+      localStorage.setItem('user', JSON.stringify(action.payload));
     },
     setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;

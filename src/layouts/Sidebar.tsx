@@ -21,7 +21,8 @@ const { Sider } = Layout;
 function filterNavByRole(items: NavItem[], userRole?: string): NavItem[] {
   return items
     .map((item) => {
-      if (item.roles && userRole && !item.roles.includes(userRole)) return null;
+      // If item has role restriction, hide it when role is unknown or not in the list
+      if (item.roles && (!userRole || !item.roles.includes(userRole))) return null;
       if (item.children) {
         const filteredChildren = filterNavByRole(item.children, userRole);
         if (filteredChildren.length === 0) return null;
@@ -113,10 +114,12 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         {!collapsed && (
           <div className="min-w-0">
             <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[16px] font-bold leading-tight truncate`}>
-              Sheeraj Codeworks
+              {user?.role === 'super_admin'
+                ? 'ERP Platform'
+                : (typeof user?.company === 'object' && user?.company?.name) || 'ERP'}
             </span>
             <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px] font-medium`}>
-              HR Management
+              {user?.role === 'super_admin' ? 'Platform Admin' : 'HR Management'}
             </span>
           </div>
         )}
@@ -144,10 +147,10 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
             <Avatar size={38} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
               <span className={`block ${isDark ? 'text-white' : 'text-slate-900'} text-[13px] font-semibold truncate leading-tight`}>
-                {user?.name || 'Admin User'}
+                {user ? `${user.firstName} ${user.lastName}` : 'User'}
               </span>
               <span className={`block ${isDark ? 'text-white/35' : 'text-slate-400'} text-[11px] truncate mt-0.5`}>
-                {user?.email || 'admin@sheeraj.com'}
+                {user?.email || ''}
               </span>
             </div>
           </div>
@@ -161,22 +164,24 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
               <LogOut size={14} />
               <span>Logout</span>
             </button>
-            <Tooltip title={t('settings')} placement="top">
-              <button
-                onClick={() => {
-                  navigate('/admin/settings');
-                  onMobileOpenChange?.(false);
-                }}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition ${isDark ? 'text-white/40 bg-white/[0.04] hover:bg-white/[0.07] hover:text-white/60' : 'text-slate-400 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}
-              >
-                <Settings size={15} />
-              </button>
-            </Tooltip>
+            {user?.role !== 'super_admin' && (
+              <Tooltip title={t('settings')} placement="top">
+                <button
+                  onClick={() => {
+                    navigate('/admin/settings');
+                    onMobileOpenChange?.(false);
+                  }}
+                  className={`w-10 h-10 flex items-center justify-center rounded-xl transition ${isDark ? 'text-white/40 bg-white/[0.04] hover:bg-white/[0.07] hover:text-white/60' : 'text-slate-400 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}
+                >
+                  <Settings size={15} />
+                </button>
+              </Tooltip>
+            )}
           </div>
         </div>
       ) : (
         <div className={`shrink-0 py-3 flex flex-col items-center gap-2 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
-          <Tooltip title={user?.name || 'Admin User'} placement="right">
+          <Tooltip title={user ? `${user.firstName} ${user.lastName}` : 'User'} placement="right">
             <Avatar size={34} icon={<User size={16} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
           </Tooltip>
           <Tooltip title="Logout" placement="right">
@@ -187,17 +192,19 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
               <LogOut size={15} />
             </button>
           </Tooltip>
-          <Tooltip title={t('settings')} placement="right">
-            <button
-              onClick={() => {
-                navigate('/admin/settings');
-                onMobileOpenChange?.(false);
-              }}
-              className={`rounded-xl p-2 transition ${isDark ? 'text-white/35 hover:text-white/60 hover:bg-white/[0.06]' : 'text-slate-400 border border-slate-200 hover:text-slate-600 hover:bg-slate-50'}`}
-            >
-              <Settings size={15} />
-            </button>
-          </Tooltip>
+          {user?.role !== 'super_admin' && (
+            <Tooltip title={t('settings')} placement="right">
+              <button
+                onClick={() => {
+                  navigate('/admin/settings');
+                  onMobileOpenChange?.(false);
+                }}
+                className={`rounded-xl p-2 transition ${isDark ? 'text-white/35 hover:text-white/60 hover:bg-white/[0.06]' : 'text-slate-400 border border-slate-200 hover:text-slate-600 hover:bg-slate-50'}`}
+              >
+                <Settings size={15} />
+              </button>
+            </Tooltip>
+          )}
         </div>
       )}
     </div>

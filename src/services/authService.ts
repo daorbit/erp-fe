@@ -3,6 +3,9 @@ import api from './api';
 const AUTH_URL = '/auth';
 
 const authService = {
+  me: () =>
+    api.get<any>(`${AUTH_URL}/me`),
+
   login: (data: { email: string; password: string }) =>
     api.post<{ token: string; refreshToken: string; user: any }>(`${AUTH_URL}/login`, data),
 

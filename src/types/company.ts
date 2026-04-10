@@ -16,6 +16,11 @@ export interface ICompany {
   address?: ICompanyAddress;
   industry?: string;
   logo?: string;
+  contactPerson?: string;
+  gstNumber?: string;
+  panNumber?: string;
+  maxEmployees?: number;
+  subscription?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

@@ -1,9 +1,40 @@
+import { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider, theme as antdTheme, App as AntApp } from 'antd';
-import { store, useAppSelector } from '../store';
+import { store, useAppSelector, useAppDispatch } from '../store';
+import { setUser, logout } from '../store/authSlice';
 import { queryClient } from '../config/queryClient';
 import { getAntdTheme, colorPalettes, type ThemeColor } from '../config/theme';
+import authService from '../services/authService';
+
+/**
+ * Fetches user profile on app load when token exists but user is not in state.
+ * This handles the case where the user logged in before localStorage persistence was added,
+ * or if localStorage was cleared but the token cookie survived.
+ */
+function AuthBootstrap({ children }: { children: React.ReactNode }) {
+  const dispatch = useAppDispatch();
+  const token = useAppSelector((s) => s.auth.token);
+  const user = useAppSelector((s) => s.auth.user);
+
+  useEffect(() => {
+    if (token && !user) {
+      authService.me()
+        .then((res: any) => {
+          const me = res?.data;
+          if (me) {
+            dispatch(setUser(me));
+          }
+        })
+        .catch(() => {
+          dispatch(logout());
+        });
+    }
+  }, [token, user, dispatch]);
+
+  return <>{children}</>;
+}
 
 function AntdConfigWrapper({ children }: { children: React.ReactNode }) {
   const themeMode = useAppSelector((s) => s.ui.themeMode);
@@ -36,9 +67,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <AntdConfigWrapper>
-          {children}
-        </AntdConfigWrapper>
+        <AuthBootstrap>
+          <AntdConfigWrapper>
+            {children}
+          </AntdConfigWrapper>
+        </AuthBootstrap>
       </QueryClientProvider>
     </Provider>
   );

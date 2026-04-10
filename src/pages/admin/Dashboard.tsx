@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Table, Avatar, Tag, Typography, Row, Col, List, Spin, Progress } from 'antd';
 import {
-  Users, CheckCircle2, Clock, UserPlus, TrendingUp, TrendingDown,
+  Users, CheckCircle2, Clock, UserPlus,
   ArrowUpRight, Briefcase, CalendarCheck,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -99,58 +99,57 @@ const Dashboard: React.FC = () => {
   const apiStats = statsData?.data;
   const employees = employeeData?.data ?? [];
   const activities = activitiesData?.data ?? [];
-  const departmentData = deptData?.data ?? fallbackDeptData;
+  const rawDeptData = deptData?.data;
+  const departmentData = rawDeptData?.length
+    ? rawDeptData.map((d: any) => ({ name: d.department || d.name, value: d.count ?? d.value ?? 0 }))
+    : fallbackDeptData;
   const monthlyData = fallbackMonthlyData;
 
   const PIE_COLORS = [primaryColor, palette.colors[1], palette.colors[2], '#f59e0b', '#8b5cf6'];
 
+  const presentToday = apiStats?.todayAttendance?.present ?? 0;
+  const totalEmp = apiStats?.totalEmployees ?? 0;
+  const attendanceRate = totalEmp > 0 ? Math.round((presentToday / totalEmp) * 100) : 0;
+
   const stats = [
     {
       title: t('total_employees'),
-      value: apiStats?.totalEmployees ?? 248,
+      value: apiStats?.totalEmployees ?? 0,
       icon: <Users size={22} />,
-      change: apiStats?.employeeChange ?? '+20.9%',
-      changeType: 'up' as const,
-      gradient: 'from-blue-500 to-blue-600',
+      subtitle: `${apiStats?.totalDepartments ?? 0} ${t('departments')}`,
       lightBg: 'bg-blue-50 dark:bg-blue-900/20',
       iconColor: 'text-blue-600 dark:text-blue-400',
     },
     {
-      title: t('pending_onboarding'),
-      value: apiStats?.pendingOnboarding ?? 12,
-      icon: <UserPlus size={22} />,
-      change: apiStats?.onboardingChange ?? '+5.2%',
-      changeType: 'up' as const,
-      gradient: 'from-violet-500 to-purple-600',
-      lightBg: 'bg-violet-50 dark:bg-violet-900/20',
-      iconColor: 'text-violet-600 dark:text-violet-400',
-    },
-    {
-      title: t('kyc_completed'),
-      value: apiStats?.kycCompleted ?? 196,
+      title: t('present_today'),
+      value: presentToday,
       icon: <CheckCircle2 size={22} />,
-      change: apiStats?.kycRate ?? '92%',
-      changeType: 'up' as const,
-      gradient: 'from-emerald-500 to-teal-600',
+      subtitle: `${attendanceRate}% ${t('attendance')}`,
       lightBg: 'bg-emerald-50 dark:bg-emerald-900/20',
       iconColor: 'text-emerald-600 dark:text-emerald-400',
     },
     {
-      title: t('pending_approvals'),
-      value: apiStats?.pendingApprovals ?? 8,
+      title: t('pending_leaves'),
+      value: apiStats?.pendingLeaves ?? 0,
       icon: <Clock size={22} />,
-      change: apiStats?.approvalChange ?? '-12%',
-      changeType: 'down' as const,
-      gradient: 'from-amber-500 to-orange-600',
+      subtitle: `${apiStats?.upcomingHolidays ?? 0} ${t('upcoming_holidays')}`,
       lightBg: 'bg-amber-50 dark:bg-amber-900/20',
       iconColor: 'text-amber-600 dark:text-amber-400',
+    },
+    {
+      title: t('recent_hires'),
+      value: apiStats?.recentHires ?? 0,
+      icon: <UserPlus size={22} />,
+      subtitle: `${apiStats?.pendingPayroll ?? 0} ${t('pending_payroll')}`,
+      lightBg: 'bg-violet-50 dark:bg-violet-900/20',
+      iconColor: 'text-violet-600 dark:text-violet-400',
     },
   ];
 
   const quickStats = [
-    { label: 'Attendance Today', value: '92%', icon: <CalendarCheck size={16} /> },
-    { label: 'Open Positions', value: '7', icon: <Briefcase size={16} /> },
-    { label: 'Leave Requests', value: '14', icon: <Clock size={16} /> },
+    { label: t('attendance_today'), value: `${attendanceRate}%`, icon: <CalendarCheck size={16} /> },
+    { label: t('announcements'), value: `${apiStats?.activeAnnouncements ?? 0}`, icon: <Briefcase size={16} /> },
+    { label: t('pending_leaves'), value: `${apiStats?.pendingLeaves ?? 0}`, icon: <Clock size={16} /> },
   ];
 
   return (
@@ -182,26 +181,15 @@ const Dashboard: React.FC = () => {
                 <StaggerItem>
                   <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
                     <Card bordered={false} className="!rounded-xl !shadow-sm hover:!shadow-md transition-shadow" styles={{ body: { padding: 20 } }}>
-                      <div className="flex items-start justify-between">
-                        <div className={`w-11 h-11 rounded-xl ${stat.lightBg} flex items-center justify-center`}>
-                          <span className={stat.iconColor}>{stat.icon}</span>
-                        </div>
-                        <Tag
-                          className={`!border-0 !rounded-full !text-xs !px-2 !m-0 ${
-                            stat.changeType === 'up'
-                              ? '!bg-emerald-50 !text-emerald-600 dark:!bg-emerald-900/30 dark:!text-emerald-400'
-                              : '!bg-red-50 !text-red-600 dark:!bg-red-900/30 dark:!text-red-400'
-                          }`}
-                        >
-                          {stat.changeType === 'up' ? <TrendingUp size={11} className="inline mr-1" /> : <TrendingDown size={11} className="inline mr-1" />}
-                          {stat.change}
-                        </Tag>
+                      <div className={`w-11 h-11 rounded-xl ${stat.lightBg} flex items-center justify-center`}>
+                        <span className={stat.iconColor}>{stat.icon}</span>
                       </div>
                       <div className="mt-3">
                         <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{stat.title}</div>
                         <div className="text-2xl font-bold mt-1">
                           {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                         </div>
+                        <div className="text-xs text-gray-400 mt-1">{stat.subtitle}</div>
                       </div>
                     </Card>
                   </motion.div>

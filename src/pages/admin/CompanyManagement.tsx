@@ -67,8 +67,16 @@ const CompanyManagement: React.FC = () => {
       ),
     },
     { title: t('company_code'), dataIndex: 'code', key: 'code', render: (c: string) => <Tag>{c}</Tag> },
-    { title: t('email'), dataIndex: 'email', key: 'email' },
-    { title: t('phone'), dataIndex: 'phone', key: 'phone', render: (p: string) => p || '-' },
+    { title: t('contact_person'), dataIndex: 'contactPerson', key: 'contactPerson', render: (c: string) => c || '-' },
+    {
+      title: t('subscription'),
+      dataIndex: 'subscription',
+      key: 'subscription',
+      render: (s: string) => {
+        const colors: Record<string, string> = { free: 'default', starter: 'blue', professional: 'purple', enterprise: 'gold' };
+        return <Tag color={colors[s] || 'default'}>{s || 'free'}</Tag>;
+      },
+    },
     {
       title: t('status'),
       dataIndex: 'isActive',
