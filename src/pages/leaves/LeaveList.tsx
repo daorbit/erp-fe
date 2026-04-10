@@ -155,7 +155,7 @@ const LeaveList: React.FC = () => {
             ))}
           </Row>
           <Card bordered={false}>
-            <Table columns={requestColumns} dataSource={leaves} loading={leavesLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+            <Table columns={requestColumns} dataSource={leaves} loading={leavesLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 900 }} />
           </Card>
         </div>
       ),
@@ -165,7 +165,7 @@ const LeaveList: React.FC = () => {
       label: 'Leave Types',
       children: (
         <Card bordered={false} extra={<Button type="primary" icon={<Plus size={16} />} onClick={() => setTypeModalOpen(true)}>Add Type</Button>}>
-          <Table columns={typeColumns} dataSource={leaveTypes} loading={typesLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+          <Table columns={typeColumns} dataSource={leaveTypes} loading={typesLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 600 }} />
         </Card>
       ),
     },
@@ -174,7 +174,7 @@ const LeaveList: React.FC = () => {
       label: 'Leave Balances',
       children: (
         <Card bordered={false}>
-          <Table columns={balanceColumns} dataSource={[]} loading={false} rowKey={(r) => `${r.employeeId}-${r.leaveType}`} pagination={{ pageSize: 10 }} />
+          <Table columns={balanceColumns} dataSource={[]} loading={false} rowKey={(r) => `${r.employeeId}-${r.leaveType}`} pagination={{ pageSize: 10 }} scroll={{ x: 600 }} />
         </Card>
       ),
     },

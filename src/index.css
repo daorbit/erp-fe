@@ -310,6 +310,87 @@ body {
   background: var(--bg-card) !important;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE: MOBILE OVERRIDES
+   ══════════════════════════════════════════════════════════════ */
+
+/* Drawers: full-width on small screens */
+@media (max-width: 576px) {
+  .ant-drawer-content-wrapper {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+}
+@media (min-width: 577px) and (max-width: 768px) {
+  .ant-drawer-content-wrapper {
+    max-width: 90vw !important;
+  }
+}
+
+/* Tables: improve mobile readability */
+@media (max-width: 768px) {
+  .ant-table-thead > tr > th,
+  .ant-table-thead > tr > td {
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+  }
+  .ant-table-tbody > tr > td {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+  }
+  .ant-card-body {
+    padding: 12px !important;
+  }
+  .ant-card-head {
+    padding: 0 12px !important;
+  }
+}
+
+/* Settings tabs: top on mobile */
+@media (max-width: 768px) {
+  .settings-tabs .ant-tabs-nav {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .settings-tabs.ant-tabs-left > .ant-tabs-nav {
+    min-width: unset !important;
+  }
+}
+
+/* Stat cards: tighter on mobile */
+@media (max-width: 480px) {
+  .ant-card-body {
+    padding: 10px !important;
+  }
+}
+
+/* Forms in drawers: stack on small screens */
+@media (max-width: 576px) {
+  .ant-drawer .grid-cols-2,
+  .ant-drawer .grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* KYC form grids: stack on small screens */
+@media (max-width: 640px) {
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Pagination responsive */
+@media (max-width: 576px) {
+  .ant-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+  .ant-pagination-options {
+    display: none;
+  }
+}
+
 /* Animation controls */
 .no-animations *, .no-animations *::before, .no-animations *::after {
   animation-duration: 0s !important;

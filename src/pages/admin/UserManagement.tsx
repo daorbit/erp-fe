@@ -96,7 +96,7 @@ const UserManagement: React.FC = () => {
           <Input prefix={<Search size={16} />} placeholder={t('search') + '...'} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
           <Button icon={<SlidersHorizontal size={16} />}>Filters</Button>
         </div>
-        <Table columns={columns} dataSource={filteredUsers} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={filteredUsers} pagination={{ pageSize: 10 }} scroll={{ x: 900 }} />
       </Card>
 
       <Drawer title={t('add_employee')} open={isModalOpen} onClose={() => setIsModalOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setIsModalOpen(false)}>{t('cancel')}</Button><Button type="primary" onClick={() => form.submit()}>{t('add_employee')}</Button></Space>}>

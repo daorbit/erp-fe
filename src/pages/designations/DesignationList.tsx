@@ -107,7 +107,7 @@ const DesignationList: React.FC = () => {
         <div className="mb-4">
           <Input prefix={<Search size={16} />} placeholder={t('search') + '...'} value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs" allowClear />
         </div>
-        <Table columns={columns} dataSource={filtered} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={filtered} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
       </Card>
 
       <Drawer title={isEdit ? t('edit') + ' ' + t('designation') : t('add_designation')} open={modalOpen} onClose={() => { setModalOpen(false); setEditRecord(null); }} width={520} destroyOnClose extra={<Space><Button onClick={() => { setModalOpen(false); setEditRecord(null); }}>{t('cancel')}</Button><Button type="primary" loading={createMutation.isPending || updateMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>

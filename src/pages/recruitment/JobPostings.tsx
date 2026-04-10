@@ -131,7 +131,7 @@ const JobPostings: React.FC = () => {
       </Row>
 
       <Card bordered={false}>
-        <Table columns={columns} dataSource={jobs} loading={isLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={jobs} loading={isLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 700 }} />
       </Card>
 
       <Drawer title={editingJob ? 'Edit Job' : 'Create Job'} open={drawerOpen} onClose={closeDrawer} width={520}>

@@ -155,7 +155,7 @@ const ExpenseList: React.FC = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center mb-4">
           <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
         </div>
-        <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" />
+        <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 800 }} />
       </Card>
 
       <Drawer title="New Expense Claim" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={

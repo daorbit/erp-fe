@@ -103,7 +103,7 @@ const HolidayCalendar: React.FC = () => {
       </Row>
 
       <Card bordered={false}>
-        <Table columns={columns} dataSource={holidays} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 15 }} size="middle" />
+        <Table columns={columns} dataSource={holidays} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 15 }} size="middle" scroll={{ x: 700 }} />
       </Card>
 
       <Drawer title="Add Holiday" open={modalOpen} onClose={() => setModalOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('add')}</Button></Space>}>

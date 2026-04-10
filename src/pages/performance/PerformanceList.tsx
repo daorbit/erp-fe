@@ -121,7 +121,7 @@ const PerformanceList: React.FC = () => {
       label: 'Reviews',
       children: (
         <Card bordered={false}>
-          <Table columns={reviewColumns} dataSource={reviews} loading={reviewsLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+          <Table columns={reviewColumns} dataSource={reviews} loading={reviewsLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
         </Card>
       ),
     },
@@ -130,7 +130,7 @@ const PerformanceList: React.FC = () => {
       label: 'Goals',
       children: (
         <Card bordered={false} extra={<Button type="primary" icon={<Plus size={16} />} onClick={() => setGoalModalOpen(true)}>Add Goal</Button>}>
-          <Table columns={goalColumns} dataSource={goals} loading={goalsLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+          <Table columns={goalColumns} dataSource={goals} loading={goalsLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
         </Card>
       ),
     },

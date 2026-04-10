@@ -131,13 +131,13 @@ const EmployeeProfile: React.FC = () => {
             </Descriptions>
           )},
           { key: 'attendance', label: 'Attendance', children: (
-            <Table columns={attendanceColumns} dataSource={attendance} loading={attLoading} rowKey={(r: any) => r._id || r.id || r.date} pagination={{ pageSize: 10 }} />
+            <Table columns={attendanceColumns} dataSource={attendance} loading={attLoading} rowKey={(r: any) => r._id || r.id || r.date} pagination={{ pageSize: 10 }} scroll={{ x: 600 }} />
           )},
           { key: 'leaves', label: 'Leaves', children: (
-            <Table columns={leaveColumns} dataSource={leaves} loading={leavesLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
+            <Table columns={leaveColumns} dataSource={leaves} loading={leavesLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
           )},
           { key: 'payslips', label: 'Payslips', children: (
-            <Table columns={payslipColumns} dataSource={payslips} loading={payslipsLoading} rowKey={(r: any) => r._id || r.id || r.month} pagination={{ pageSize: 10 }} />
+            <Table columns={payslipColumns} dataSource={payslips} loading={payslipsLoading} rowKey={(r: any) => r._id || r.id || r.month} pagination={{ pageSize: 10 }} scroll={{ x: 700 }} />
           )},
         ]} />
       </Card>

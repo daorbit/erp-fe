@@ -203,10 +203,10 @@ const EmployeeList: React.FC = () => {
               options={['active', 'inactive', 'on_leave', 'probation', 'terminated'].map(s => ({ value: s, label: s }))} />
           </Space>
         </div>
-        <Table columns={columns} dataSource={employees} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={employees} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} scroll={{ x: 900 }} />
       </Card>
 
-      <Drawer title={t('add_employee')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={600} destroyOnClose>
+      <Drawer title={t('add_employee')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={520} destroyOnClose>
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Tabs items={[
             { key: 'personal', label: 'Personal Info', children: (

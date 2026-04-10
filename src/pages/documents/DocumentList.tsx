@@ -107,7 +107,7 @@ const DocumentList: React.FC = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
           <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
         </div>
-        <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" />
+        <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 700 }} />
       </Card>
 
       <Drawer title="Upload Document" open={uploadOpen} onClose={() => setUploadOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setUploadOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={uploadMutation.isPending} onClick={() => form.submit()}>{t('upload_document')}</Button></Space>}>

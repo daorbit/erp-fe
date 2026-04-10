@@ -48,9 +48,20 @@ const borderRadiusOptions: { label: string; value: BorderRadius; preview: string
   { label: 'Large', value: 'large', preview: '14px' },
 ];
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isMobile;
+};
+
 const Settings: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const isMobile = useIsMobile();
   const { message } = App.useApp();
   const mode = useAppSelector((s) => s.ui.themeMode);
   const colorTheme = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
@@ -461,7 +472,7 @@ const Settings: React.FC = () => {
         <Title level={4} className="!mb-1">{t('settings')}</Title>
         <Text type="secondary">Manage your organization settings and preferences</Text>
       </div>
-      <Tabs items={tabItems} tabPosition="left" className="settings-tabs" />
+      <Tabs items={tabItems} tabPosition={isMobile ? 'top' : 'left'} className="settings-tabs" />
     </div>
   );
 };

@@ -174,6 +174,7 @@ const CompanyManagement: React.FC = () => {
           loading={isLoading}
           rowKey={(r: any) => r._id || r.id}
           pagination={{ pageSize: 10 }}
+          scroll={{ x: 800 }}
         />
       </Card>
 

@@ -105,7 +105,7 @@ const Applications: React.FC = () => {
       </Row>
 
       <Card bordered={false}>
-        <Table columns={columns} dataSource={applications} loading={isLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={applications} loading={isLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
       </Card>
 
       <Drawer title="Application Details" open={detailDrawerOpen} onClose={() => { setDetailDrawerOpen(false); setSelectedApp(null); }} width={520}>

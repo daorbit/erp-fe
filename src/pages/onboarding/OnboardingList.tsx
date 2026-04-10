@@ -94,7 +94,7 @@ const OnboardingList: React.FC = () => {
       </Row>
 
       <Card bordered={false}>
-        <Table columns={columns} dataSource={records} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={records} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} scroll={{ x: 900 }} />
       </Card>
     </div>
   );

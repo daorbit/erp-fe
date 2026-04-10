@@ -295,6 +295,7 @@ const Dashboard: React.FC = () => {
                 size="middle"
                 loading={employeesLoading}
                 locale={{ emptyText: 'No employees found. Add your first employee!' }}
+                scroll={{ x: 600 }}
               />
             </Card>
           </AnimateIn>

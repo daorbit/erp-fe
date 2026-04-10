@@ -139,7 +139,7 @@ const AttendanceList: React.FC = () => {
               { key: 'on_leave', label: 'On Leave' },
             ]} />
         </div>
-        <Table columns={columns} dataSource={records} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={records} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
       </Card>
 
       <Drawer title={t('mark_attendance')} open={modalOpen} onClose={() => setModalOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={markMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>

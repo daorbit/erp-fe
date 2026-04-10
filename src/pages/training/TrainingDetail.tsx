@@ -132,7 +132,7 @@ const TrainingDetail: React.FC = () => {
             key: 'participants',
             label: `Participants (${participants.length})`,
             children: (
-              <Table columns={participantColumns} dataSource={participants} rowKey={(r: any) => r._id ?? r.id ?? r.employeeId} pagination={{ pageSize: 10 }} size="middle" loading={isLoading} />
+              <Table columns={participantColumns} dataSource={participants} rowKey={(r: any) => r._id ?? r.id ?? r.employeeId} pagination={{ pageSize: 10 }} size="middle" loading={isLoading} scroll={{ x: 700 }} />
             ),
           },
         ]} />

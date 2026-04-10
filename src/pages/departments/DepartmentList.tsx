@@ -98,7 +98,7 @@ const DepartmentList: React.FC = () => {
         <div className="mb-4">
           <Input prefix={<Search size={16} />} placeholder={t('search') + '...'} value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs" allowClear />
         </div>
-        <Table columns={columns} dataSource={filtered} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} />
+        <Table columns={columns} dataSource={filtered} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} scroll={{ x: 700 }} />
       </Card>
 
       <DepartmentForm open={modalOpen} onClose={() => { setModalOpen(false); setEditRecord(null); }} editData={editRecord} />

@@ -157,7 +157,7 @@ const PayrollList: React.FC = () => {
             ))}
           </Row>
           <Card bordered={false}>
-            <Table columns={payslipColumns} dataSource={payslips} loading={payslipsLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+            <Table columns={payslipColumns} dataSource={payslips} loading={payslipsLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 900 }} />
           </Card>
         </div>
       ),
@@ -167,7 +167,7 @@ const PayrollList: React.FC = () => {
       label: 'Salary Structure',
       children: (
         <Card bordered={false} extra={<Button type="primary" icon={<Plus size={16} />} onClick={() => setStructureModalOpen(true)}>Add Structure</Button>}>
-          <Table columns={structureColumns} dataSource={structures} loading={structuresLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} />
+          <Table columns={structureColumns} dataSource={structures} loading={structuresLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
         </Card>
       ),
     },
