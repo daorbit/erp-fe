@@ -136,37 +136,56 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         />
       </div>
 
-      {/* User Card */}
+      {/* User Footer */}
       {!collapsed ? (
         <div className={`shrink-0 p-3 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
-          <div className={`flex items-center gap-2.5 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-100'}`}>
-            <Avatar size={36} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
+          {/* User info */}
+          <div className={`flex items-center gap-3 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-50'}`}>
+            <Avatar size={38} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
-              <span className={`block ${isDark ? 'text-white' : 'text-slate-950'} text-[13px] font-semibold truncate`}>Admin User</span>
-              <span className={`block ${isDark ? 'text-white/40' : 'text-slate-500'} text-[11px]`}>Super Admin</span>
+              <span className={`block ${isDark ? 'text-white' : 'text-slate-900'} text-[13px] font-semibold truncate leading-tight`}>
+                {user?.name || 'Admin User'}
+              </span>
+              <span className={`block ${isDark ? 'text-white/35' : 'text-slate-400'} text-[11px] truncate mt-0.5`}>
+                {user?.email || 'admin@sheeraj.com'}
+              </span>
             </div>
+          </div>
+
+          {/* Actions row */}
+          <div className="flex items-center gap-2 mt-2">
             <button
               onClick={handleLogout}
-              className={`transition-colors ${isDark ? 'text-white/30 hover:text-white/60' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-[12px] font-medium transition ${isDark ? 'text-red-400 bg-red-500/[0.08] hover:bg-red-500/[0.15]' : 'text-red-500 bg-red-50 hover:bg-red-100'}`}
             >
               <LogOut size={14} />
+              <span>Logout</span>
             </button>
+            <Tooltip title={t('settings')} placement="top">
+              <button
+                onClick={() => {
+                  navigate('/admin/settings');
+                  onMobileOpenChange?.(false);
+                }}
+                className={`w-9 h-9 flex items-center justify-center rounded-lg transition ${isDark ? 'text-white/40 bg-white/[0.04] hover:bg-white/[0.08] hover:text-white/60' : 'text-slate-400 bg-slate-100 hover:bg-slate-200 hover:text-slate-600'}`}
+              >
+                <Settings size={15} />
+              </button>
+            </Tooltip>
           </div>
-          <button
-            onClick={() => {
-              navigate('/admin/settings');
-              onMobileOpenChange?.(false);
-            }}
-            className={`mt-3 flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition ${isDark ? 'border-white/[0.08] bg-white/[0.04] text-white hover:bg-white/[0.08]' : 'border-slate-200 bg-slate-100 text-slate-950 hover:bg-slate-200'}`}
-          >
-            <Settings size={16} />
-            <span>{t('settings')}</span>
-          </button>
         </div>
       ) : (
-        <div className={`shrink-0 py-4 flex flex-col items-center gap-2 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
-          <Tooltip title="Admin User" placement="right">
-            <Avatar size={36} icon={<User size={18} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
+        <div className={`shrink-0 py-3 flex flex-col items-center gap-2 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
+          <Tooltip title={user?.name || 'Admin User'} placement="right">
+            <Avatar size={34} icon={<User size={16} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
+          </Tooltip>
+          <Tooltip title="Logout" placement="right">
+            <button
+              onClick={handleLogout}
+              className={`rounded-lg p-2 transition ${isDark ? 'text-red-400/60 hover:text-red-400 hover:bg-red-500/[0.1]' : 'text-red-400 hover:text-red-500 hover:bg-red-50'}`}
+            >
+              <LogOut size={15} />
+            </button>
           </Tooltip>
           <Tooltip title={t('settings')} placement="right">
             <button
@@ -174,9 +193,9 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
                 navigate('/admin/settings');
                 onMobileOpenChange?.(false);
               }}
-              className={`rounded-full p-2 transition ${isDark ? 'text-white/30 hover:text-white/60 hover:bg-white/[0.08]' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+              className={`rounded-lg p-2 transition ${isDark ? 'text-white/30 hover:text-white/60 hover:bg-white/[0.08]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
             >
-              <Settings size={16} />
+              <Settings size={15} />
             </button>
           </Tooltip>
         </div>

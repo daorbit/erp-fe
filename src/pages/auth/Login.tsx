@@ -6,9 +6,18 @@ import { useAppDispatch } from '@/store';
 import { setCredentials } from '@/store/authSlice';
 import { useLogin } from '@/hooks/queries/useAuth';
 import { App } from 'antd';
-import { ArrowRight, Shield } from 'lucide-react';
+import { ArrowRight, Shield, Users, CalendarCheck, IndianRupee, FileCheck, ClipboardList, GraduationCap } from 'lucide-react';
 
 const { Title, Text } = Typography;
+
+const modules = [
+  { icon: <Users size={16} />, label: 'Employee Management' },
+  { icon: <CalendarCheck size={16} />, label: 'Attendance & Leaves' },
+  { icon: <IndianRupee size={16} />, label: 'Payroll & Expenses' },
+  { icon: <FileCheck size={16} />, label: 'KYC & Onboarding' },
+  { icon: <ClipboardList size={16} />, label: 'Performance Reviews' },
+  { icon: <GraduationCap size={16} />, label: 'Training Programs' },
+];
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -59,53 +68,37 @@ export default function Login() {
             <span className="text-white/90 text-[15px] font-semibold tracking-tight">Sheeraj Codeworks</span>
           </div>
 
-          {/* Hero content */}
-          <div className="max-w-md -mt-6">
+          {/* Hero */}
+          <div className="max-w-md -mt-4">
             <h1 className="text-[2.5rem] xl:text-[2.85rem] font-extrabold leading-[1.12] tracking-tight text-white mb-4">
               Your workforce,{' '}
               <span className="text-blue-400">managed.</span>
             </h1>
-            <p className="text-[15px] text-white/40 leading-relaxed mb-12">
+            <p className="text-[15px] text-white/40 leading-relaxed mb-10">
               Onboarding, attendance, payroll, performance — everything your HR team needs, in one place.
             </p>
 
-            {/* Stats row */}
-            <div className="flex gap-10">
-              {[
-                { val: '500+', label: 'Companies' },
-                { val: '50k+', label: 'Employees' },
-                { val: '99.9%', label: 'Uptime' },
-              ].map((s) => (
-                <div key={s.label}>
-                  <div className="text-2xl font-bold text-white">{s.val}</div>
-                  <div className="text-xs text-white/30 mt-1 font-medium">{s.label}</div>
+            {/* Module list */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-12">
+              {modules.map((m) => (
+                <div key={m.label} className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                    {m.icon}
+                  </div>
+                  <span className="text-[13px] text-white/50 font-medium">{m.label}</span>
                 </div>
               ))}
             </div>
+
+           
           </div>
 
-          {/* Testimonial card */}
-          <div className="max-w-md">
-            <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-6">
-              <p className="text-[14px] text-white/50 leading-relaxed italic">
-                "Sheeraj HRM cut our onboarding time by 60% and gave us full visibility into attendance and payroll. It's become indispensable."
-              </p>
-              <div className="flex items-center gap-3 mt-5">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                  RS
-                </div>
-                <div>
-                  <div className="text-white/80 text-[13px] font-semibold">Rajesh Sharma</div>
-                  <div className="text-white/30 text-[11px]">VP of People, TechNova Inc.</div>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-6 text-[11px] text-white/20">
-              <span>&copy; {new Date().getFullYear()} Sheeraj Codeworks</span>
-              <div className="flex gap-4">
-                <span className="hover:text-white/40 cursor-pointer transition-colors">Privacy</span>
-                <span className="hover:text-white/40 cursor-pointer transition-colors">Terms</span>
-              </div>
+          {/* Footer */}
+          <div className="flex items-center justify-between text-[11px] text-white/20">
+            <span>&copy; {new Date().getFullYear()} Sheeraj Codeworks</span>
+            <div className="flex gap-4">
+              <span className="hover:text-white/40 cursor-pointer transition-colors">Privacy</span>
+              <span className="hover:text-white/40 cursor-pointer transition-colors">Terms</span>
             </div>
           </div>
         </div>
