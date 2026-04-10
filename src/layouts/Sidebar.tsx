@@ -140,7 +140,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
       {!collapsed ? (
         <div className={`shrink-0 p-3 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
           {/* User info */}
-          <div className={`flex items-center gap-3 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-50'}`}>
+          <div className={`flex items-center gap-3 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-50 border border-slate-200'}`}>
             <Avatar size={38} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
               <span className={`block ${isDark ? 'text-white' : 'text-slate-900'} text-[13px] font-semibold truncate leading-tight`}>
@@ -156,7 +156,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
           <div className="flex items-center gap-2 mt-2">
             <button
               onClick={handleLogout}
-              className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-medium transition ${isDark ? 'text-white/50 bg-white/[0.04] hover:bg-white/[0.07] hover:text-white/70' : 'text-slate-500 bg-slate-50 hover:bg-slate-100 hover:text-slate-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[12px] font-medium transition ${isDark ? 'text-red-400/70 bg-white/[0.04] hover:bg-red-500/10 hover:text-red-400' : 'text-red-500 bg-red-50/50 border border-red-200 hover:bg-red-50 hover:text-red-600'}`}
             >
               <LogOut size={14} />
               <span>Logout</span>
@@ -167,7 +167,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
                   navigate('/admin/settings');
                   onMobileOpenChange?.(false);
                 }}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition ${isDark ? 'text-white/40 bg-white/[0.04] hover:bg-white/[0.07] hover:text-white/60' : 'text-slate-400 bg-slate-50 hover:bg-slate-100 hover:text-slate-600'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition ${isDark ? 'text-white/40 bg-white/[0.04] hover:bg-white/[0.07] hover:text-white/60' : 'text-slate-400 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}
               >
                 <Settings size={15} />
               </button>
@@ -182,7 +182,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
           <Tooltip title="Logout" placement="right">
             <button
               onClick={handleLogout}
-              className={`rounded-xl p-2 transition ${isDark ? 'text-white/35 hover:text-white/60 hover:bg-white/[0.06]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+              className={`rounded-xl p-2 transition ${isDark ? 'text-red-400/70 hover:text-red-400 hover:bg-red-500/10' : 'text-red-500 border border-red-200 hover:text-red-600 hover:bg-red-50'}`}
             >
               <LogOut size={15} />
             </button>
@@ -193,7 +193,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
                 navigate('/admin/settings');
                 onMobileOpenChange?.(false);
               }}
-              className={`rounded-xl p-2 transition ${isDark ? 'text-white/35 hover:text-white/60 hover:bg-white/[0.06]' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+              className={`rounded-xl p-2 transition ${isDark ? 'text-white/35 hover:text-white/60 hover:bg-white/[0.06]' : 'text-slate-400 border border-slate-200 hover:text-slate-600 hover:bg-slate-50'}`}
             >
               <Settings size={15} />
             </button>
