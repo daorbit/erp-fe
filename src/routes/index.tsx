@@ -58,40 +58,56 @@ function Protected({ children }: { children: React.ReactNode }) {
   );
 }
 
+const COMPANY_ROLES = ['admin', 'hr_manager', 'manager', 'employee'];
+
+function CompanyRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <Protected>
+      <RoleGuard roles={COMPANY_ROLES}>{children}</RoleGuard>
+    </Protected>
+  );
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<GuestRoute><Loader><Login /></Loader></GuestRoute>} />
       <Route path="/" element={<Navigate to="/admin" replace />} />
+
+      {/* Shared routes (all roles) */}
       <Route path="/admin" element={<Protected><DashboardRouter /></Protected>} />
-      <Route path="/admin/companies" element={<Protected><RoleGuard roles={['super_admin']}><CompanyManagement /></RoleGuard></Protected>} />
       <Route path="/admin/users" element={<Protected><UserManagement /></Protected>} />
-      <Route path="/admin/settings" element={<Protected><Settings /></Protected>} />
-      <Route path="/onboarding/new" element={<Protected><KYCOnboarding /></Protected>} />
-      <Route path="/onboarding/list" element={<Protected><OnboardingList /></Protected>} />
-      <Route path="/employees" element={<Protected><EmployeeList /></Protected>} />
-      <Route path="/employees/:id" element={<Protected><EmployeeProfile /></Protected>} />
-      <Route path="/departments" element={<Protected><DepartmentList /></Protected>} />
-      <Route path="/designations" element={<Protected><DesignationList /></Protected>} />
-      <Route path="/attendance" element={<Protected><AttendanceList /></Protected>} />
-      <Route path="/attendance/my" element={<Protected><MyAttendance /></Protected>} />
-      <Route path="/leaves" element={<Protected><LeaveList /></Protected>} />
-      <Route path="/leaves/apply" element={<Protected><LeaveApply /></Protected>} />
-      <Route path="/payroll" element={<Protected><PayrollList /></Protected>} />
-      <Route path="/payroll/payslip/:id" element={<Protected><PayslipView /></Protected>} />
-      <Route path="/recruitment" element={<Protected><JobPostings /></Protected>} />
-      <Route path="/recruitment/applications" element={<Protected><Applications /></Protected>} />
-      <Route path="/performance" element={<Protected><PerformanceList /></Protected>} />
-      <Route path="/performance/review" element={<Protected><ReviewForm /></Protected>} />
-      <Route path="/training" element={<Protected><TrainingList /></Protected>} />
-      <Route path="/training/:id" element={<Protected><TrainingDetail /></Protected>} />
-      <Route path="/documents" element={<Protected><DocumentList /></Protected>} />
-      <Route path="/holidays" element={<Protected><HolidayCalendar /></Protected>} />
-      <Route path="/announcements" element={<Protected><AnnouncementList /></Protected>} />
-      <Route path="/expenses" element={<Protected><ExpenseList /></Protected>} />
-      <Route path="/assets" element={<Protected><AssetList /></Protected>} />
-      <Route path="/helpdesk" element={<Protected><TicketList /></Protected>} />
-      <Route path="/reports" element={<Protected><Reports /></Protected>} />
+
+      {/* Platform admin only */}
+      <Route path="/admin/companies" element={<Protected><RoleGuard roles={['super_admin']}><CompanyManagement /></RoleGuard></Protected>} />
+
+      {/* Company-scoped routes (company roles only) */}
+      <Route path="/admin/settings" element={<CompanyRoute><Settings /></CompanyRoute>} />
+      <Route path="/onboarding/new" element={<CompanyRoute><KYCOnboarding /></CompanyRoute>} />
+      <Route path="/onboarding/list" element={<CompanyRoute><OnboardingList /></CompanyRoute>} />
+      <Route path="/employees" element={<CompanyRoute><EmployeeList /></CompanyRoute>} />
+      <Route path="/employees/:id" element={<CompanyRoute><EmployeeProfile /></CompanyRoute>} />
+      <Route path="/departments" element={<CompanyRoute><DepartmentList /></CompanyRoute>} />
+      <Route path="/designations" element={<CompanyRoute><DesignationList /></CompanyRoute>} />
+      <Route path="/attendance" element={<CompanyRoute><AttendanceList /></CompanyRoute>} />
+      <Route path="/attendance/my" element={<CompanyRoute><MyAttendance /></CompanyRoute>} />
+      <Route path="/leaves" element={<CompanyRoute><LeaveList /></CompanyRoute>} />
+      <Route path="/leaves/apply" element={<CompanyRoute><LeaveApply /></CompanyRoute>} />
+      <Route path="/payroll" element={<CompanyRoute><PayrollList /></CompanyRoute>} />
+      <Route path="/payroll/payslip/:id" element={<CompanyRoute><PayslipView /></CompanyRoute>} />
+      <Route path="/recruitment" element={<CompanyRoute><JobPostings /></CompanyRoute>} />
+      <Route path="/recruitment/applications" element={<CompanyRoute><Applications /></CompanyRoute>} />
+      <Route path="/performance" element={<CompanyRoute><PerformanceList /></CompanyRoute>} />
+      <Route path="/performance/review" element={<CompanyRoute><ReviewForm /></CompanyRoute>} />
+      <Route path="/training" element={<CompanyRoute><TrainingList /></CompanyRoute>} />
+      <Route path="/training/:id" element={<CompanyRoute><TrainingDetail /></CompanyRoute>} />
+      <Route path="/documents" element={<CompanyRoute><DocumentList /></CompanyRoute>} />
+      <Route path="/holidays" element={<CompanyRoute><HolidayCalendar /></CompanyRoute>} />
+      <Route path="/announcements" element={<CompanyRoute><AnnouncementList /></CompanyRoute>} />
+      <Route path="/expenses" element={<CompanyRoute><ExpenseList /></CompanyRoute>} />
+      <Route path="/assets" element={<CompanyRoute><AssetList /></CompanyRoute>} />
+      <Route path="/helpdesk" element={<CompanyRoute><TicketList /></CompanyRoute>} />
+      <Route path="/reports" element={<CompanyRoute><Reports /></CompanyRoute>} />
       <Route path="*" element={<Loader><NotFound /></Loader>} />
     </Routes>
   );
