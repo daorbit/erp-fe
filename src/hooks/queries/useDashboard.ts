@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import dashboardService from '../../services/dashboardService';
+import dashboardService, { platformDashboardService } from '../../services/dashboardService';
 
 export const dashboardKeys = {
   all: ['dashboard'] as const,
@@ -58,5 +58,43 @@ export function useAnniversaries(params?: any) {
   return useQuery({
     queryKey: dashboardKeys.anniversaries(params),
     queryFn: () => dashboardService.getAnniversaries(params),
+  });
+}
+
+// ─── Platform Dashboard Hooks (super_admin) ──────────────────────────────────
+
+export const platformDashboardKeys = {
+  all: ['platform-dashboard'] as const,
+  stats: () => [...platformDashboardKeys.all, 'stats'] as const,
+  companyOverviews: () => [...platformDashboardKeys.all, 'company-overviews'] as const,
+  companyGrowth: () => [...platformDashboardKeys.all, 'company-growth'] as const,
+  userDistribution: () => [...platformDashboardKeys.all, 'user-distribution'] as const,
+};
+
+export function usePlatformStats() {
+  return useQuery({
+    queryKey: platformDashboardKeys.stats(),
+    queryFn: () => platformDashboardService.getStats(),
+  });
+}
+
+export function useCompanyOverviews() {
+  return useQuery({
+    queryKey: platformDashboardKeys.companyOverviews(),
+    queryFn: () => platformDashboardService.getCompanyOverviews(),
+  });
+}
+
+export function useCompanyGrowth() {
+  return useQuery({
+    queryKey: platformDashboardKeys.companyGrowth(),
+    queryFn: () => platformDashboardService.getCompanyGrowth(),
+  });
+}
+
+export function useUserDistribution() {
+  return useQuery({
+    queryKey: platformDashboardKeys.userDistribution(),
+    queryFn: () => platformDashboardService.getUserDistribution(),
   });
 }

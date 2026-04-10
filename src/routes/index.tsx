@@ -6,7 +6,7 @@ import { ProtectedRoute, GuestRoute, RoleGuard } from './guards';
 
 const Login = lazy(() => import('../pages/auth/Login'));
 const CompanyManagement = lazy(() => import('../pages/admin/CompanyManagement'));
-const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
+const DashboardRouter = lazy(() => import('../pages/admin/DashboardRouter'));
 const UserManagement = lazy(() => import('../pages/admin/UserManagement'));
 const Settings = lazy(() => import('../pages/admin/Settings'));
 const KYCOnboarding = lazy(() => import('../pages/onboarding/KYCOnboarding'));
@@ -63,7 +63,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<GuestRoute><Loader><Login /></Loader></GuestRoute>} />
       <Route path="/" element={<Navigate to="/admin" replace />} />
-      <Route path="/admin" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/admin" element={<Protected><DashboardRouter /></Protected>} />
       <Route path="/admin/companies" element={<Protected><RoleGuard roles={['super_admin']}><CompanyManagement /></RoleGuard></Protected>} />
       <Route path="/admin/users" element={<Protected><UserManagement /></Protected>} />
       <Route path="/admin/settings" element={<Protected><Settings /></Protected>} />
