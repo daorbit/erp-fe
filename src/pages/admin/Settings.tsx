@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
 import {
-  Card, Tabs, Input, Select, Switch, Button, Typography, Divider, Space, InputNumber, Upload,
+  Card, Tabs, Input, Select, Switch, Button, Typography, Divider, Space, InputNumber, Upload, Slider, Radio,
 } from 'antd';
 import {
-  Save,
-  Check,
-  Sun,
-  Moon,
-  Droplet,
-  Banknote,
-  Bell,
-  Lock,
-  Type,
-  Globe,
-  Upload as UploadIcon,
+  Save, Check, Sun, Moon, Droplet, Banknote, Bell, Lock, Type, Globe,
+  Upload as UploadIcon, Zap, Maximize, LayoutGrid, MonitorSmartphone,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setThemeMode, setThemeColor, setFontFamily, setLanguage } from '@/store/uiSlice';
+import {
+  setThemeMode, setThemeColor, setFontFamily, setLanguage,
+  setFontSize, setAnimationLevel, setBorderRadius, setCompactMode,
+  type AnimationLevel, type FontSize, type BorderRadius,
+} from '@/store/uiSlice';
 import { colorPalettes, fontFamilies, type ThemeColor } from '@/config/theme';
 import { languages } from '@/config/i18n';
 import type { Language } from '@/config/i18n';
@@ -34,6 +29,25 @@ const notificationItems = [
   { id: 'doc-expiry', label: 'Document expiry reminders', desc: 'Alert when employee documents are about to expire', defaultOn: true },
 ];
 
+const fontSizeOptions: { label: string; value: FontSize; desc: string; preview: string }[] = [
+  { label: 'Small', value: 'small', desc: '13px base — Compact view', preview: 'Aa' },
+  { label: 'Default', value: 'default', desc: '14px base — Standard', preview: 'Aa' },
+  { label: 'Large', value: 'large', desc: '16px base — Accessibility', preview: 'Aa' },
+];
+
+const animationOptions: { label: string; value: AnimationLevel; desc: string; icon: React.ReactNode }[] = [
+  { label: 'None', value: 'none', desc: 'No animations — best performance', icon: <MonitorSmartphone size={18} /> },
+  { label: 'Minimal', value: 'minimal', desc: 'Subtle fades only', icon: <Zap size={18} /> },
+  { label: 'Full', value: 'full', desc: 'All transitions & effects', icon: <Zap size={18} className="text-amber-500" /> },
+];
+
+const borderRadiusOptions: { label: string; value: BorderRadius; preview: string }[] = [
+  { label: 'None', value: 'none', preview: '0px' },
+  { label: 'Small', value: 'small', preview: '4px' },
+  { label: 'Default', value: 'default', preview: '8px' },
+  { label: 'Large', value: 'large', preview: '14px' },
+];
+
 const Settings: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -42,6 +56,10 @@ const Settings: React.FC = () => {
   const colorTheme = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
   const fontFamily = useAppSelector((s) => s.ui.fontFamily);
   const language = useAppSelector((s) => s.ui.language) as Language;
+  const fontSize = useAppSelector((s) => s.ui.fontSize);
+  const animationLevel = useAppSelector((s) => s.ui.animationLevel);
+  const borderRadius = useAppSelector((s) => s.ui.borderRadius);
+  const compactMode = useAppSelector((s) => s.ui.compactMode);
 
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
     Object.fromEntries(notificationItems.map((n) => [n.id, n.defaultOn])),
@@ -52,13 +70,10 @@ const Settings: React.FC = () => {
   const tabItems = [
     {
       key: 'appearance',
-      label: (
-        <span className="flex items-center gap-2">
-          <Droplet size={18} /> {t('appearance')}
-        </span>
-      ),
+      label: <span className="flex items-center gap-2"><Droplet size={18} /> {t('appearance')}</span>,
       children: (
         <div className="space-y-6">
+          {/* Theme Mode */}
           <AnimateIn>
             <Card size="small" title={t('theme_mode')} className="!rounded-xl">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -72,9 +87,7 @@ const Settings: React.FC = () => {
                         isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                       }`}
                     >
-                      <div className={`rounded-lg border p-3 mb-3 ${
-                        m === 'dark' ? 'bg-[#1a1d23] border-[#2d3140]' : 'bg-[#f8fafc] border-[#e2e8f0]'
-                      }`}>
+                      <div className={`rounded-lg border p-3 mb-3 ${m === 'dark' ? 'bg-[#1a1d23] border-[#2d3140]' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
                         <div className="flex gap-1.5 mb-2">
                           <div className="w-2 h-2 rounded-full bg-red-500" />
                           <div className="w-2 h-2 rounded-full bg-yellow-500" />
@@ -90,7 +103,7 @@ const Settings: React.FC = () => {
                       </div>
                       {isSelected && (
                         <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Check size={10} />
+                          <Check size={10} className="text-white" />
                         </div>
                       )}
                       <div className="mb-1">{m === 'dark' ? <Moon size={18} /> : <Sun size={18} />}</div>
@@ -103,6 +116,7 @@ const Settings: React.FC = () => {
             </Card>
           </AnimateIn>
 
+          {/* Color Theme */}
           <AnimateIn>
             <Card size="small" title={t('color_theme')} className="!rounded-xl">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -113,18 +127,19 @@ const Settings: React.FC = () => {
                       key={key}
                       onClick={() => dispatch(setThemeColor(key))}
                       className={`relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm ${
-                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                        isSelected ? 'shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                       }`}
+                      style={isSelected ? { borderColor: palette.primary } : undefined}
                     >
                       <div className="flex gap-1.5 mb-3">
                         {palette.colors.map((c, i) => (
-                          <div key={i} className="w-6 h-6 rounded-md" style={{ background: c, opacity: 1 - i * 0.2 }} />
+                          <div key={i} className="w-6 h-6 rounded-full shadow-sm" style={{ background: c }} />
                         ))}
                       </div>
                       <div className="text-sm font-semibold">{palette.label}</div>
                       {isSelected && (
                         <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: palette.primary }}>
-                          <Check size={10} />
+                          <Check size={10} className="text-white" />
                         </div>
                       )}
                     </button>
@@ -134,6 +149,7 @@ const Settings: React.FC = () => {
             </Card>
           </AnimateIn>
 
+          {/* Font Family */}
           <AnimateIn>
             <Card size="small" title={<span className="flex items-center gap-2"><Type size={18} /> {t('font_family')}</span>} className="!rounded-xl">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -154,7 +170,7 @@ const Settings: React.FC = () => {
                       <div className="text-sm font-semibold">{font.label}</div>
                       {isSelected && (
                         <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Check size={10} />
+                          <Check size={10} className="text-white" />
                         </div>
                       )}
                     </button>
@@ -164,6 +180,108 @@ const Settings: React.FC = () => {
             </Card>
           </AnimateIn>
 
+          {/* Font Size */}
+          <AnimateIn>
+            <Card size="small" title={<span className="flex items-center gap-2"><Maximize size={18} /> Font Size</span>} className="!rounded-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {fontSizeOptions.map((opt) => {
+                  const isSelected = fontSize === opt.value;
+                  const sizeMap = { small: '20px', default: '28px', large: '36px' };
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => dispatch(setFontSize(opt.value))}
+                      className={`relative rounded-xl border-2 p-4 text-center transition-all hover:shadow-sm ${
+                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-bold mb-2" style={{ fontSize: sizeMap[opt.value] }}>{opt.preview}</div>
+                      <div className="text-sm font-semibold">{opt.label}</div>
+                      <div className="text-xs text-gray-500">{opt.desc}</div>
+                      {isSelected && (
+                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                          <Check size={10} className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          </AnimateIn>
+
+          {/* Animations */}
+          <AnimateIn>
+            <Card size="small" title={<span className="flex items-center gap-2"><Zap size={18} /> Animation Effects</span>} className="!rounded-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {animationOptions.map((opt) => {
+                  const isSelected = animationLevel === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => dispatch(setAnimationLevel(opt.value))}
+                      className={`relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm ${
+                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="mb-2">{opt.icon}</div>
+                      <div className="text-sm font-semibold">{opt.label}</div>
+                      <div className="text-xs text-gray-500">{opt.desc}</div>
+                      {isSelected && (
+                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                          <Check size={10} className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          </AnimateIn>
+
+          {/* Border Radius */}
+          <AnimateIn>
+            <Card size="small" title={<span className="flex items-center gap-2"><LayoutGrid size={18} /> Border Radius</span>} className="!rounded-xl">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {borderRadiusOptions.map((opt) => {
+                  const isSelected = borderRadius === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => dispatch(setBorderRadius(opt.value))}
+                      className={`relative rounded-xl border-2 p-4 text-center transition-all hover:shadow-sm ${
+                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-400 mx-auto mb-2" style={{ borderRadius: opt.preview }} />
+                      <div className="text-sm font-semibold">{opt.label}</div>
+                      <div className="text-xs text-gray-400">{opt.preview}</div>
+                      {isSelected && (
+                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                          <Check size={10} className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          </AnimateIn>
+
+          {/* Compact Mode */}
+          <AnimateIn>
+            <Card size="small" className="!rounded-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold">Compact Mode</div>
+                  <div className="text-xs text-gray-500">Reduce spacing and padding throughout the app</div>
+                </div>
+                <Switch checked={compactMode} onChange={(v) => dispatch(setCompactMode(v))} />
+              </div>
+            </Card>
+          </AnimateIn>
+
+          {/* Preview */}
           <AnimateIn>
             <Card size="small" title="Preview" className="!rounded-xl">
               <Space wrap>
@@ -180,11 +298,7 @@ const Settings: React.FC = () => {
     },
     {
       key: 'language',
-      label: (
-        <span className="flex items-center gap-2">
-          <Globe size={18} /> {t('language')}
-        </span>
-      ),
+      label: <span className="flex items-center gap-2"><Globe size={18} /> {t('language')}</span>,
       children: (
         <div className="space-y-6">
           <AnimateIn>
@@ -204,7 +318,7 @@ const Settings: React.FC = () => {
                       <div className="font-semibold text-base">{lang.label}</div>
                       {isSelected && (
                         <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Check size={10} />
+                          <Check size={10} className="text-white" />
                         </div>
                       )}
                     </button>
@@ -213,7 +327,6 @@ const Settings: React.FC = () => {
               </div>
             </Card>
           </AnimateIn>
-
           <AnimateIn>
             <Card size="small" title="Preview" className="!rounded-xl">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -231,11 +344,7 @@ const Settings: React.FC = () => {
     },
     {
       key: 'company',
-      label: (
-        <span className="flex items-center gap-2">
-          <Banknote size={18} /> {t('company')}
-        </span>
-      ),
+      label: <span className="flex items-center gap-2"><Banknote size={18} /> {t('company')}</span>,
       children: (
         <AnimateIn>
           <Card size="small" title="Company Information" className="!rounded-xl">
@@ -284,11 +393,7 @@ const Settings: React.FC = () => {
     },
     {
       key: 'notifications',
-      label: (
-        <span className="flex items-center gap-2">
-          <Bell size={18} /> {t('notifications')}
-        </span>
-      ),
+      label: <span className="flex items-center gap-2"><Bell size={18} /> {t('notifications')}</span>,
       children: (
         <AnimateIn>
           <Card size="small" title="Notification Preferences" className="!rounded-xl">
@@ -316,11 +421,7 @@ const Settings: React.FC = () => {
     },
     {
       key: 'security',
-      label: (
-        <span className="flex items-center gap-2">
-          <Lock size={18} /> {t('security')}
-        </span>
-      ),
+      label: <span className="flex items-center gap-2"><Lock size={18} /> {t('security')}</span>,
       children: (
         <AnimateIn>
           <Card size="small" title="Security Settings" className="!rounded-xl">
@@ -335,29 +436,6 @@ const Settings: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium mb-1">Minimum Password Length</label>
                 <InputNumber defaultValue={8} min={6} max={32} className="w-full" />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div className="pr-4">
-                  <div className="text-sm font-medium">Require Uppercase Letter</div>
-                  <div className="text-sm text-gray-500">Password must contain at least one uppercase letter</div>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div className="pr-4">
-                  <div className="text-sm font-medium">Require Special Character</div>
-                  <div className="text-sm text-gray-500">Password must contain at least one special character</div>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Session Timeout</label>
-                <Select defaultValue="30" className="w-full" options={[
-                  { value: '15', label: '15 minutes' },
-                  { value: '30', label: '30 minutes' },
-                  { value: '60', label: '1 hour' },
-                  { value: '120', label: '2 hours' },
-                ]} />
               </div>
               <div className="flex items-center justify-between py-2">
                 <div className="pr-4">

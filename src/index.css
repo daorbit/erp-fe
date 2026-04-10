@@ -309,3 +309,13 @@ body {
 .dark .ant-popover-inner {
   background: var(--bg-card) !important;
 }
+
+/* Animation controls */
+.no-animations *, .no-animations *::before, .no-animations *::after {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+.minimal-animations *, .minimal-animations *::before, .minimal-animations *::after {
+  animation-duration: 0.1s !important;
+  transition-duration: 0.1s !important;
+}

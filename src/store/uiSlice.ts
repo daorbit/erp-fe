@@ -1,24 +1,40 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+export type AnimationLevel = 'none' | 'minimal' | 'full';
+export type FontSize = 'small' | 'default' | 'large';
+export type BorderRadius = 'none' | 'small' | 'default' | 'large';
+
 interface UIState {
   sidebarCollapsed: boolean;
   themeMode: 'light' | 'dark';
   themeColor: string;
   fontFamily: string;
   language: 'en' | 'es' | 'hi';
+  fontSize: FontSize;
+  animationLevel: AnimationLevel;
+  borderRadius: BorderRadius;
+  compactMode: boolean;
 }
 
 function loadUIState(): UIState {
   try {
     const stored = localStorage.getItem('ui');
-    if (stored) return JSON.parse(stored) as UIState;
+    if (stored) return { ...getDefaults(), ...JSON.parse(stored) } as UIState;
   } catch { /* ignore */ }
+  return getDefaults();
+}
+
+function getDefaults(): UIState {
   return {
     sidebarCollapsed: false,
     themeMode: 'light',
-    themeColor: 'green',
+    themeColor: 'blue',
     fontFamily: "'Inter', sans-serif",
     language: 'en',
+    fontSize: 'default',
+    animationLevel: 'full',
+    borderRadius: 'default',
+    compactMode: false,
   };
 }
 
@@ -56,8 +72,28 @@ const uiSlice = createSlice({
       state.language = action.payload;
       persistUIState(state);
     },
+    setFontSize(state, action: PayloadAction<FontSize>) {
+      state.fontSize = action.payload;
+      persistUIState(state);
+    },
+    setAnimationLevel(state, action: PayloadAction<AnimationLevel>) {
+      state.animationLevel = action.payload;
+      persistUIState(state);
+    },
+    setBorderRadius(state, action: PayloadAction<BorderRadius>) {
+      state.borderRadius = action.payload;
+      persistUIState(state);
+    },
+    setCompactMode(state, action: PayloadAction<boolean>) {
+      state.compactMode = action.payload;
+      persistUIState(state);
+    },
   },
 });
 
-export const { toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor, setFontFamily, setLanguage } = uiSlice.actions;
+export const {
+  toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor,
+  setFontFamily, setLanguage, setFontSize, setAnimationLevel,
+  setBorderRadius, setCompactMode,
+} = uiSlice.actions;
 export default uiSlice.reducer;

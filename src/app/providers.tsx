@@ -22,7 +22,7 @@ function AntdConfigWrapper({ children }: { children: React.ReactNode }) {
           ...themeConfig.token,
           fontFamily: fontFamily || "'Inter', sans-serif",
         },
-        cssVar: true,
+        cssVar: { prefix: 'ant' },
       }}
     >
       <AntApp>
