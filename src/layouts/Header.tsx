@@ -1,13 +1,11 @@
-import {} from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Badge,
-  Avatar,
-  Dropdown,
   Tooltip,
   Button as AntButton,
   Popover,
   Space,
+  Input,
 } from "antd";
 import { localeMap } from '@/config/i18n';
 import { useTranslation } from "@/hooks/useTranslation";
@@ -17,11 +15,9 @@ import {
   PanelLeftOpen,
   Bell,
   Maximize2,
-  User,
-  Settings2,
-  LogOut,
   Sun,
   Moon,
+  Search,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -31,9 +27,7 @@ interface HeaderProps {
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const { t, language } = useTranslation();
   const dispatch = useDispatch();
-  const collapsed = useSelector(
-    (state: any) => state.ui?.sidebarCollapsed ?? false,
-  );
+  const collapsed = useSelector((state: any) => state.ui?.sidebarCollapsed ?? false);
   const themeMode = useSelector((state: any) => state.ui?.themeMode ?? "light");
   const isDark = themeMode === "dark";
 
@@ -41,8 +35,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const toggleTheme = () =>
     dispatch({ type: "ui/setThemeMode", payload: isDark ? "light" : "dark" });
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement)
-      document.documentElement.requestFullscreen();
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
     else document.exitFullscreen();
   };
 
@@ -69,30 +62,14 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           className="py-2 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-1 rounded"
         >
           <div className="text-sm font-medium">{n.name}</div>
-          <div className="text-xs text-gray-500">
-            {n.message} — {n.time}
-          </div>
+          <div className="text-xs text-gray-500">{n.message} — {n.time}</div>
         </div>
       ))}
     </div>
   );
 
-  const userMenuItems = [
-    { key: "profile", icon: <User size={18} />, label: t('my_profile') },
-    { key: "settings", icon: <Settings2 size={18} />, label: t('account_settings') },
-    { type: "divider" as const },
-    {
-      key: "logout",
-      icon: <LogOut size={18} />,
-      label: t('sign_out'),
-      danger: true,
-    },
-  ];
-
   return (
-    <header
-      className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 bg-white dark:bg-[#111318] border-b border-gray-200 dark:border-gray-800"
-    >
+    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 md:px-6 bg-white dark:bg-[#111318] border-b border-gray-200 dark:border-gray-800">
       {/* Left */}
       <div className="flex items-center gap-3">
         <AntButton
@@ -109,11 +86,19 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             className="hidden md:inline-flex"
           />
         </Tooltip>
-        <span
-          className={`hidden sm:block text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
-        >
+        <span className={`hidden sm:block text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
           {dateString}
         </span>
+      </div>
+
+      {/* Center - Search */}
+      <div className="hidden md:block flex-1 max-w-md mx-4">
+        <Input
+          prefix={<Search size={14} className="text-gray-400" />}
+          placeholder="Search anything..."
+          className="!rounded-lg !bg-gray-50 dark:!bg-gray-800/50 !border-gray-200 dark:!border-gray-700"
+          allowClear
+        />
       </div>
 
       {/* Right */}
@@ -135,27 +120,11 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           />
         </Tooltip>
 
-        <Popover
-          content={notificationContent}
-          trigger="click"
-          placement="bottomRight"
-        >
+        <Popover content={notificationContent} trigger="click" placement="bottomRight">
           <Badge count={3} size="small">
             <AntButton type="text" icon={<Bell size={18} />} />
           </Badge>
         </Popover>
-
-        <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-1" />
-
-        <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-          <div className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <Avatar size={34} icon={<User size={16} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
-            <div className="hidden sm:block leading-tight">
-              <div className="text-sm font-medium">Admin User</div>
-              <div className="text-xs text-gray-400">Super Admin</div>
-            </div>
-          </div>
-        </Dropdown>
       </Space>
     </header>
   );

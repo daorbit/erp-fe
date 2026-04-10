@@ -2,22 +2,20 @@ import { useEffect } from 'react';
 import { useAppSelector } from '../store';
 import { colorPalettes, type ThemeColor } from '../config/theme';
 
+const fontSizeMap = { small: '13px', default: '14px', large: '16px' };
+const radiusMap = { none: '0px', small: '4px', default: '8px', large: '14px' };
+
 export default function ThemeSync() {
-  const themeMode = useAppSelector((s) => s.ui.themeMode);
-  const themeColor = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
-  const fontFamily = useAppSelector((s) => s.ui.fontFamily);
+  const { themeMode, themeColor, fontFamily, fontSize, animationLevel, borderRadius } =
+    useAppSelector((s) => s.ui);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (themeMode === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+    root.classList.toggle('dark', themeMode === 'dark');
   }, [themeMode]);
 
   useEffect(() => {
-    const palette = colorPalettes[themeColor];
+    const palette = colorPalettes[themeColor as ThemeColor];
     if (palette) {
       document.documentElement.style.setProperty('--theme-primary', palette.primary);
     }
@@ -29,6 +27,20 @@ export default function ThemeSync() {
       document.body.style.fontFamily = fontFamily;
     }
   }, [fontFamily]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--base-font-size', fontSizeMap[fontSize] || '14px');
+    document.body.style.fontSize = fontSizeMap[fontSize] || '14px';
+  }, [fontSize]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--base-radius', radiusMap[borderRadius] || '8px');
+  }, [borderRadius]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('no-animations', animationLevel === 'none');
+    document.documentElement.classList.toggle('minimal-animations', animationLevel === 'minimal');
+  }, [animationLevel]);
 
   return null;
 }

@@ -1,27 +1,22 @@
 import React from 'react';
-import { Card, Table, Avatar, Tag, Typography, Row, Col, List, Spin } from 'antd';
+import { Card, Table, Avatar, Tag, Typography, Row, Col, List, Spin, Progress } from 'antd';
 import {
-  Users,
-  CheckCircle2,
-  Clock,
-  ShieldCheck,
-  UserPlus,
-  TrendingUp,
-  TrendingDown,
+  Users, CheckCircle2, Clock, UserPlus, TrendingUp, TrendingDown,
+  ArrowUpRight, Briefcase, CalendarCheck,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
-  ResponsiveContainer, PieChart, Pie, Cell,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { useDashboardStats, useRecentActivities, useDepartmentDistribution } from '@/hooks/queries/useDashboard';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import AnimateIn, { StaggerContainer, StaggerItem } from '@/components/AnimateIn';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
+import { colorPalettes, type ThemeColor } from '@/config/theme';
 
 const { Title, Text } = Typography;
-
-const PIE_COLORS = ['#047857', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
 
 const fallbackMonthlyData = [
   { month: 'Jan', joined: 12, left: 3 },
@@ -47,11 +42,7 @@ const fallbackDeptData = [
 ];
 
 const statusColorMap: Record<string, string> = {
-  completed: 'green',
-  in_progress: 'orange',
-  pending: 'gold',
-  active: 'green',
-  inactive: 'red',
+  completed: 'green', in_progress: 'orange', pending: 'gold', active: 'green', inactive: 'red',
 };
 
 const columns = [
@@ -63,8 +54,8 @@ const columns = [
       const name = record.name || `${record.firstName || ''} ${record.lastName || ''}`.trim() || 'N/A';
       return (
         <div className="flex items-center gap-3">
-          <Avatar className="bg-blue-600" size={32}>
-            {name.split(' ').map((n: string) => n[0]).join('')}
+          <Avatar size={36} className="!bg-gradient-to-br !from-blue-500 !to-indigo-600 !text-white !text-xs !font-semibold">
+            {name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
           </Avatar>
           <div>
             <div className="font-medium text-sm">{name}</div>
@@ -96,6 +87,10 @@ const columns = [
 
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
+  const themeColor = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
+  const palette = colorPalettes[themeColor] || colorPalettes.blue;
+  const primaryColor = palette.primary;
+
   const { data: statsData, isLoading: statsLoading } = useDashboardStats();
   const { data: activitiesData, isLoading: activitiesLoading } = useRecentActivities();
   const { data: employeeData, isLoading: employeesLoading } = useEmployeeList({ limit: '5' });
@@ -107,51 +102,74 @@ const Dashboard: React.FC = () => {
   const departmentData = deptData?.data ?? fallbackDeptData;
   const monthlyData = fallbackMonthlyData;
 
+  const PIE_COLORS = [primaryColor, palette.colors[1], palette.colors[2], '#f59e0b', '#8b5cf6'];
+
   const stats = [
     {
       title: t('total_employees'),
       value: apiStats?.totalEmployees ?? 248,
-      icon: <Users size={20} />,
+      icon: <Users size={22} />,
       change: apiStats?.employeeChange ?? '+20.9%',
       changeType: 'up' as const,
-      sub: 'Employees in Last Month',
-      large: true,
+      gradient: 'from-blue-500 to-blue-600',
+      lightBg: 'bg-blue-50 dark:bg-blue-900/20',
+      iconColor: 'text-blue-600 dark:text-blue-400',
     },
     {
       title: t('pending_onboarding'),
       value: apiStats?.pendingOnboarding ?? 12,
-      icon: <UserPlus size={20} />,
+      icon: <UserPlus size={22} />,
       change: apiStats?.onboardingChange ?? '+5.2%',
       changeType: 'up' as const,
-      sub: 'New hires this month',
-      large: true,
+      gradient: 'from-violet-500 to-purple-600',
+      lightBg: 'bg-violet-50 dark:bg-violet-900/20',
+      iconColor: 'text-violet-600 dark:text-violet-400',
     },
     {
       title: t('kyc_completed'),
       value: apiStats?.kycCompleted ?? 196,
-      icon: <CheckCircle2 size={20} />,
+      icon: <CheckCircle2 size={22} />,
       change: apiStats?.kycRate ?? '92%',
       changeType: 'up' as const,
-      sub: 'Completion rate',
-      large: false,
+      gradient: 'from-emerald-500 to-teal-600',
+      lightBg: 'bg-emerald-50 dark:bg-emerald-900/20',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
     },
     {
       title: t('pending_approvals'),
       value: apiStats?.pendingApprovals ?? 8,
-      icon: <Clock size={20} />,
+      icon: <Clock size={22} />,
       change: apiStats?.approvalChange ?? '-12%',
       changeType: 'down' as const,
-      sub: 'From last month',
-      large: false,
+      gradient: 'from-amber-500 to-orange-600',
+      lightBg: 'bg-amber-50 dark:bg-amber-900/20',
+      iconColor: 'text-amber-600 dark:text-amber-400',
     },
+  ];
+
+  const quickStats = [
+    { label: 'Attendance Today', value: '92%', icon: <CalendarCheck size={16} /> },
+    { label: 'Open Positions', value: '7', icon: <Briefcase size={16} /> },
+    { label: 'Leave Requests', value: '14', icon: <Clock size={16} /> },
   ];
 
   return (
     <div className="space-y-6">
       <AnimateIn variant="fadeIn">
-        <div>
-          <Title level={4} className="!mb-1">{t('dashboard')}</Title>
-          <Text type="secondary">{t('welcome_back')}. {t('heres_whats_happening')}</Text>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <Title level={4} className="!mb-0">{t('dashboard')}</Title>
+            <Text type="secondary">{t('welcome_back')}. {t('heres_whats_happening')}</Text>
+          </div>
+          <div className="flex items-center gap-3">
+            {quickStats.map((qs, i) => (
+              <div key={i} className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                <span className="text-gray-400">{qs.icon}</span>
+                <span className="text-xs text-gray-500">{qs.label}</span>
+                <span className="text-sm font-bold">{qs.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </AnimateIn>
 
@@ -162,37 +180,28 @@ const Dashboard: React.FC = () => {
             {stats.map((stat, index) => (
               <Col key={index} xs={24} sm={12} lg={6}>
                 <StaggerItem>
-                  <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                    <Card
-                      className={`h-full border-0 shadow-md ${
-                        stat.large
-                          ? 'bg-gradient-to-br from-emerald-800 to-emerald-600'
-                          : 'bg-gradient-to-br from-emerald-700 to-emerald-500'
-                      }`}
-                      bordered={false}
-                      styles={{ body: { padding: 20 } }}
-                    >
+                  <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+                    <Card bordered={false} className="!rounded-xl !shadow-sm hover:!shadow-md transition-shadow" styles={{ body: { padding: 20 } }}>
                       <div className="flex items-start justify-between">
-                        <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                          <span className="text-white">{stat.icon}</span>
+                        <div className={`w-11 h-11 rounded-xl ${stat.lightBg} flex items-center justify-center`}>
+                          <span className={stat.iconColor}>{stat.icon}</span>
                         </div>
                         <Tag
-                          className="!bg-emerald-500/30 !text-white !border-0 !rounded-full !text-xs !px-2 !m-0"
+                          className={`!border-0 !rounded-full !text-xs !px-2 !m-0 ${
+                            stat.changeType === 'up'
+                              ? '!bg-emerald-50 !text-emerald-600 dark:!bg-emerald-900/30 dark:!text-emerald-400'
+                              : '!bg-red-50 !text-red-600 dark:!bg-red-900/30 dark:!text-red-400'
+                          }`}
                         >
-                          {stat.changeType === 'up' ? (
-                            <TrendingUp size={12} className="inline mr-1" />
-                          ) : (
-                            <TrendingDown size={12} className="inline mr-1" />
-                          )}
+                          {stat.changeType === 'up' ? <TrendingUp size={11} className="inline mr-1" /> : <TrendingDown size={11} className="inline mr-1" />}
                           {stat.change}
                         </Tag>
                       </div>
-                      <div className="mt-4">
-                        <div className="text-sm text-white/70">{stat.title}</div>
-                        <div className="text-3xl font-bold text-white mt-1">
+                      <div className="mt-3">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{stat.title}</div>
+                        <div className="text-2xl font-bold mt-1">
                           {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                         </div>
-                        <div className="text-xs text-white/50 mt-1">{stat.sub}</div>
                       </div>
                     </Card>
                   </motion.div>
@@ -207,41 +216,59 @@ const Dashboard: React.FC = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
           <AnimateIn variant="fadeUp" delay={0.2}>
-            <Card title="Employee Trends" bordered={false} className="shadow-sm">
+            <Card
+              title={<span className="font-semibold">Employee Trends</span>}
+              extra={<Tag color="blue">2024</Tag>}
+              bordered={false}
+              className="!rounded-xl !shadow-sm"
+            >
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
+                <AreaChart data={monthlyData}>
+                  <defs>
+                    <linearGradient id="joinedGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={primaryColor} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={primaryColor} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="leftGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                   <RTooltip />
-                  <Bar dataKey="joined" name="Joined" fill="#047857" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="left" name="Left" fill="#a7f3d0" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Area type="monotone" dataKey="joined" name="Joined" stroke={primaryColor} fill="url(#joinedGrad)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="left" name="Left" stroke="#f59e0b" fill="url(#leftGrad)" strokeWidth={2} />
+                </AreaChart>
               </ResponsiveContainer>
             </Card>
           </AnimateIn>
         </Col>
         <Col xs={24} lg={8}>
           <AnimateIn variant="fadeUp" delay={0.3}>
-            <Card title="Department Distribution" bordered={false} className="shadow-sm h-full">
+            <Card
+              title={<span className="font-semibold">Department Distribution</span>}
+              bordered={false}
+              className="!rounded-xl !shadow-sm h-full"
+            >
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
                     data={departmentData}
                     cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={3}
+                    cy="45%"
+                    innerRadius={55}
+                    outerRadius={90}
+                    paddingAngle={4}
                     dataKey="value"
                     nameKey="name"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
                   >
                     {departmentData.map((_: any, i: number) => (
                       <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
                   <RTooltip />
                 </PieChart>
               </ResponsiveContainer>
@@ -250,11 +277,16 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
-      {/* Bottom Section: Table + Activity */}
+      {/* Bottom Section */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
           <AnimateIn variant="fadeUp" delay={0.35}>
-            <Card title="Recent Employees" bordered={false} className="shadow-sm">
+            <Card
+              title={<span className="font-semibold">Recent Employees</span>}
+              extra={<a className="text-xs flex items-center gap-1">View All <ArrowUpRight size={12} /></a>}
+              bordered={false}
+              className="!rounded-xl !shadow-sm"
+            >
               <Table
                 columns={columns}
                 dataSource={employees}
@@ -270,7 +302,11 @@ const Dashboard: React.FC = () => {
 
         <Col xs={24} lg={8}>
           <AnimateIn variant="fadeUp" delay={0.4}>
-            <Card title="Recent Activity" bordered={false} className="shadow-sm h-full">
+            <Card
+              title={<span className="font-semibold">Recent Activity</span>}
+              bordered={false}
+              className="!rounded-xl !shadow-sm h-full"
+            >
               <Spin spinning={activitiesLoading}>
                 {activities.length > 0 ? (
                   <List
@@ -279,12 +315,12 @@ const Dashboard: React.FC = () => {
                       <List.Item className="!px-0">
                         <List.Item.Meta
                           avatar={
-                            <Avatar size={36} className="bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                              <ShieldCheck className="text-blue-600" size={16} />
-                            </Avatar>
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                              <CheckCircle2 className="text-blue-500" size={14} />
+                            </div>
                           }
-                          title={<Text className="text-sm">{activity.title || activity.action || 'Activity'}</Text>}
-                          description={<Text type="secondary" className="text-xs">{activity.time || activity.createdAt || ''}</Text>}
+                          title={<Text className="!text-sm">{activity.title || activity.action || 'Activity'}</Text>}
+                          description={<Text type="secondary" className="!text-xs">{activity.time || activity.createdAt || ''}</Text>}
                         />
                       </List.Item>
                     )}
