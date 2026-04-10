@@ -169,7 +169,7 @@ const AssetList: React.FC = () => {
         ))}
       </Row>
 
-      <Card bordered={false}>
+      <Card bordered={false} className="overflow-hidden">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center mb-4">
           <Input prefix={<Search size={16} />} placeholder={`${t('search')}...`} value={searchText} onChange={e => setSearchText(e.target.value)} className="max-w-xs" />
         </div>

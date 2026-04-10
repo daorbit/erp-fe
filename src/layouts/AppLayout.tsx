@@ -18,12 +18,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <Sidebar mobileOpen={mobileOpen} onMobileOpenChange={setMobileOpen} />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ml-0
+        className={`flex-1 min-w-0 flex flex-col transition-all duration-300 ml-0
           ${sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[270px]'}`}
       >
         <Header onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
 
-        <main className={`flex-1 p-4 md:p-6 min-h-[calc(100vh-64px)] ${isDark ? 'bg-[#0c0e14]' : 'bg-[#f0f2f5]'}`}>
+        <main className={`flex-1 overflow-x-hidden p-4 md:p-6 min-h-[calc(100vh-64px)] ${isDark ? 'bg-[#0c0e14]' : 'bg-[#f0f2f5]'}`}>
           {children}
         </main>
       </div>
