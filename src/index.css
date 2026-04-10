@@ -28,11 +28,14 @@ body {
 }
 
 /* ─── Scrollbar ─── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #c4c9d2; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 .dark ::-webkit-scrollbar-thumb { background: #374151; }
+
+/* Firefox */
+* { scrollbar-width: thin; }
 
 .sidebar-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
 .sidebar-scrollbar-hidden::-webkit-scrollbar { display: none; }
