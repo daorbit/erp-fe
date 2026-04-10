@@ -17,6 +17,8 @@ import { languages } from '@/config/i18n';
 import type { Language } from '@/config/i18n';
 import { useTranslation } from '@/hooks/useTranslation';
 import AnimateIn from '@/components/AnimateIn';
+import { useQuery } from '@tanstack/react-query';
+import companyService from '@/services/companyService';
 import { App } from 'antd';
 
 const { Title, Text } = Typography;
@@ -63,6 +65,13 @@ const Settings: React.FC = () => {
   const dispatch = useAppDispatch();
   const isMobile = useIsMobile();
   const { message } = App.useApp();
+  const user = useAppSelector((state) => state.auth.user);
+  const { data: companyData } = useQuery({
+    queryKey: ['companies', 'me'],
+    queryFn: () => companyService.getMyCompany(),
+    enabled: !!user?.company,
+  });
+  const companyInfo = companyData?.data ?? null;
   const mode = useAppSelector((s) => s.ui.themeMode);
   const colorTheme = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
   const fontFamily = useAppSelector((s) => s.ui.fontFamily);
@@ -362,12 +371,12 @@ const Settings: React.FC = () => {
             <div className="space-y-4 max-w-2xl">
               <div>
                 <label className="block text-sm font-medium mb-1">Company Name</label>
-                <Input defaultValue="Acme Corp Pvt Ltd" />
+                <Input defaultValue={companyInfo?.name || ''} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Industry</label>
-                  <Select defaultValue="technology" className="w-full" options={[
+                  <Select defaultValue={companyInfo?.industry || undefined} className="w-full" options={[
                     { value: 'technology', label: 'Technology' },
                     { value: 'finance', label: 'Finance' },
                     { value: 'healthcare', label: 'Healthcare' },
@@ -375,7 +384,7 @@ const Settings: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Company Size</label>
-                  <Select defaultValue="200-500" className="w-full" options={[
+                  <Select defaultValue={companyInfo?.size || undefined} className="w-full" options={[
                     { value: '1-50', label: '1-50' },
                     { value: '50-200', label: '50-200' },
                     { value: '200-500', label: '200-500' },
@@ -385,7 +394,7 @@ const Settings: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Address</label>
-                <TextArea rows={3} defaultValue="123 Tech Park, Bangalore, India" />
+                <TextArea rows={3} defaultValue={companyInfo?.address ? `${companyInfo.address.street || ''}, ${companyInfo.address.city || ''}, ${companyInfo.address.state || ''}, ${companyInfo.address.country || ''}`.replace(/^[, ]+|[, ]+$/g, '') : ''} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Company Logo</label>

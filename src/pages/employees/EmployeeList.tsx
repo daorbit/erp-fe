@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useEmployeeList, useCreateEmployee, useDeleteEmployee } from '@/hooks/queries/useEmployees';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
+import { useDesignationList } from '@/hooks/queries/useDesignations';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -33,8 +34,10 @@ const EmployeeList: React.FC = () => {
   const createMutation = useCreateEmployee();
   const deleteMutation = useDeleteEmployee();
 
+  const { data: desigData } = useDesignationList();
   const employees: any[] = empData?.data ?? [];
   const departments: any[] = deptData?.data ?? [];
+  const designations: any[] = desigData?.data ?? [];
 
   const totalEmployees = employees.length;
   const activeCount = employees.filter((e: any) => e.status === 'active').length;
@@ -230,7 +233,9 @@ const EmployeeList: React.FC = () => {
                   <Form.Item name="department" label="Department" rules={[{ required: true }]}>
                     <Select options={departments.map((d: any) => ({ value: d._id || d.id, label: d.name }))} />
                   </Form.Item>
-                  <Form.Item name="designation" label="Designation"><Input /></Form.Item>
+                  <Form.Item name="designation" label="Designation">
+                    <Select placeholder="Select designation" allowClear showSearch optionFilterProp="label" options={designations.map((d: any) => ({ value: d._id || d.id, label: d.title }))} />
+                  </Form.Item>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Form.Item name="employmentType" label="Employment Type">
@@ -238,7 +243,9 @@ const EmployeeList: React.FC = () => {
                   </Form.Item>
                   <Form.Item name="joinDate" label="Join Date"><DatePicker className="w-full" /></Form.Item>
                 </div>
-                <Form.Item name="reportingManager" label="Reporting Manager"><Input /></Form.Item>
+                <Form.Item name="reportingManager" label="Reporting Manager">
+                  <Select placeholder="Select manager" allowClear showSearch optionFilterProp="label" options={employees.map((e: any) => ({ value: e._id || e.userId?._id || e.id, label: `${e.userId?.firstName || e.firstName || ''} ${e.userId?.lastName || e.lastName || ''}`.trim() }))} />
+                </Form.Item>
               </>
             )},
             { key: 'bank', label: 'Bank Details', children: (

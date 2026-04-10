@@ -8,6 +8,7 @@ import {
   useEmployeeReport, useAttendanceReport, useLeaveReport, usePayrollReport,
   useRecruitmentReport, useExpenseReport, useHeadcountReport, useTurnoverReport,
 } from '@/hooks/queries/useReports';
+import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
@@ -51,6 +52,8 @@ const hookMap: Record<string, (params?: any) => any> = {
 
 const ReportView: React.FC<{ reportKey: string; chartType: 'bar' | 'line' | 'pie'; onBack: () => void }> = ({ reportKey, chartType, onBack }) => {
   const [department, setDepartment] = useState<string | undefined>();
+  const { data: deptData } = useDepartmentList();
+  const deptOptions = (deptData?.data ?? []).map((d: any) => ({ value: d.name, label: d.name }));
   const useHook = hookMap[reportKey];
   const { data, isLoading } = useHook({ department });
   const reportData: any[] = Array.isArray(data?.data) ? data.data : [];
@@ -72,7 +75,7 @@ const ReportView: React.FC<{ reportKey: string; chartType: 'bar' | 'line' | 'pie
         <Button onClick={onBack}>Back to Reports</Button>
         <Space>
           <Select placeholder="Department" allowClear className="min-w-[160px]" value={department} onChange={setDepartment}
-            options={['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'Operations'].map(d => ({ value: d, label: d }))} />
+            options={deptOptions} />
         </Space>
       </div>
 

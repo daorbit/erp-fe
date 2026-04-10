@@ -3,6 +3,7 @@ import { Card, Table, Tag, Button, Drawer, Form, Input, InputNumber, Select, Typ
 import { App } from 'antd';
 import { Briefcase, Users, Calendar, CheckCircle2, Plus, Edit2 } from 'lucide-react';
 import { useJobList, useCreateJob, useUpdateJob } from '@/hooks/queries/useRecruitment';
+import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
@@ -26,7 +27,9 @@ const JobPostings: React.FC = () => {
   const createMutation = useCreateJob();
   const updateMutation = useUpdateJob();
 
+  const { data: deptData } = useDepartmentList();
   const jobs: any[] = jobData?.data ?? [];
+  const departments: any[] = deptData?.data ?? [];
 
   const open = jobs.filter(j => j.status === 'open').length;
   const totalApplications = jobs.reduce((sum, j) => sum + (j.applicationCount || j.applications || 0), 0);
@@ -44,7 +47,7 @@ const JobPostings: React.FC = () => {
     { title: t('name'), dataIndex: 'title', key: 'title', render: (v: string) => <span className="font-medium">{v}</span> },
     {
       title: t('department'), dataIndex: 'department', key: 'department',
-      filters: ['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'Operations'].map(d => ({ text: d, value: d })),
+      filters: departments.map((d: any) => ({ text: d.name, value: d.name })),
       onFilter: (value: any, record: any) => record.department === value,
       render: (v: string) => <Tag color="blue">{v}</Tag>,
     },
@@ -140,7 +143,7 @@ const JobPostings: React.FC = () => {
             <Input placeholder="e.g. Senior Software Engineer" />
           </Form.Item>
           <Form.Item name="department" label="Department" rules={[{ required: true }]}>
-            <Select placeholder="Select department" options={['Engineering', 'Marketing', 'Finance', 'HR', 'Sales', 'Operations'].map(d => ({ value: d, label: d }))} />
+            <Select placeholder="Select department" allowClear showSearch optionFilterProp="label" options={departments.map((d: any) => ({ value: d._id || d.id, label: d.name }))} />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="vacancies" label="Vacancies" rules={[{ required: true }]}>

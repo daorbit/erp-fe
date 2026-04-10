@@ -3,6 +3,9 @@ import api from './api';
 const COMPANIES_URL = '/companies';
 
 const companyService = {
+  getMyCompany: () =>
+    api.get<any>(`${COMPANIES_URL}/me`),
+
   getAll: (params?: Record<string, string>) =>
     api.get<any>(COMPANIES_URL, params),
 

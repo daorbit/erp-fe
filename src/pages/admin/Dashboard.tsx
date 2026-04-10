@@ -19,26 +19,18 @@ import { colorPalettes, type ThemeColor } from '@/config/theme';
 const { Title, Text } = Typography;
 
 const fallbackMonthlyData = [
-  { month: 'Jan', joined: 12, left: 3 },
-  { month: 'Feb', joined: 15, left: 5 },
-  { month: 'Mar', joined: 8, left: 2 },
-  { month: 'Apr', joined: 20, left: 4 },
-  { month: 'May', joined: 18, left: 6 },
-  { month: 'Jun', joined: 22, left: 3 },
-  { month: 'Jul', joined: 14, left: 5 },
-  { month: 'Aug', joined: 16, left: 4 },
-  { month: 'Sep', joined: 19, left: 7 },
-  { month: 'Oct', joined: 24, left: 5 },
-  { month: 'Nov', joined: 21, left: 3 },
-  { month: 'Dec', joined: 17, left: 6 },
-];
-
-const fallbackDeptData = [
-  { name: 'Engineering', value: 85 },
-  { name: 'Marketing', value: 40 },
-  { name: 'Sales', value: 35 },
-  { name: 'HR', value: 20 },
-  { name: 'Finance', value: 25 },
+  { month: 'Jan', joined: 0, left: 0 },
+  { month: 'Feb', joined: 0, left: 0 },
+  { month: 'Mar', joined: 0, left: 0 },
+  { month: 'Apr', joined: 0, left: 0 },
+  { month: 'May', joined: 0, left: 0 },
+  { month: 'Jun', joined: 0, left: 0 },
+  { month: 'Jul', joined: 0, left: 0 },
+  { month: 'Aug', joined: 0, left: 0 },
+  { month: 'Sep', joined: 0, left: 0 },
+  { month: 'Oct', joined: 0, left: 0 },
+  { month: 'Nov', joined: 0, left: 0 },
+  { month: 'Dec', joined: 0, left: 0 },
 ];
 
 const statusColorMap: Record<string, string> = {
@@ -102,7 +94,7 @@ const Dashboard: React.FC = () => {
   const rawDeptData = deptData?.data;
   const departmentData = rawDeptData?.length
     ? rawDeptData.map((d: any) => ({ name: d.department || d.name, value: d.count ?? d.value ?? 0 }))
-    : fallbackDeptData;
+    : [];
   const monthlyData = fallbackMonthlyData;
 
   const PIE_COLORS = [primaryColor, palette.colors[1], palette.colors[2], '#f59e0b', '#8b5cf6'];
