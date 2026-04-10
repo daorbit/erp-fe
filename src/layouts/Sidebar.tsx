@@ -1,17 +1,11 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Layout, Menu, Avatar, Tooltip, Drawer } from 'antd';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppDispatch } from '@/store';
 import { logout } from '@/store/authSlice';
-import {
-  LayoutDashboard, LayoutGrid, Users, Settings, Contact, Building2, Award,
-  UserPlus, IdCard, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
-  IndianRupee, Wallet, Briefcase, FileSearch, Star, Target, GraduationCap,
-  BookOpen, FolderOpen, PartyPopper, Megaphone, Receipt, Package, LifeBuoy, BarChart3,
-  User, LogOut,
-} from 'lucide-react';
+import { Settings, User, LogOut } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import { navigationItems, type NavItem } from './navigation';
 import { useAppSelector } from '@/store';
@@ -164,19 +158,17 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
               <LogOut size={14} />
               <span>Logout</span>
             </button>
-            {user?.role !== 'super_admin' && (
-              <Tooltip title={t('settings')} placement="top">
-                <button
-                  onClick={() => {
-                    navigate('/admin/settings');
-                    onMobileOpenChange?.(false);
-                  }}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl transition ${isDark ? 'text-white/40 bg-white/[0.04] hover:bg-white/[0.07] hover:text-white/60' : 'text-slate-400 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}
-                >
-                  <Settings size={15} />
-                </button>
-              </Tooltip>
-            )}
+            <Tooltip title={t('settings')} placement="top">
+              <button
+                onClick={() => {
+                  navigate('/admin/settings');
+                  onMobileOpenChange?.(false);
+                }}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition ${isDark ? 'text-white/40 bg-white/[0.04] hover:bg-white/[0.07] hover:text-white/60' : 'text-slate-400 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}
+              >
+                <Settings size={15} />
+              </button>
+            </Tooltip>
           </div>
         </div>
       ) : (
@@ -192,19 +184,17 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
               <LogOut size={15} />
             </button>
           </Tooltip>
-          {user?.role !== 'super_admin' && (
-            <Tooltip title={t('settings')} placement="right">
-              <button
-                onClick={() => {
-                  navigate('/admin/settings');
-                  onMobileOpenChange?.(false);
-                }}
-                className={`rounded-xl p-2 transition ${isDark ? 'text-white/35 hover:text-white/60 hover:bg-white/[0.06]' : 'text-slate-400 border border-slate-200 hover:text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Settings size={15} />
-              </button>
-            </Tooltip>
-          )}
+          <Tooltip title={t('settings')} placement="right">
+            <button
+              onClick={() => {
+                navigate('/admin/settings');
+                onMobileOpenChange?.(false);
+              }}
+              className={`rounded-xl p-2 transition ${isDark ? 'text-white/35 hover:text-white/60 hover:bg-white/[0.06]' : 'text-slate-400 border border-slate-200 hover:text-slate-600 hover:bg-slate-50'}`}
+            >
+              <Settings size={15} />
+            </button>
+          </Tooltip>
         </div>
       )}
     </div>
@@ -219,9 +209,9 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         collapsedWidth={72}
         className="!fixed inset-y-0 left-0 z-40 hidden md:!block"
         style={{
-          background: isDark ? 'var(--sider-bg, #0f172a)' : '#ffffff',
+          background: isDark ? '#09090b' : '#ffffff',
           overflow: 'hidden',
-          borderRight: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e5e7eb',
+          borderRight: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e5e7eb',
         }}
         trigger={null}
       >
@@ -235,7 +225,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         placement="left"
         width={270}
         closable={false}
-        styles={{ body: { padding: 0, background: isDark ? '#0f172a' : '#ffffff' } }}
+        styles={{ body: { padding: 0, background: isDark ? '#09090b' : '#ffffff' } }}
         className="md:hidden"
       >
         {siderContent}

@@ -1,4 +1,4 @@
-import { Spin } from 'antd';
+import { Skeleton } from 'antd';
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
@@ -40,15 +40,17 @@ const TicketList = lazy(() => import('../pages/helpdesk/TicketList'));
 const Reports = lazy(() => import('../pages/reports/Reports'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
-function Loader({ children }: { children: React.ReactNode }) {
+function PageSkeleton() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 64px)' }}>
-        <Spin size="large" tip="Loading..." />
+    <div className="p-6 space-y-6">
+      <Skeleton.Input active style={{ width: 200, height: 28 }} />
+      <div className="grid grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton.Node key={i} active style={{ width: '100%', height: 100, borderRadius: 12 }} />
+        ))}
       </div>
-    }>
-      {children}
-    </Suspense>
+      <Skeleton active paragraph={{ rows: 8 }} />
+    </div>
   );
 }
 
@@ -56,7 +58,7 @@ function Protected({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
       <AppLayout>
-        <Loader>{children}</Loader>
+        <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
       </AppLayout>
     </ProtectedRoute>
   );
@@ -78,18 +80,18 @@ function CS({ children, moduleName }: { children: React.ReactNode; moduleName?: 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<GuestRoute><Loader><Login /></Loader></GuestRoute>} />
+      <Route path="/login" element={<GuestRoute><Suspense><Login /></Suspense></GuestRoute>} />
       <Route path="/" element={<Navigate to="/admin" replace />} />
 
       {/* All authenticated */}
       <Route path="/admin" element={<Protected><DashboardRouter /></Protected>} />
+      <Route path="/admin/settings" element={<Protected><Settings /></Protected>} />
 
       {/* Platform admin only */}
       <Route path="/admin/companies" element={<R roles={['super_admin']}><CompanyManagement /></R>} />
 
       {/* Admin & HR */}
       <Route path="/admin/users" element={<R roles={['super_admin', ...ADMINS]}><UserManagement /></R>} />
-      <Route path="/admin/settings" element={<R roles={ADMINS}><Settings /></R>} />
       <Route path="/onboarding/new" element={<R roles={ADMINS}><KYCOnboarding /></R>} />
       <Route path="/onboarding/list" element={<R roles={ADMINS}><OnboardingList /></R>} />
       <Route path="/employees" element={<R roles={ADMINS}><EmployeeList /></R>} />
@@ -119,7 +121,7 @@ export default function AppRoutes() {
       <Route path="/expenses" element={<R roles={ALL_COMPANY}><CS moduleName="Expenses"><ExpenseList /></CS></R>} />
       <Route path="/assets" element={<R roles={ALL_COMPANY}><CS moduleName="Assets"><AssetList /></CS></R>} />
       <Route path="/helpdesk" element={<R roles={ALL_COMPANY}><CS moduleName="Helpdesk"><TicketList /></CS></R>} />
-      <Route path="*" element={<Loader><NotFound /></Loader>} />
+      <Route path="*" element={<Suspense><NotFound /></Suspense>} />
     </Routes>
   );
 }

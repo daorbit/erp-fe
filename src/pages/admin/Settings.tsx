@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import {
-  Card, Tabs, Input, Select, Switch, Button, Typography, Divider, Space, InputNumber, Upload, Slider, Radio,
+  Card, Tabs, Input, Select, Switch, Button, Typography, Divider, Space, InputNumber, App,
 } from 'antd';
 import {
-  Save, Check, Sun, Moon, Droplet, Banknote, Bell, Lock, Type, Globe,
-  Upload as UploadIcon,
+  Save, Check, Sun, Moon, Droplet, Bell, Lock, Type, Globe,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
@@ -15,12 +14,8 @@ import { languages } from '@/config/i18n';
 import type { Language } from '@/config/i18n';
 import { useTranslation } from '@/hooks/useTranslation';
 import AnimateIn from '@/components/AnimateIn';
-import { useQuery } from '@tanstack/react-query';
-import companyService from '@/services/companyService';
-import { App } from 'antd';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 const notificationItems = [
   { id: 'onboarding', label: 'Email notifications for new onboarding', desc: 'Receive email when a new employee starts KYC', defaultOn: true },
@@ -44,13 +39,6 @@ const Settings: React.FC = () => {
   const dispatch = useAppDispatch();
   const isMobile = useIsMobile();
   const { message } = App.useApp();
-  const user = useAppSelector((state) => state.auth.user);
-  const { data: companyData } = useQuery({
-    queryKey: ['companies', 'me'],
-    queryFn: () => companyService.getMyCompany(),
-    enabled: !!user?.company,
-  });
-  const companyInfo = companyData?.data ?? null;
   const mode = useAppSelector((s) => s.ui.themeMode);
   const colorTheme = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
   const fontFamily = useAppSelector((s) => s.ui.fontFamily);
@@ -233,55 +221,6 @@ const Settings: React.FC = () => {
             </Card>
           </AnimateIn>
         </div>
-      ),
-    },
-    {
-      key: 'company',
-      label: <span className="flex items-center gap-2"><Banknote size={18} /> {t('company')}</span>,
-      children: (
-        <AnimateIn>
-          <Card size="small" title="Company Information" className="!rounded-xl">
-            <div className="space-y-4 max-w-2xl">
-              <div>
-                <label className="block text-sm font-medium mb-1">Company Name</label>
-                <Input defaultValue={companyInfo?.name || ''} />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Industry</label>
-                  <Select defaultValue={companyInfo?.industry || undefined} className="w-full" options={[
-                    { value: 'technology', label: 'Technology' },
-                    { value: 'finance', label: 'Finance' },
-                    { value: 'healthcare', label: 'Healthcare' },
-                  ]} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Company Size</label>
-                  <Select defaultValue={companyInfo?.size || undefined} className="w-full" options={[
-                    { value: '1-50', label: '1-50' },
-                    { value: '50-200', label: '50-200' },
-                    { value: '200-500', label: '200-500' },
-                    { value: '500+', label: '500+' },
-                  ]} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Address</label>
-                <TextArea rows={3} defaultValue={companyInfo?.address ? `${companyInfo.address.street || ''}, ${companyInfo.address.city || ''}, ${companyInfo.address.state || ''}, ${companyInfo.address.country || ''}`.replace(/^[, ]+|[, ]+$/g, '') : ''} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Company Logo</label>
-                <Upload.Dragger name="logo" maxCount={1} beforeUpload={() => false}>
-                  <p className="text-gray-400"><UploadIcon size={24} className="mx-auto mb-2" /></p>
-                  <p className="text-sm">Click or drag to upload logo</p>
-                </Upload.Dragger>
-              </div>
-              <Button type="primary" icon={<Save size={18} />} onClick={() => message.success('Company settings saved')}>
-                {t('save')} Changes
-              </Button>
-            </div>
-          </Card>
-        </AnimateIn>
       ),
     },
     {
