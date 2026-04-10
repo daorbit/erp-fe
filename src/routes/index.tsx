@@ -3,6 +3,10 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import { ProtectedRoute, GuestRoute, RoleGuard } from './guards';
+import ComingSoon from '../components/ComingSoon';
+
+// Toggle to show "Coming Soon" on modules that are not yet ready
+const COMING_SOON_ENABLED = true;
 
 const Login = lazy(() => import('../pages/auth/Login'));
 const CompanyManagement = lazy(() => import('../pages/admin/CompanyManagement'));
@@ -67,6 +71,10 @@ function R({ roles, children }: { roles: string[]; children: React.ReactNode }) 
   return <Protected><RoleGuard roles={roles}>{children}</RoleGuard></Protected>;
 }
 
+function CS({ children, moduleName }: { children: React.ReactNode; moduleName?: string }) {
+  return <ComingSoon enabled={COMING_SOON_ENABLED} moduleName={moduleName}>{children}</ComingSoon>;
+}
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -88,29 +96,29 @@ export default function AppRoutes() {
       <Route path="/employees/:id" element={<R roles={ADMINS}><EmployeeProfile /></R>} />
       <Route path="/departments" element={<R roles={ADMINS}><DepartmentList /></R>} />
       <Route path="/designations" element={<R roles={ADMINS}><DesignationList /></R>} />
-      <Route path="/payroll" element={<R roles={ADMINS}><PayrollList /></R>} />
-      <Route path="/payroll/payslip/:id" element={<R roles={ADMINS}><PayslipView /></R>} />
-      <Route path="/recruitment" element={<R roles={ADMINS}><JobPostings /></R>} />
-      <Route path="/recruitment/applications" element={<R roles={ADMINS}><Applications /></R>} />
-      <Route path="/reports" element={<R roles={ADMINS}><Reports /></R>} />
+      <Route path="/payroll" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayrollList /></CS></R>} />
+      <Route path="/payroll/payslip/:id" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayslipView /></CS></R>} />
+      <Route path="/recruitment" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobPostings /></CS></R>} />
+      <Route path="/recruitment/applications" element={<R roles={ADMINS}><CS moduleName="Recruitment"><Applications /></CS></R>} />
+      <Route path="/reports" element={<R roles={ADMINS}><CS moduleName="Reports"><Reports /></CS></R>} />
 
       {/* Management (admin + HR + manager) */}
-      <Route path="/attendance" element={<R roles={MANAGEMENT}><AttendanceList /></R>} />
-      <Route path="/leaves" element={<R roles={MANAGEMENT}><LeaveList /></R>} />
+      <Route path="/attendance" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceList /></CS></R>} />
+      <Route path="/leaves" element={<R roles={MANAGEMENT}><CS moduleName="Leave Management"><LeaveList /></CS></R>} />
 
       {/* All company roles */}
-      <Route path="/attendance/my" element={<R roles={ALL_COMPANY}><MyAttendance /></R>} />
-      <Route path="/leaves/apply" element={<R roles={ALL_COMPANY}><LeaveApply /></R>} />
-      <Route path="/performance" element={<R roles={ALL_COMPANY}><PerformanceList /></R>} />
-      <Route path="/performance/review" element={<R roles={ALL_COMPANY}><ReviewForm /></R>} />
-      <Route path="/training" element={<R roles={ALL_COMPANY}><TrainingList /></R>} />
-      <Route path="/training/:id" element={<R roles={ALL_COMPANY}><TrainingDetail /></R>} />
-      <Route path="/documents" element={<R roles={ALL_COMPANY}><DocumentList /></R>} />
-      <Route path="/holidays" element={<R roles={ALL_COMPANY}><HolidayCalendar /></R>} />
-      <Route path="/announcements" element={<R roles={ALL_COMPANY}><AnnouncementList /></R>} />
-      <Route path="/expenses" element={<R roles={ALL_COMPANY}><ExpenseList /></R>} />
-      <Route path="/assets" element={<R roles={ALL_COMPANY}><AssetList /></R>} />
-      <Route path="/helpdesk" element={<R roles={ALL_COMPANY}><TicketList /></R>} />
+      <Route path="/attendance/my" element={<R roles={ALL_COMPANY}><CS moduleName="Attendance"><MyAttendance /></CS></R>} />
+      <Route path="/leaves/apply" element={<R roles={ALL_COMPANY}><CS moduleName="Leave Management"><LeaveApply /></CS></R>} />
+      <Route path="/performance" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><PerformanceList /></CS></R>} />
+      <Route path="/performance/review" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><ReviewForm /></CS></R>} />
+      <Route path="/training" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingList /></CS></R>} />
+      <Route path="/training/:id" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingDetail /></CS></R>} />
+      <Route path="/documents" element={<R roles={ALL_COMPANY}><CS moduleName="Documents"><DocumentList /></CS></R>} />
+      <Route path="/holidays" element={<R roles={ALL_COMPANY}><CS moduleName="Holidays"><HolidayCalendar /></CS></R>} />
+      <Route path="/announcements" element={<R roles={ALL_COMPANY}><CS moduleName="Announcements"><AnnouncementList /></CS></R>} />
+      <Route path="/expenses" element={<R roles={ALL_COMPANY}><CS moduleName="Expenses"><ExpenseList /></CS></R>} />
+      <Route path="/assets" element={<R roles={ALL_COMPANY}><CS moduleName="Assets"><AssetList /></CS></R>} />
+      <Route path="/helpdesk" element={<R roles={ALL_COMPANY}><CS moduleName="Helpdesk"><TicketList /></CS></R>} />
       <Route path="*" element={<Loader><NotFound /></Loader>} />
     </Routes>
   );
