@@ -169,7 +169,7 @@ export default function Login() {
               block
               size="large"
               loading={loginMutation.isPending}
-              className="!h-11 !rounded-lg !font-semibold"
+              className="!h-[46px] !rounded-xl !font-semibold !text-[14px] !border-none !shadow-none hover:!opacity-90 transition-opacity"
             >
               {loginMutation.isPending ? 'Signing in...' : (
                 <span className="flex items-center justify-center gap-2">Sign In <ArrowRight size={15} /></span>
@@ -177,22 +177,7 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="my-6 flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
-            <span className="text-[11px] text-gray-300 dark:text-gray-600 uppercase tracking-widest font-medium">or</span>
-            <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
-          </div>
-
-          {/* Demo login shortcut */}
-          <button
-            type="button"
-            onClick={() => { setEmail('admin@sheeraj.com'); setPassword('Admin@123'); }}
-            className="w-full flex items-center justify-center gap-2 h-11 rounded-lg border border-gray-200 dark:border-gray-700 text-[13px] font-medium text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent transition-all"
-          >
-            <Shield size={14} />
-            Fill demo credentials
-          </button>
+       
 
           {/* Bottom link */}
           <p className="text-center text-[13px] text-gray-400 mt-8">
