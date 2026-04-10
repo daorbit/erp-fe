@@ -23,7 +23,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       >
         <Header onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
 
-        <main className={`flex-1 p-4 md:p-6 ${isDark ? 'bg-[#111318]' : 'bg-white'}`}>
+        <main className={`flex-1 p-4 md:p-6 min-h-[calc(100vh-64px)] ${isDark ? 'bg-[#0c0e14]' : 'bg-[#f0f2f5]'}`}>
           {children}
         </main>
       </div>

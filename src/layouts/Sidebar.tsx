@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Layout, Menu, Avatar, Tooltip, Drawer } from 'antd';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   LayoutDashboard, LayoutGrid, Users, Settings, Contact, Building2, Award,
   UserPlus, IdCard, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
@@ -19,28 +20,28 @@ interface SidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
 }
 
-function buildMenuItems(items: NavItem[]): MenuProps['items'] {
+function buildMenuItems(items: NavItem[], t: (key: string) => string): MenuProps['items'] {
   return items.map((item) => {
     const Icon = item.icon;
     if (item.children) {
       return {
-        key: item.title,
+        key: item.titleKey,
         icon: <Icon size={18} />,
-        label: item.title,
+        label: t(item.titleKey),
         children: item.children.map((child) => {
           const ChildIcon = child.icon;
           return {
-            key: child.href || child.title,
+            key: child.href || child.titleKey,
             icon: <ChildIcon size={16} />,
-            label: child.title,
+            label: t(child.titleKey),
           };
         }),
       };
     }
     return {
-      key: item.href || item.title,
+      key: item.href || item.titleKey,
       icon: <Icon size={18} />,
-      label: item.title,
+      label: t(item.titleKey),
     };
   });
 }
@@ -48,19 +49,19 @@ function buildMenuItems(items: NavItem[]): MenuProps['items'] {
 export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
   const collapsed = useSelector((state: any) => state.ui?.sidebarCollapsed ?? false);
   const themeMode = useSelector((state: any) => state.ui?.themeMode ?? 'light');
+  const { t } = useTranslation();
   const isDark = themeMode === 'dark';
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems = useMemo(() => buildMenuItems(navigationItems), []);
-
+  const menuItems = useMemo(() => buildMenuItems(navigationItems, t), [t]);
   const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
 
   const openKeys = useMemo(() => {
     const keys: string[] = [];
     navigationItems.forEach((item) => {
       if (item.children?.some((c) => c.href === location.pathname)) {
-        keys.push(item.title);
+        keys.push(item.titleKey);
       }
     });
     return keys;

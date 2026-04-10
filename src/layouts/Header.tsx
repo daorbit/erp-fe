@@ -1,4 +1,4 @@
-import React from "react";
+import {} from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Badge,
@@ -9,12 +9,13 @@ import {
   Popover,
   Space,
 } from "antd";
+import { localeMap } from '@/config/i18n';
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Menu,
   PanelRightOpen,
   PanelLeftOpen,
   Bell,
-  Globe,
   Maximize2,
   User,
   Settings2,
@@ -28,6 +29,7 @@ interface HeaderProps {
 }
 
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
+  const { t, language } = useTranslation();
   const dispatch = useDispatch();
   const collapsed = useSelector(
     (state: any) => state.ui?.sidebarCollapsed ?? false,
@@ -44,7 +46,8 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
     else document.exitFullscreen();
   };
 
-  const dateString = new Date().toLocaleDateString("en-US", {
+  const locale = localeMap[language] ?? 'en-US';
+  const dateString = new Date().toLocaleDateString(locale, {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -52,22 +55,14 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   });
 
   const notifications = [
-    {
-      name: "Rahul Sharma",
-      message: "Uploaded Aadhaar card",
-      time: "2 min ago",
-    },
-    {
-      name: "Priya Singh",
-      message: "Completed onboarding",
-      time: "15 min ago",
-    },
+    { name: "Rahul Sharma", message: "Uploaded Aadhaar card", time: "2 min ago" },
+    { name: "Priya Singh", message: "Completed onboarding", time: "15 min ago" },
     { name: "System", message: "3 KYC approvals pending", time: "1 hr ago" },
   ];
 
   const notificationContent = (
     <div className="w-72">
-      <div className="font-semibold text-sm mb-2">Notifications</div>
+      <div className="font-semibold text-sm mb-2">{t('notifications')}</div>
       {notifications.map((n, i) => (
         <div
           key={i}
@@ -83,20 +78,20 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   );
 
   const userMenuItems = [
-    { key: "profile", icon: <User size={18} />, label: "My Profile" },
-    { key: "settings", icon: <Settings2 size={18} />, label: "Account Settings" },
+    { key: "profile", icon: <User size={18} />, label: t('my_profile') },
+    { key: "settings", icon: <Settings2 size={18} />, label: t('account_settings') },
     { type: "divider" as const },
     {
       key: "logout",
       icon: <LogOut size={18} />,
-      label: "Sign Out",
+      label: t('sign_out'),
       danger: true,
     },
   ];
 
   return (
     <header
-      className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 bg-white dark:bg-[#111318]"
+      className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 bg-white dark:bg-[#111318] border-b border-gray-200 dark:border-gray-800"
     >
       {/* Left */}
       <div className="flex items-center gap-3">
@@ -106,7 +101,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           onClick={onMobileMenuToggle}
           className="md:hidden"
         />
-        <Tooltip title="Toggle sidebar">
+        <Tooltip title={t('dashboard')}>
           <AntButton
             type="text"
             icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelRightOpen size={18} />}
@@ -123,8 +118,12 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
       {/* Right */}
       <Space size={4}>
-        <Tooltip title="Language">
-          <AntButton type="text" icon={<Globe size={18} />} />
+        <Tooltip title={isDark ? t('light') : t('dark')}>
+          <AntButton
+            type="text"
+            icon={isDark ? <Sun size={18} /> : <Moon size={18} />}
+            onClick={toggleTheme}
+          />
         </Tooltip>
 
         <Tooltip title="Fullscreen">
@@ -145,6 +144,18 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             <AntButton type="text" icon={<Bell size={18} />} />
           </Badge>
         </Popover>
+
+        <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-1" />
+
+        <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
+          <div className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <Avatar size={34} icon={<User size={16} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
+            <div className="hidden sm:block leading-tight">
+              <div className="text-sm font-medium">Admin User</div>
+              <div className="text-xs text-gray-400">Super Admin</div>
+            </div>
+          </div>
+        </Dropdown>
       </Space>
     </header>
   );

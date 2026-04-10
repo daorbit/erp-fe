@@ -5,6 +5,7 @@ interface UIState {
   themeMode: 'light' | 'dark';
   themeColor: string;
   fontFamily: string;
+  language: 'en' | 'es' | 'hi';
 }
 
 function loadUIState(): UIState {
@@ -17,6 +18,7 @@ function loadUIState(): UIState {
     themeMode: 'light',
     themeColor: 'green',
     fontFamily: "'Inter', sans-serif",
+    language: 'en',
   };
 }
 
@@ -50,8 +52,12 @@ const uiSlice = createSlice({
       state.fontFamily = action.payload;
       persistUIState(state);
     },
+    setLanguage(state, action: PayloadAction<'en' | 'es' | 'hi'>) {
+      state.language = action.payload;
+      persistUIState(state);
+    },
   },
 });
 
-export const { toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor, setFontFamily } = uiSlice.actions;
+export const { toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor, setFontFamily, setLanguage } = uiSlice.actions;
 export default uiSlice.reducer;

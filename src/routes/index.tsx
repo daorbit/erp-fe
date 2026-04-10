@@ -37,7 +37,11 @@ const NotFound = lazy(() => import('../pages/NotFound'));
 
 function Loader({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64"><Spin size="large" /></div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 64px)' }}>
+        <Spin size="large" tip="Loading..." />
+      </div>
+    }>
       {children}
     </Suspense>
   );
