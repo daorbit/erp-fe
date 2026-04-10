@@ -4,13 +4,11 @@ import {
 } from 'antd';
 import {
   Save, Check, Sun, Moon, Droplet, Banknote, Bell, Lock, Type, Globe,
-  Upload as UploadIcon, Zap, Maximize, LayoutGrid, MonitorSmartphone,
+  Upload as UploadIcon,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
   setThemeMode, setThemeColor, setFontFamily, setLanguage,
-  setFontSize, setAnimationLevel, setBorderRadius, setCompactMode,
-  type AnimationLevel, type FontSize, type BorderRadius,
 } from '@/store/uiSlice';
 import { colorPalettes, fontFamilies, type ThemeColor } from '@/config/theme';
 import { languages } from '@/config/i18n';
@@ -29,25 +27,6 @@ const notificationItems = [
   { id: 'kyc-complete', label: 'KYC completion alerts', desc: 'Get notified when KYC is fully completed', defaultOn: true },
   { id: 'weekly-report', label: 'Weekly summary report', desc: 'Receive weekly HR summary via email', defaultOn: false },
   { id: 'doc-expiry', label: 'Document expiry reminders', desc: 'Alert when employee documents are about to expire', defaultOn: true },
-];
-
-const fontSizeOptions: { label: string; value: FontSize; desc: string; preview: string }[] = [
-  { label: 'Small', value: 'small', desc: '13px base — Compact view', preview: 'Aa' },
-  { label: 'Default', value: 'default', desc: '14px base — Standard', preview: 'Aa' },
-  { label: 'Large', value: 'large', desc: '16px base — Accessibility', preview: 'Aa' },
-];
-
-const animationOptions: { label: string; value: AnimationLevel; desc: string; icon: React.ReactNode }[] = [
-  { label: 'None', value: 'none', desc: 'No animations — best performance', icon: <MonitorSmartphone size={18} /> },
-  { label: 'Minimal', value: 'minimal', desc: 'Subtle fades only', icon: <Zap size={18} /> },
-  { label: 'Full', value: 'full', desc: 'All transitions & effects', icon: <Zap size={18} className="text-amber-500" /> },
-];
-
-const borderRadiusOptions: { label: string; value: BorderRadius; preview: string }[] = [
-  { label: 'None', value: 'none', preview: '0px' },
-  { label: 'Small', value: 'small', preview: '4px' },
-  { label: 'Default', value: 'default', preview: '8px' },
-  { label: 'Large', value: 'large', preview: '14px' },
 ];
 
 const useIsMobile = () => {
@@ -76,11 +55,6 @@ const Settings: React.FC = () => {
   const colorTheme = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
   const fontFamily = useAppSelector((s) => s.ui.fontFamily);
   const language = useAppSelector((s) => s.ui.language) as Language;
-  const fontSize = useAppSelector((s) => s.ui.fontSize);
-  const animationLevel = useAppSelector((s) => s.ui.animationLevel);
-  const borderRadius = useAppSelector((s) => s.ui.borderRadius);
-  const compactMode = useAppSelector((s) => s.ui.compactMode);
-
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
     Object.fromEntries(notificationItems.map((n) => [n.id, n.defaultOn])),
   );
@@ -196,107 +170,6 @@ const Settings: React.FC = () => {
                     </button>
                   );
                 })}
-              </div>
-            </Card>
-          </AnimateIn>
-
-          {/* Font Size */}
-          <AnimateIn>
-            <Card size="small" title={<span className="flex items-center gap-2"><Maximize size={18} /> Font Size</span>} className="!rounded-xl">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {fontSizeOptions.map((opt) => {
-                  const isSelected = fontSize === opt.value;
-                  const sizeMap = { small: '20px', default: '28px', large: '36px' };
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => dispatch(setFontSize(opt.value))}
-                      className={`relative rounded-xl border-2 p-4 text-center transition-all hover:shadow-sm ${
-                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="font-bold mb-2" style={{ fontSize: sizeMap[opt.value] }}>{opt.preview}</div>
-                      <div className="text-sm font-semibold">{opt.label}</div>
-                      <div className="text-xs text-gray-500">{opt.desc}</div>
-                      {isSelected && (
-                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Check size={10} className="text-white" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
-          </AnimateIn>
-
-          {/* Animations */}
-          <AnimateIn>
-            <Card size="small" title={<span className="flex items-center gap-2"><Zap size={18} /> Animation Effects</span>} className="!rounded-xl">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {animationOptions.map((opt) => {
-                  const isSelected = animationLevel === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => dispatch(setAnimationLevel(opt.value))}
-                      className={`relative rounded-xl border-2 p-4 text-left transition-all hover:shadow-sm ${
-                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="mb-2">{opt.icon}</div>
-                      <div className="text-sm font-semibold">{opt.label}</div>
-                      <div className="text-xs text-gray-500">{opt.desc}</div>
-                      {isSelected && (
-                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Check size={10} className="text-white" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
-          </AnimateIn>
-
-          {/* Border Radius */}
-          <AnimateIn>
-            <Card size="small" title={<span className="flex items-center gap-2"><LayoutGrid size={18} /> Border Radius</span>} className="!rounded-xl">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {borderRadiusOptions.map((opt) => {
-                  const isSelected = borderRadius === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => dispatch(setBorderRadius(opt.value))}
-                      className={`relative rounded-xl border-2 p-4 text-center transition-all hover:shadow-sm ${
-                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-400 mx-auto mb-2" style={{ borderRadius: opt.preview }} />
-                      <div className="text-sm font-semibold">{opt.label}</div>
-                      <div className="text-xs text-gray-400">{opt.preview}</div>
-                      {isSelected && (
-                        <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                          <Check size={10} className="text-white" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
-          </AnimateIn>
-
-          {/* Compact Mode */}
-          <AnimateIn>
-            <Card size="small" className="!rounded-xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold">Compact Mode</div>
-                  <div className="text-xs text-gray-500">Reduce spacing and padding throughout the app</div>
-                </div>
-                <Switch checked={compactMode} onChange={(v) => dispatch(setCompactMode(v))} />
               </div>
             </Card>
           </AnimateIn>
