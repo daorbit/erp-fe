@@ -11,6 +11,7 @@ export interface NavItem {
   href?: string;
   icon: LucideIcon;
   children?: NavItem[];
+  roles?: string[];
 }
 
 export const navigationItems: NavItem[] = [
@@ -18,6 +19,7 @@ export const navigationItems: NavItem[] = [
   {
     titleKey: 'admin_panel', icon: LayoutGrid,
     children: [
+      { titleKey: 'company_management', href: '/admin/companies', icon: Building2, roles: ['super_admin'] },
       { titleKey: 'user_management', href: '/admin/users', icon: Users },
       { titleKey: 'settings', href: '/admin/settings', icon: Settings },
     ],

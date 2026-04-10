@@ -10,6 +10,9 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { useEmployeeList, useCreateEmployee } from '@/hooks/queries/useEmployees';
+import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useAppSelector } from '@/store';
+import { UserRole } from '@/types/enums';
 import { App } from 'antd';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -44,6 +47,10 @@ const UserManagement: React.FC = () => {
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const { data: employeeData } = useEmployeeList();
+  const { data: companyData } = useCompanyList();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
+  const companies: any[] = companyData?.data ?? [];
   const createMutation = useCreateEmployee();
   const allUsers: UserRecord[] = employeeData?.data ?? users;
   const filteredUsers = allUsers.filter(u => u.name.toLowerCase().includes(searchText.toLowerCase()) || u.email.toLowerCase().includes(searchText.toLowerCase()));
@@ -64,6 +71,7 @@ const UserManagement: React.FC = () => {
     { title: t('phone'), dataIndex: 'phone', key: 'phone' },
     { title: t('role'), dataIndex: 'role', key: 'role', render: (role: string) => <Tag color={roleColor[role]}>{role}</Tag> },
     { title: t('department'), dataIndex: 'department', key: 'department', render: (d: string) => <Tag>{d}</Tag> },
+    ...(isSuperAdmin ? [{ title: t('company'), dataIndex: 'company', key: 'company', render: (c: any) => <Tag>{typeof c === 'object' ? c?.name : (c || '-')}</Tag> }] : []),
     { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'Active' ? 'green' : 'red'}>{s}</Tag> },
     { title: t('join_date'), dataIndex: 'joinDate', key: 'joinDate' },
     {
@@ -120,11 +128,19 @@ const UserManagement: React.FC = () => {
           </div>
           <Form.Item name="role" label="Role" rules={[{ required: true }]}>
             <Select placeholder="Select role" options={[
-              { value: 'Employee', label: 'Employee' },
-              { value: 'Manager', label: 'Manager' },
-              { value: 'HR Admin', label: 'HR Admin' },
+              { value: 'employee', label: 'Employee' },
+              { value: 'manager', label: 'Manager' },
+              { value: 'hr_manager', label: 'HR Manager' },
+              { value: 'admin', label: 'Company Admin' },
+              ...(isSuperAdmin ? [{ value: 'super_admin', label: 'Application Admin' }] : []),
             ]} />
           </Form.Item>
+          {isSuperAdmin && (
+            <Form.Item name="company" label={t('company')}>
+              <Select placeholder="Select company" allowClear showSearch optionFilterProp="label"
+                options={companies.map((c: any) => ({ value: c._id || c.id, label: `${c.name} (${c.code})` }))} />
+            </Form.Item>
+          )}
         </Form>
       </Drawer>
     </div>

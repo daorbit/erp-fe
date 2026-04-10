@@ -12,8 +12,23 @@ import {
 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import { navigationItems, type NavItem } from './navigation';
+import { useAppSelector } from '@/store';
 
 const { Sider } = Layout;
+
+function filterNavByRole(items: NavItem[], userRole?: string): NavItem[] {
+  return items
+    .map((item) => {
+      if (item.roles && userRole && !item.roles.includes(userRole)) return null;
+      if (item.children) {
+        const filteredChildren = filterNavByRole(item.children, userRole);
+        if (filteredChildren.length === 0) return null;
+        return { ...item, children: filteredChildren };
+      }
+      return item;
+    })
+    .filter(Boolean) as NavItem[];
+}
 
 interface SidebarProps {
   mobileOpen?: boolean;
@@ -49,23 +64,25 @@ function buildMenuItems(items: NavItem[], t: (key: string) => string): MenuProps
 export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
   const collapsed = useSelector((state: any) => state.ui?.sidebarCollapsed ?? false);
   const themeMode = useSelector((state: any) => state.ui?.themeMode ?? 'light');
+  const user = useAppSelector((state) => state.auth.user);
   const { t } = useTranslation();
   const isDark = themeMode === 'dark';
   const location = useLocation();
   const navigate = useNavigate();
 
-  const menuItems = useMemo(() => buildMenuItems(navigationItems, t), [t]);
+  const filteredNav = useMemo(() => filterNavByRole(navigationItems, user?.role), [user?.role]);
+  const menuItems = useMemo(() => buildMenuItems(filteredNav, t), [filteredNav, t]);
   const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
 
   const openKeys = useMemo(() => {
     const keys: string[] = [];
-    navigationItems.forEach((item) => {
+    filteredNav.forEach((item) => {
       if (item.children?.some((c) => c.href === location.pathname)) {
         keys.push(item.titleKey);
       }
     });
     return keys;
-  }, [location.pathname]);
+  }, [filteredNav, location.pathname]);
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key.startsWith('/')) {

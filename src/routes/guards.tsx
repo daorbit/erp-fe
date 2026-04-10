@@ -13,3 +13,11 @@ export function GuestRoute({ children }: { children: React.ReactNode }) {
   if (isAuthenticated) return <Navigate to="/admin" replace />;
   return <>{children}</>;
 }
+
+export function RoleGuard({ roles, children }: { roles: string[]; children: React.ReactNode }) {
+  const user = useAppSelector((state) => state.auth.user);
+  if (!user || !roles.includes(user.role)) {
+    return <Navigate to="/admin" replace />;
+  }
+  return <>{children}</>;
+}

@@ -2,9 +2,10 @@ import { Spin } from 'antd';
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
-import { ProtectedRoute, GuestRoute } from './guards';
+import { ProtectedRoute, GuestRoute, RoleGuard } from './guards';
 
 const Login = lazy(() => import('../pages/auth/Login'));
+const CompanyManagement = lazy(() => import('../pages/admin/CompanyManagement'));
 const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
 const UserManagement = lazy(() => import('../pages/admin/UserManagement'));
 const Settings = lazy(() => import('../pages/admin/Settings'));
@@ -63,6 +64,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<GuestRoute><Loader><Login /></Loader></GuestRoute>} />
       <Route path="/" element={<Navigate to="/admin" replace />} />
       <Route path="/admin" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/admin/companies" element={<Protected><RoleGuard roles={['super_admin']}><CompanyManagement /></RoleGuard></Protected>} />
       <Route path="/admin/users" element={<Protected><UserManagement /></Protected>} />
       <Route path="/admin/settings" element={<Protected><Settings /></Protected>} />
       <Route path="/onboarding/new" element={<Protected><KYCOnboarding /></Protected>} />

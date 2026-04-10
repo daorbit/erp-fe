@@ -1,5 +1,12 @@
 import type { UserRole } from './enums';
 
+export interface ICompanyRef {
+  _id: string;
+  name: string;
+  code: string;
+  logo?: string;
+}
+
 export interface IUser {
   _id: string;
   firstName: string;
@@ -8,6 +15,7 @@ export interface IUser {
   phone?: string;
   role: UserRole;
   employeeId: string;
+  company?: ICompanyRef | string;
   department?: string;
   designation?: string;
   avatar?: string;
@@ -35,6 +43,7 @@ export interface IRegisterRequest {
   password: string;
   phone?: string;
   role?: UserRole;
+  company?: string;
   employeeId: string;
   department?: string;
   designation?: string;
