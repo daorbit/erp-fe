@@ -11,6 +11,70 @@ export const colorPalettes: Record<ThemeColor, { label: string; primary: string;
   teal: { label: 'Tropical Teal', primary: '#0d9488', colors: ['#0d9488', '#14b8a6', '#2dd4bf'] },
 };
 
+export interface BgPreset {
+  id: string;
+  label: string;
+  light: string;
+  dark: string;
+}
+
+export const bgPresets: BgPreset[] = [
+  {
+    id: 'default',
+    label: 'Flat',
+    light: '#f0f2f5',
+    dark: '#09090b',
+  },
+  {
+    id: 'subtle',
+    label: 'Subtle Mist',
+    light: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8ee 100%)',
+    dark: 'linear-gradient(135deg, #0a0a0c 0%, #111115 100%)',
+  },
+  {
+    id: 'cool',
+    label: 'Cool Slate',
+    light: 'linear-gradient(160deg, #e8edf5 0%, #f0f2f5 50%, #e6ecf5 100%)',
+    dark: 'linear-gradient(160deg, #09090b 0%, #0c0d12 50%, #09090e 100%)',
+  },
+  {
+    id: 'warm',
+    label: 'Warm Sand',
+    light: 'linear-gradient(160deg, #f5f0e8 0%, #f2f0ed 50%, #f5efe6 100%)',
+    dark: 'linear-gradient(160deg, #0b0a09 0%, #0d0c0a 50%, #0b0a08 100%)',
+  },
+  {
+    id: 'aurora',
+    label: 'Aurora',
+    light: 'linear-gradient(135deg, #e8f0fe 0%, #f0e8f5 50%, #e8f5f0 100%)',
+    dark: 'linear-gradient(135deg, #090b10 0%, #0d0a10 50%, #090d0b 100%)',
+  },
+  {
+    id: 'ocean',
+    label: 'Deep Ocean',
+    light: 'linear-gradient(180deg, #eaf2fb 0%, #f0f2f5 60%, #e8eff8 100%)',
+    dark: 'linear-gradient(180deg, #08090e 0%, #09090b 60%, #080a0f 100%)',
+  },
+  {
+    id: 'sunset',
+    label: 'Dusk',
+    light: 'linear-gradient(135deg, #f5ece8 0%, #f0f2f5 50%, #f0e8f0 100%)',
+    dark: 'linear-gradient(135deg, #0d0a09 0%, #09090b 50%, #0c090c 100%)',
+  },
+  {
+    id: 'mint',
+    label: 'Fresh Mint',
+    light: 'linear-gradient(160deg, #e8f5f0 0%, #f0f2f5 50%, #e8f2f5 100%)',
+    dark: 'linear-gradient(160deg, #080c0b 0%, #09090b 50%, #080a0c 100%)',
+  },
+  {
+    id: 'charcoal',
+    label: 'Charcoal',
+    light: 'linear-gradient(180deg, #eaecef 0%, #f0f2f5 100%)',
+    dark: 'linear-gradient(180deg, #0c0c0c 0%, #080808 100%)',
+  },
+];
+
 export const fontFamilies = [
   { label: 'Inter', value: "'Inter', sans-serif" },
   { label: 'Poppins', value: "'Poppins', sans-serif" },

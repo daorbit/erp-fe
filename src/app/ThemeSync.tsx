@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useAppSelector } from '../store';
-import { colorPalettes, type ThemeColor } from '../config/theme';
+import { colorPalettes, type ThemeColor, bgPresets } from '../config/theme';
 
 const fontSizeMap = { small: '13px', default: '14px', large: '16px' };
 const radiusMap = { none: '0px', small: '4px', default: '8px', large: '14px' };
 
 export default function ThemeSync() {
-  const { themeMode, themeColor, fontFamily, fontSize, animationLevel, borderRadius } =
+  const { themeMode, themeColor, fontFamily, fontSize, animationLevel, borderRadius, bgStyle } =
     useAppSelector((s) => s.ui);
 
   useEffect(() => {
@@ -41,6 +41,12 @@ export default function ThemeSync() {
     document.documentElement.classList.toggle('no-animations', animationLevel === 'none');
     document.documentElement.classList.toggle('minimal-animations', animationLevel === 'minimal');
   }, [animationLevel]);
+
+  useEffect(() => {
+    const preset = bgPresets.find((p) => p.id === bgStyle) || bgPresets[0];
+    const value = themeMode === 'dark' ? preset.dark : preset.light;
+    document.documentElement.style.setProperty('--app-bg', value);
+  }, [bgStyle, themeMode]);
 
   return null;
 }

@@ -3,13 +3,13 @@ import {
   Card, Tabs, Input, Select, Switch, Button, Typography, Divider, Space, InputNumber, App,
 } from 'antd';
 import {
-  Save, Check, Sun, Moon, Droplet, Bell, Lock, Type, Globe,
+  Save, Check, Sun, Moon, Droplet, Bell, Lock, Type, Globe, Palette,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
-  setThemeMode, setThemeColor, setFontFamily, setLanguage,
+  setThemeMode, setThemeColor, setFontFamily, setLanguage, setBgStyle,
 } from '@/store/uiSlice';
-import { colorPalettes, fontFamilies, type ThemeColor } from '@/config/theme';
+import { colorPalettes, fontFamilies, bgPresets, type ThemeColor } from '@/config/theme';
 import { languages } from '@/config/i18n';
 import type { Language } from '@/config/i18n';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -43,6 +43,7 @@ const Settings: React.FC = () => {
   const colorTheme = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
   const fontFamily = useAppSelector((s) => s.ui.fontFamily);
   const language = useAppSelector((s) => s.ui.language) as Language;
+  const bgStyle = useAppSelector((s) => s.ui.bgStyle) || 'default';
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
     Object.fromEntries(notificationItems.map((n) => [n.id, n.defaultOn])),
   );
@@ -122,6 +123,43 @@ const Settings: React.FC = () => {
                       {isSelected && (
                         <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: palette.primary }}>
                           <Check size={10} className="text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          </AnimateIn>
+
+          {/* Background Style */}
+          <AnimateIn>
+            <Card size="small" title={<span className="flex items-center gap-2"><Palette size={18} /> Background Style</span>} className="!rounded-xl">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                {bgPresets.map((preset) => {
+                  const isSelected = bgStyle === preset.id;
+                  const previewBg = mode === 'dark' ? preset.dark : preset.light;
+                  return (
+                    <button
+                      key={preset.id}
+                      onClick={() => dispatch(setBgStyle(preset.id))}
+                      className={`relative rounded-xl border-2 p-2 text-left transition-all hover:shadow-sm ${
+                        isSelected ? 'border-blue-500 shadow-sm' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div
+                        className="w-full aspect-[4/3] rounded-lg mb-2 border border-gray-200 dark:border-gray-700"
+                        style={{ background: previewBg }}
+                      >
+                        <div className="p-2 h-full flex flex-col justify-end gap-1">
+                          <div className={`h-1 rounded-full w-3/4 ${mode === 'dark' ? 'bg-white/10' : 'bg-black/10'}`} />
+                          <div className={`h-1 rounded-full w-1/2 ${mode === 'dark' ? 'bg-white/10' : 'bg-black/10'}`} />
+                        </div>
+                      </div>
+                      <div className="text-xs font-medium truncate">{preset.label}</div>
+                      {isSelected && (
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                          <Check size={8} className="text-white" />
                         </div>
                       )}
                     </button>

@@ -14,6 +14,7 @@ interface UIState {
   animationLevel: AnimationLevel;
   borderRadius: BorderRadius;
   compactMode: boolean;
+  bgStyle: string;
 }
 
 function loadUIState(): UIState {
@@ -35,6 +36,7 @@ function getDefaults(): UIState {
     animationLevel: 'full',
     borderRadius: 'default',
     compactMode: false,
+    bgStyle: 'default',
   };
 }
 
@@ -88,12 +90,16 @@ const uiSlice = createSlice({
       state.compactMode = action.payload;
       persistUIState(state);
     },
+    setBgStyle(state, action: PayloadAction<string>) {
+      state.bgStyle = action.payload;
+      persistUIState(state);
+    },
   },
 });
 
 export const {
   toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor,
   setFontFamily, setLanguage, setFontSize, setAnimationLevel,
-  setBorderRadius, setCompactMode,
+  setBorderRadius, setCompactMode, setBgStyle,
 } = uiSlice.actions;
 export default uiSlice.reducer;

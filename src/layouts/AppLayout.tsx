@@ -9,8 +9,6 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const sidebarCollapsed = useSelector((state: any) => state.ui?.sidebarCollapsed ?? false);
-  const themeMode = useSelector((state: any) => state.ui?.themeMode ?? 'light');
-  const isDark = themeMode === 'dark';
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -23,7 +21,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       >
         <Header onMobileMenuToggle={() => setMobileOpen((prev) => !prev)} />
 
-        <main className={`flex-1 overflow-x-hidden p-4 md:p-6 min-h-[calc(100vh-3rem)] ${isDark ? 'bg-[#09090b]' : 'bg-[#f0f2f5]'}`}>
+        <main className="flex-1 overflow-x-hidden p-4 md:p-6 min-h-[calc(100vh-3rem)]" style={{ background: 'var(--app-bg, #f0f2f5)' }}>
           {children}
         </main>
       </div>
