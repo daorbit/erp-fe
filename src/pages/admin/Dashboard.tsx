@@ -40,40 +40,49 @@ const statusColorMap: Record<string, string> = {
 const columns = [
   {
     title: 'Employee',
-    dataIndex: 'name',
     key: 'name',
     render: (_: any, record: any) => {
-      const name = record.name || `${record.firstName || ''} ${record.lastName || ''}`.trim() || 'N/A';
+      const u = record.userId || record;
+      const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'N/A';
+      const email = u.email || record.email || '';
       return (
         <div className="flex items-center gap-3">
-          <Avatar size={36} className="!bg-gradient-to-br !from-blue-500 !to-indigo-600 !text-white !text-xs !font-semibold">
+          <Avatar size={36} src={u.avatar} className="!bg-gradient-to-br !from-blue-500 !to-indigo-600 !text-white !text-xs !font-semibold">
             {name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
           </Avatar>
           <div>
             <div className="font-medium text-sm">{name}</div>
-            <div className="text-xs text-gray-400">{record.email}</div>
+            <div className="text-xs text-gray-400">{email}</div>
           </div>
         </div>
       );
     },
   },
   {
-    title: 'Department',
-    dataIndex: 'department',
-    key: 'department',
-    render: (dept: any) => <Tag color="blue">{typeof dept === 'object' ? dept?.name : dept || 'N/A'}</Tag>,
+    title: 'Employee ID',
+    dataIndex: 'employeeId',
+    key: 'employeeId',
+    render: (id: string) => <span className="text-xs font-mono text-gray-500">{id || '-'}</span>,
+  },
+  {
+    title: 'Type',
+    dataIndex: 'employmentType',
+    key: 'employmentType',
+    render: (type: string) => <Tag color="cyan">{type?.replace('_', ' ') || '-'}</Tag>,
   },
   {
     title: 'Status',
-    dataIndex: 'status',
+    dataIndex: 'isActive',
     key: 'status',
-    render: (status: string) => <Tag color={statusColorMap[status] || 'default'}>{status}</Tag>,
+    render: (active: boolean) => <Tag color={active ? 'green' : 'red'}>{active ? 'Active' : 'Inactive'}</Tag>,
   },
   {
     title: 'Role',
-    dataIndex: 'role',
     key: 'role',
-    render: (role: string) => <Tag>{role}</Tag>,
+    render: (_: any, record: any) => {
+      const role = record.userId?.role || record.role || '';
+      return <Tag>{role}</Tag>;
+    },
   },
 ];
 
