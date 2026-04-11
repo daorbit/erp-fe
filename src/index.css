@@ -313,7 +313,10 @@ body {
 }
 
 /* Dark menu */
-.dark .ant-menu-dark {
+.dark .ant-menu-dark,
+.dark .ant-menu-dark .ant-menu-sub,
+.dark .ant-menu-dark .ant-menu-sub.ant-menu-inline,
+.dark .ant-menu-dark .ant-menu-item-group-list {
   background: transparent !important;
 }
 
