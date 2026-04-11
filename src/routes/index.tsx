@@ -138,7 +138,7 @@ export default function AppRoutes() {
       <Route path="/documents" element={<R roles={ALL_COMPANY}><CS moduleName="Documents"><DocumentList /></CS></R>} />
       <Route path="/holidays" element={<R roles={ALL_COMPANY}><CS moduleName="Holidays"><HolidayCalendar /></CS></R>} />
       <Route path="/announcements" element={<R roles={ALL_COMPANY}><CS moduleName="Announcements"><AnnouncementList /></CS></R>} />
-      <Route path="/expenses" element={<R roles={ALL_COMPANY}><CS moduleName="Expenses"><ExpenseList /></CS></R>} />
+      <Route path="/expenses" element={<R roles={['admin', 'hr_manager', 'manager', 'viewer']}><CS moduleName="Expenses"><ExpenseList /></CS></R>} />
       <Route path="/assets" element={<R roles={ALL_COMPANY}><CS moduleName="Assets"><AssetList /></CS></R>} />
       <Route path="/helpdesk" element={<R roles={ALL_COMPANY}><CS moduleName="Helpdesk"><TicketList /></CS></R>} />
       <Route path="*" element={<Suspense><NotFound /></Suspense>} />

@@ -91,7 +91,7 @@ export const navigationItems: NavItem[] = [
   { titleKey: 'documents', href: '/documents', icon: FolderOpen, roles: ALL_COMPANY },
   { titleKey: 'holidays', href: '/holidays', icon: PartyPopper, roles: ALL_COMPANY },
   { titleKey: 'announcements', href: '/announcements', icon: Megaphone, roles: ALL_COMPANY },
-  { titleKey: 'expenses', href: '/expenses', icon: Receipt, roles: ALL_COMPANY },
+  { titleKey: 'expenses', href: '/expenses', icon: Receipt, roles: ['admin', 'hr_manager', 'manager', 'viewer'] },
   { titleKey: 'assets', href: '/assets', icon: Package, roles: ALL_COMPANY },
   { titleKey: 'helpdesk', href: '/helpdesk', icon: LifeBuoy, roles: ALL_COMPANY },
 
