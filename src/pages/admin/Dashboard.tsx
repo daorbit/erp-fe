@@ -300,8 +300,8 @@ const Dashboard: React.FC = () => {
                               <CheckCircle2 className="text-blue-500" size={14} />
                             </div>
                           }
-                          title={<Text className="!text-sm">{activity.title || activity.action || 'Activity'}</Text>}
-                          description={<Text type="secondary" className="!text-xs">{activity.time || activity.createdAt || ''}</Text>}
+                          title={<Text className="!text-sm">{activity.description || activity.title || activity.action || 'Activity'}</Text>}
+                          description={<Text type="secondary" className="!text-xs">{activity.timestamp ? new Date(activity.timestamp).toLocaleString() : activity.time || activity.createdAt || ''}</Text>}
                         />
                       </List.Item>
                     )}
