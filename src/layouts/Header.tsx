@@ -69,16 +69,16 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   );
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 md:px-6 bg-white dark:bg-[#111318] border-b border-gray-200 dark:border-gray-800">
+    <header className={`sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 backdrop-blur-md ${isDark ? 'bg-[#111318]/80 border-b border-white/[0.06]' : 'bg-white/80 border-b border-slate-200'}`}>
       {/* Left */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <AntButton
           type="text"
           icon={<Menu size={18} />}
           onClick={onMobileMenuToggle}
           className="md:hidden"
         />
-        <Tooltip title={t('dashboard')}>
+        <Tooltip title={collapsed ? t('expand_sidebar') : t('collapse_sidebar')}>
           <AntButton
             type="text"
             icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelRightOpen size={18} />}
@@ -86,18 +86,18 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             className="hidden md:inline-flex"
           />
         </Tooltip>
-        <span className={`hidden sm:block text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+        <div className={`hidden sm:block h-5 w-px mx-1 ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+        <span className={`hidden sm:block text-[13px] font-medium ${isDark ? "text-gray-400" : "text-slate-500"}`}>
           {dateString}
         </span>
       </div>
 
- 
       {/* Right */}
       <Space size={4}>
         <Tooltip title={isDark ? t('light') : t('dark')}>
           <AntButton
             type="text"
-            icon={isDark ? <Sun size={18} /> : <Moon size={18} />}
+            icon={isDark ? <Sun size={17} /> : <Moon size={17} />}
             onClick={toggleTheme}
           />
         </Tooltip>
@@ -105,7 +105,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
         <Tooltip title="Fullscreen">
           <AntButton
             type="text"
-            icon={<Maximize2 size={18} />}
+            icon={<Maximize2 size={17} />}
             onClick={toggleFullscreen}
             className="hidden sm:inline-flex"
           />
@@ -113,7 +113,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
         <Popover content={notificationContent} trigger="click" placement="bottomRight">
           <Badge count={3} size="small">
-            <AntButton type="text" icon={<Bell size={18} />} />
+            <AntButton type="text" icon={<Bell size={17} />} />
           </Badge>
         </Popover>
       </Space>

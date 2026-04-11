@@ -1,22 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Input, Button, Typography } from 'antd';
+import { Input, Button, Checkbox, Typography } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/store';
 import { setCredentials } from '@/store/authSlice';
 import { useLogin } from '@/hooks/queries/useAuth';
 import { App } from 'antd';
+import { ArrowRight, Shield, Users, CalendarCheck, IndianRupee, FileCheck, ClipboardList, GraduationCap } from 'lucide-react';
 
 const { Title, Text } = Typography;
+
+const modules = [
+  { icon: <Users size={16} />, label: 'Employee Management' },
+  { icon: <CalendarCheck size={16} />, label: 'Attendance & Leaves' },
+  { icon: <IndianRupee size={16} />, label: 'Payroll & Expenses' },
+  { icon: <FileCheck size={16} />, label: 'KYC & Onboarding' },
+  { icon: <ClipboardList size={16} />, label: 'Performance Reviews' },
+  { icon: <GraduationCap size={16} />, label: 'Training Programs' },
+];
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const loginMutation = useLogin();
   const { message } = App.useApp();
 
+  // Show deactivation message if redirected from a disabled account
   useEffect(() => {
     const deactivatedMsg = localStorage.getItem('deactivated_message');
     if (deactivatedMsg) {
@@ -48,90 +61,116 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-end relative"
-      style={{
-        backgroundImage: 'url(/images/login-bg.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center left',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
-      {/* Logo - top left */}
-      <div className="absolute top-8 left-10 z-20 flex items-center gap-2.5">
-        <img
-          src="/logo.png"
-          alt="Logo"
-          className="w-8 h-8 rounded"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-        <span className="text-gray-700 font-bold text-lg tracking-tight">Sheeraj Codeworks</span>
+    <div className="min-h-screen flex">
+      {/* ──────── Left Panel ──────── */}
+      <div className="hidden lg:flex lg:w-[52%] bg-[#0F1117] relative overflow-hidden select-none">
+        {/* Ambient glow */}
+        <div className="absolute top-[-20%] left-[30%] w-[500px] h-[500px] rounded-full bg-blue-600/[0.07] blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[10%] w-[400px] h-[400px] rounded-full bg-indigo-600/[0.05] blur-[100px]" />
+
+        <div className="relative z-10 flex flex-col justify-between w-full px-14 xl:px-20 py-10">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-white/[0.08] flex items-center justify-center">
+              <img src="/logo.png" alt="Logo" className="w-6 h-6 rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            </div>
+            <span className="text-white/90 text-[15px] font-semibold tracking-tight">Sheeraj Codeworks</span>
+          </div>
+
+          {/* Hero */}
+          <div className="max-w-md -mt-4">
+            <h1 className="text-[2.5rem] xl:text-[2.85rem] font-extrabold leading-[1.12] tracking-tight text-white mb-4">
+              Your workforce,{' '}
+              <span className="text-blue-400">managed.</span>
+            </h1>
+            <p className="text-[15px] text-white/40 leading-relaxed mb-10">
+              Onboarding, attendance, payroll, performance — everything your HR team needs, in one place.
+            </p>
+
+            {/* Module list */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-12">
+              {modules.map((m) => (
+                <div key={m.label} className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                    {m.icon}
+                  </div>
+                  <span className="text-[13px] text-white/50 font-medium">{m.label}</span>
+                </div>
+              ))}
+            </div>
+
+           
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between text-[11px] text-white/20">
+            <span>&copy; {new Date().getFullYear()} Sheeraj Codeworks</span>
+            <div className="flex gap-4">
+              <span className="hover:text-white/40 cursor-pointer transition-colors">Privacy</span>
+              <span className="hover:text-white/40 cursor-pointer transition-colors">Terms</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Sign-in card — floating on the right */}
-      <div className="relative z-10 w-full max-w-[500px] mr-8 lg:mr-16 xl:mr-24 my-8">
-        <div
-          className="rounded-3xl p-10 md:p-12"
-          style={{
-            background: 'rgba(255, 255, 255, 0.85)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
-          }}
-        >
+      {/* ──────── Right Panel — Form ──────── */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white dark:bg-[#111318]">
+        <div className="w-full max-w-[400px]">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-3 justify-center mb-10">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+              <img src="/logo.png" alt="Logo" className="w-6 h-6 rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            </div>
+            <span className="text-[15px] font-semibold">Sheeraj Codeworks</span>
+          </div>
+
           {/* Header */}
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <Text className="!text-gray-500 !text-[15px]">
-                Welcome to <span className="!text-blue-500 !font-semibold">Sheeraj</span>
-              </Text>
-              <Title level={1} className="!mb-0 !mt-1 !text-[36px] !font-extrabold !leading-tight !text-gray-900">
-                Sign in
-              </Title>
-            </div>
-            <div className="text-right pt-1">
-              <Text className="!text-gray-400 !text-xs">No Account?</Text>
-              <br />
-              <Link to="/register" className="text-blue-500 text-sm font-semibold hover:text-blue-600">
-                Sign up
-              </Link>
-            </div>
+          <div className="mb-8">
+            <Title level={2} className="!mb-1.5 !text-[22px] !font-bold">Sign in to your account</Title>
+            <Text className="!text-gray-400 text-sm">Enter your credentials below to continue</Text>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">
-                Enter your username or email address
-              </label>
+              <label className="block text-[13px] font-medium mb-1.5 text-gray-600 dark:text-gray-400">Email address</label>
               <Input
+                prefix={<MailOutlined className="!text-gray-300 dark:!text-gray-600" />}
                 size="large"
                 type="email"
-                placeholder="Username or email address"
+                placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="!h-[50px] !rounded-xl !border-gray-200 !bg-white/60 !text-[15px]"
+                className="!h-11 !rounded-lg"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700">
-                Enter your Password
-              </label>
-              <Input.Password
-                size="large"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="!h-[50px] !rounded-xl !border-gray-200 !bg-white/60 !text-[15px]"
-                visibilityToggle={{ visible: showPassword, onVisibleChange: setShowPassword }}
-              />
-              <div className="flex justify-end mt-2">
-                <Link to="/forgot-password" className="text-blue-500 text-sm font-medium hover:text-blue-600">
-                  Forgot Password
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[13px] font-medium text-gray-600 dark:text-gray-400">Password</label>
+                <Link to="/forgot-password" className="text-[12px] text-blue-500 hover:text-blue-600 font-medium">
+                  Forgot password?
                 </Link>
               </div>
+              <Input
+                prefix={<LockOutlined className="!text-gray-300 dark:!text-gray-600" />}
+                size="large"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="!h-11 !rounded-lg"
+                suffix={
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-300 dark:text-gray-600 hover:text-gray-500 transition-colors">
+                    {showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                  </button>
+                }
+              />
             </div>
+
+            <Checkbox checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}>
+              <span className="text-[13px] text-gray-500">Remember me for 30 days</span>
+            </Checkbox>
 
             <Button
               type="primary"
@@ -139,21 +178,27 @@ export default function Login() {
               block
               size="large"
               loading={loginMutation.isPending}
-              className="!h-[52px] !rounded-xl !font-semibold !text-[15px] !border-none !shadow-none !bg-[#8B9A46] hover:!bg-[#7a8940] !text-white !mt-4"
+              className="!h-[46px] !rounded-xl !font-semibold !text-[14px] !border-none !shadow-none hover:!opacity-90 transition-opacity"
             >
-              {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+              {loginMutation.isPending ? 'Signing in...' : (
+                <span className="flex items-center justify-center gap-2">Sign In <ArrowRight size={15} /></span>
+              )}
             </Button>
           </form>
+
+       
+
+          {/* Bottom link */}
+          <p className="text-center text-[13px] text-gray-400 mt-8">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-blue-500 font-semibold hover:text-blue-600">Contact HR Admin</Link>
+          </p>
+
+          <p className="lg:hidden text-center text-[11px] text-gray-300 dark:text-gray-600 mt-6">
+            &copy; {new Date().getFullYear()} Sheeraj Codeworks. All rights reserved.
+          </p>
         </div>
       </div>
-
-      {/* Mobile fallback — on small screens, center the card */}
-      <style>{`
-        @media (max-width: 768px) {
-          .min-h-screen { justify-content: center !important; }
-          .max-w-\\[500px\\] { margin-right: auto !important; margin-left: auto !important; }
-        }
-      `}</style>
     </div>
   );
 }
