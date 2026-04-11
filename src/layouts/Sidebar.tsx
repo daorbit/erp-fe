@@ -99,11 +99,12 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center h-12 ${collapsed ? 'justify-center px-0' : 'px-4 gap-2.5'} shrink-0 ${isDark ? 'border-b border-white/[0.06]' : 'border-b border-slate-200'}`}>
-        <img
-          src="/logo.png"
-          alt="Logo"
-          className={`object-contain rounded-lg shrink-0 ${collapsed ? 'w-7 h-7' : 'w-8 h-8'}`}
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        <Avatar
+          shape="square"
+          size={collapsed ? 28 : 32}
+          src={(typeof user?.company === 'object' && user?.company?.logo) || '/logo.png'}
+          icon={<Settings size={16} />}
+          className="shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600"
         />
         {!collapsed && (
           <div className="min-w-0">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Input, Typography, Row, Col, Space, Dropdown, App } from 'antd';
+import { Card, Table, Tag, Button, Input, Typography, Row, Col, Space, Dropdown, App, Avatar, Image } from 'antd';
 import { Plus, Search, Edit2, Trash2, MoreVertical, Building2, CheckCircle2, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCompanyList, useDeleteCompany } from '@/hooks/queries/useCompanies';
@@ -55,11 +55,17 @@ const CompanyManagement: React.FC = () => {
       render: (name: string, record: any) => (
         <div className="flex items-center gap-3">
           {record.logo ? (
-            <img src={record.logo} alt={name} className="w-8 h-8 rounded-lg object-contain" />
+            <Image
+              src={record.logo}
+              alt={name}
+              width={36}
+              height={36}
+              className="rounded-lg object-cover"
+              preview={{ mask: 'View' }}
+              fallback="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHJ4PSI4IiBmaWxsPSIjZWZmNmZmIi8+PC9zdmc+"
+            />
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
-              <Building2 size={16} className="text-blue-500" />
-            </div>
+            <Avatar shape="square" size={36} icon={<Building2 size={18} />} className="bg-blue-50 dark:bg-blue-950 text-blue-500" />
           )}
           <div
             className="cursor-pointer"

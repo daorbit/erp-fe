@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Avatar, Tag, Button, Input, Select, Switch, Drawer, Form, Dropdown, Typography, Space, App, Modal, Tabs, Popconfirm, Tooltip } from 'antd';
+import { Card, Table, Avatar, Tag, Button, Input, Select, Switch, Drawer, Form, Dropdown, Typography, Space, App, Modal, Tabs, Popconfirm, Tooltip, Upload as AntUpload, Image } from 'antd';
 import {
   Plus, Download, Edit2, Trash2, MoreVertical, Search, Mail, Copy, Link2,
-  UserCheck, UserX, Clock, CheckCircle2, ClipboardCheck,
+  UserCheck, UserX, Clock, CheckCircle2, ClipboardCheck, Camera,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import companyService from '@/services/companyService';
 import invitationService from '@/services/invitationService';
 import { useCreateInvitation } from '@/hooks/queries/useInvitations';
+import { useUploadImage } from '@/hooks/queries/useUpload';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -41,10 +42,12 @@ const UserManagement: React.FC = () => {
   const [invitationLink, setInvitationLink] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [companyFilter, setCompanyFilter] = useState<string | undefined>(searchParams.get('company') || undefined);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [inviteForm] = Form.useForm();
   const { message } = App.useApp();
   const queryClient = useQueryClient();
+  const uploadMutation = useUploadImage();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
@@ -129,12 +132,27 @@ const UserManagement: React.FC = () => {
     return !companyFilter || companyId === companyFilter;
   });
 
+  // ─── Avatar Upload ────────────────────────────────────────────────────────
+  const handleAvatarUpload = async (file: File) => {
+    try {
+      const result = await uploadMutation.mutateAsync({ file, folder: 'avatars' });
+      const url = result.data?.url;
+      if (url) {
+        setAvatarPreview(url);
+        form.setFieldsValue({ avatar: url });
+      }
+    } catch {
+      message.error('Failed to upload photo');
+    }
+  };
+
   // ─── Handlers ────────────────────────────────────────────────────────────
   const handleCreate = async (values: any) => {
     try {
       await createUserMutation.mutateAsync(values);
       message.success('User created successfully');
       form.resetFields();
+      setAvatarPreview(null);
       setDrawerOpen(false);
     } catch (err: any) { message.error(err?.message || 'Failed to create user'); }
   };
@@ -170,7 +188,18 @@ const UserManagement: React.FC = () => {
         const name = `${r.firstName || ''} ${r.lastName || ''}`.trim() || 'N/A';
         return (
           <div className="flex items-center gap-3">
-            <Avatar src={r.avatar} className={r.isActive ? 'bg-blue-600' : 'bg-gray-400'}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            {r.avatar ? (
+              <Image
+                src={r.avatar}
+                alt={name}
+                width={36}
+                height={36}
+                className="rounded-full object-cover"
+                preview={{ mask: 'View' }}
+              />
+            ) : (
+              <Avatar className={r.isActive ? 'bg-blue-600' : 'bg-gray-400'}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            )}
             <div>
               <div className={`font-medium ${!r.isActive ? 'text-gray-400 line-through' : ''}`}>{name}</div>
               <div className="text-xs text-gray-400">{r.email}</div>
@@ -290,7 +319,7 @@ const UserManagement: React.FC = () => {
             { key: 'role', title: 'Role', render: (v: string) => roleLabel[v] || v },
             { key: 'isActive', title: 'Status', render: (v: boolean) => v ? 'Active' : 'Inactive' },
           ], 'users')}>{t('export')}</Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => { form.resetFields(); setDrawerOpen(true); }}>{t('add_user')}</Button>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => { form.resetFields(); setAvatarPreview(null); setDrawerOpen(true); }}>{t('add_user')}</Button>
           <Button icon={<Mail size={16} />} onClick={() => { inviteForm.resetFields(); setInviteDrawerOpen(true); }}>Invite User</Button>
         </Space>
       </div>
@@ -339,6 +368,30 @@ const UserManagement: React.FC = () => {
       <Drawer title={t('add_user')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={520} destroyOnClose
         extra={<Space><Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createUserMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>
         <Form form={form} layout="vertical" onFinish={handleCreate}>
+          <Form.Item name="avatar" hidden><Input /></Form.Item>
+          <div className="flex justify-center mb-4">
+            <AntUpload
+              showUploadList={false}
+              accept="image/*"
+              beforeUpload={(file) => { handleAvatarUpload(file); return false; }}
+            >
+              {avatarPreview ? (
+                <div className="relative group cursor-pointer">
+                  <Avatar size={80} src={avatarPreview} />
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera size={20} className="text-white" />
+                  </div>
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
+                  {uploadMutation.isPending
+                    ? <span className="text-xs text-gray-400">Uploading...</span>
+                    : <><Camera size={24} className="text-gray-400" /><span className="text-[10px] text-gray-400 mt-1">Photo</span></>
+                  }
+                </div>
+              )}
+            </AntUpload>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}><Input placeholder="Enter first name" /></Form.Item>
             <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}><Input placeholder="Enter last name" /></Form.Item>
