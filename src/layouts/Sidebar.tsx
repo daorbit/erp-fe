@@ -98,21 +98,21 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   const siderContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`flex items-center h-16 ${collapsed ? 'justify-center px-0' : 'px-5 gap-3'} shrink-0 ${isDark ? 'border-b border-white/[0.06]' : 'border-b border-slate-200'}`}>
+      <div className={`flex items-center h-12 ${collapsed ? 'justify-center px-0' : 'px-4 gap-2.5'} shrink-0 ${isDark ? 'border-b border-white/[0.06]' : 'border-b border-slate-200'}`}>
         <img
           src="/logo.png"
           alt="Logo"
-          className={`object-contain rounded-xl shrink-0 ${collapsed ? 'w-9 h-9' : 'w-10 h-10'}`}
+          className={`object-contain rounded-lg shrink-0 ${collapsed ? 'w-7 h-7' : 'w-8 h-8'}`}
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />
         {!collapsed && (
           <div className="min-w-0">
-            <span className={`block ${isDark ? 'text-white' : 'text-slate-900'} text-[15px] font-bold leading-tight truncate`}>
+            <span className={`block ${isDark ? 'text-white' : 'text-slate-900'} text-[13px] font-bold leading-tight truncate`}>
               {user?.role === 'super_admin'
                 ? 'ERP Platform'
                 : (typeof user?.company === 'object' && user?.company?.name) || 'ERP'}
             </span>
-            <span className={`block ${isDark ? 'text-white/40' : 'text-slate-400'} text-[11px] font-medium mt-0.5`}>
+            <span className={`block ${isDark ? 'text-white/40' : 'text-slate-400'} text-[10px] font-medium`}>
               {user?.role === 'super_admin' ? 'Platform Admin' : 'HR Management'}
             </span>
           </div>
