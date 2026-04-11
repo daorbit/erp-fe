@@ -69,7 +69,7 @@ const uiSlice = createSlice({
       persistUIState(state);
     },
     setLanguage(state, action: PayloadAction<string>) {
-      state.language = action.payload;
+      state.language = action.payload as any;
       persistUIState(state);
     },
     setFontSize(state, action: PayloadAction<FontSize>) {

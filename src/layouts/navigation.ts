@@ -98,5 +98,5 @@ export const navigationItems: NavItem[] = [
   // ─── Settings (everyone) ───────────────────────────────────────────────────
   // ─── Audit & Settings ───────────────────────────────────────────────────────
   { titleKey: 'audit_logs', href: '/admin/audit-logs', icon: Activity, roles: ['super_admin', 'admin'] },
-  { titleKey: 'settings', href: '/admin/settings', icon: Settings },
+  // { titleKey: 'settings', href: '/admin/settings', icon: Settings },
 ];

@@ -44,19 +44,19 @@ export function getAntdTheme(primaryColor: string, isDark: boolean): ThemeConfig
       colorPrimary: primaryColor,
       borderRadius: 8,
       fontFamily: 'inherit',
-      colorBgContainer: isDark ? '#1a1d23' : '#ffffff',
-      colorBgElevated: isDark ? '#22262e' : '#ffffff',
-      colorBgLayout: isDark ? '#111318' : '#ffffff',
+      colorBgContainer: isDark ? '#111113' : '#ffffff',
+      colorBgElevated: isDark ? '#161618' : '#ffffff',
+      colorBgLayout: isDark ? '#09090b' : '#ffffff',
       colorText: isDark ? '#e5e7eb' : '#1f2937',
       colorTextSecondary: isDark ? '#9ca3af' : '#6b7280',
-      colorBorder: isDark ? '#2d3140' : '#e5e7eb',
-      colorBorderSecondary: isDark ? '#374151' : '#f3f4f6',
+      colorBorder: isDark ? '#1e1e22' : '#e5e7eb',
+      colorBorderSecondary: isDark ? '#262628' : '#f3f4f6',
     },
     components: {
       Layout: {
-        siderBg: isDark ? '#111318' : '#ffffff',
-        headerBg: isDark ? '#1a1d23' : '#ffffff',
-        bodyBg: isDark ? '#111318' : '#ffffff',
+        siderBg: isDark ? '#09090b' : '#ffffff',
+        headerBg: isDark ? '#0e0e10' : '#ffffff',
+        bodyBg: isDark ? '#09090b' : '#ffffff',
       },
       Menu: {
         darkItemBg: 'transparent',
@@ -77,7 +77,7 @@ export function getAntdTheme(primaryColor: string, isDark: boolean): ThemeConfig
         paddingLG: 20,
       },
       Table: {
-        headerBg: isDark ? '#22262e' : '#fafafa',
+        headerBg: isDark ? '#161618' : '#fafafa',
       },
     },
   };
