@@ -6,7 +6,18 @@ import { ProtectedRoute, GuestRoute, RoleGuard } from './guards';
 import ComingSoon from '../components/ComingSoon';
 
 // Add module names here to show "Coming Soon" for them
-const COMING_SOON_MODULES: string[] = ['Recruitment'];
+const COMING_SOON_MODULES: string[] = [
+  'Payroll',
+  'Recruitment',
+  'Reports',
+  'Shifts',
+  'Performance',
+  'Training',
+  'Documents',
+  'Announcements',
+  'Expenses',
+  'Assets',
+];
 
 const Login = lazy(() => import('../pages/auth/Login'));
 const AcceptInvitation = lazy(() => import('../pages/auth/AcceptInvitation'));
@@ -111,7 +122,7 @@ export default function AppRoutes() {
       <Route path="/recruitment" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobPostings /></CS></R>} />
       <Route path="/recruitment/applications" element={<R roles={ADMINS}><CS moduleName="Recruitment"><Applications /></CS></R>} />
       <Route path="/reports" element={<R roles={ADMINS}><CS moduleName="Reports"><Reports /></CS></R>} />
-      <Route path="/shifts" element={<R roles={ADMINS}><ShiftList /></R>} />
+      <Route path="/shifts" element={<R roles={ADMINS}><CS moduleName="Shifts"><ShiftList /></CS></R>} />
 
       {/* Management (admin + HR + manager) */}
       <Route path="/attendance" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceList /></CS></R>} />
