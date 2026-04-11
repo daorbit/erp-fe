@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Table, Avatar, Tag, Button, Input, Select, Switch, Drawer, Form, Dropdown, Typography, Space, App, Modal, Tabs, Popconfirm, Tooltip } from 'antd';
 import {
   Plus, Download, Edit2, Trash2, MoreVertical, Search, Mail, Copy, Link2,
@@ -13,6 +13,7 @@ import { UserRole } from '@/types/enums';
 import { useTranslation } from '@/hooks/useTranslation';
 import authService from '@/services/authService';
 import api from '@/services/api';
+import { useSearchParams } from 'react-router-dom';
 import { exportToCsv } from '@/lib/exportCsv';
 import dayjs from 'dayjs';
 
@@ -33,11 +34,13 @@ const baseRoleOptions = [
 
 const UserManagement: React.FC = () => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('users');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [inviteDrawerOpen, setInviteDrawerOpen] = useState(false);
   const [invitationLink, setInvitationLink] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
+  const [companyFilter, setCompanyFilter] = useState<string | undefined>(searchParams.get('company') || undefined);
   const [form] = Form.useForm();
   const [inviteForm] = Form.useForm();
   const { message } = App.useApp();
@@ -88,11 +91,42 @@ const UserManagement: React.FC = () => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); },
   });
 
+  // Sync company filter with URL params
+  const handleCompanyFilterChange = (value: string | undefined) => {
+    setCompanyFilter(value);
+    if (value) {
+      setSearchParams({ company: value });
+    } else {
+      setSearchParams({});
+    }
+  };
+
+  // Auto-set company in forms when drawer opens with a company filter active
+  useEffect(() => {
+    if (drawerOpen && companyFilter && isSuperAdmin) {
+      form.setFieldValue('company', companyFilter);
+    }
+  }, [drawerOpen, companyFilter, isSuperAdmin, form]);
+
+  useEffect(() => {
+    if (inviteDrawerOpen && companyFilter && isSuperAdmin) {
+      inviteForm.setFieldValue('company', companyFilter);
+    }
+  }, [inviteDrawerOpen, companyFilter, isSuperAdmin, inviteForm]);
+
   // ─── Filters ─────────────────────────────────────────────────────────────
   const filteredUsers = users.filter((u: any) => {
     const name = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
     const q = searchText.toLowerCase();
-    return !searchText || name.includes(q) || u.email?.toLowerCase().includes(q);
+    const matchesSearch = !searchText || name.includes(q) || u.email?.toLowerCase().includes(q);
+    const companyId = typeof u.company === 'object' ? (u.company?._id || u.company?.id) : u.company;
+    const matchesCompany = !companyFilter || companyId === companyFilter;
+    return matchesSearch && matchesCompany;
+  });
+
+  const filteredInvitations = invitations.filter((inv: any) => {
+    const companyId = typeof inv.company === 'object' ? (inv.company?._id || inv.company?.id) : inv.company;
+    return !companyFilter || companyId === companyFilter;
   });
 
   // ─── Handlers ────────────────────────────────────────────────────────────
@@ -237,7 +271,14 @@ const UserManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Title level={4} className="!mb-1">{t('user_management')}</Title>
+          <Title level={4} className="!mb-1">
+            {t('user_management')}
+            {companyFilter && companies.length > 0 && (
+              <Tag color="blue" className="ml-2 text-sm font-normal" closable onClose={() => handleCompanyFilterChange(undefined)}>
+                {companies.find((c: any) => (c._id || c.id) === companyFilter)?.name || 'Company'}
+              </Tag>
+            )}
+          </Title>
           <Text type="secondary">{t('manage_employees')}</Text>
         </div>
         <Space>
@@ -261,11 +302,23 @@ const UserManagement: React.FC = () => {
           items={[
             {
               key: 'users',
-              label: <span className="flex items-center gap-1.5"><UserCheck size={15} /> Users ({users.length})</span>,
+              label: <span className="flex items-center gap-1.5"><UserCheck size={15} /> Users ({filteredUsers.length})</span>,
               children: (
                 <>
-                  <div className="mb-4">
+                  <div className="mb-4 flex flex-wrap gap-3">
                     <Input prefix={<Search size={16} />} placeholder={t('search') + '...'} value={searchText} onChange={(e) => setSearchText(e.target.value)} className="max-w-xs" allowClear />
+                    {isSuperAdmin && (
+                      <Select
+                        placeholder="All Companies"
+                        value={companyFilter}
+                        onChange={handleCompanyFilterChange}
+                        allowClear
+                        showSearch
+                        optionFilterProp="label"
+                        className="min-w-[200px]"
+                        options={companies.map((c: any) => ({ value: c._id || c.id, label: c.name }))}
+                      />
+                    )}
                   </div>
                   <Table columns={userColumns} dataSource={filteredUsers} loading={isLoading} rowKey={(r: any) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
                 </>
@@ -273,9 +326,9 @@ const UserManagement: React.FC = () => {
             },
             {
               key: 'invitations',
-              label: <span className="flex items-center gap-1.5"><Mail size={15} /> Invitations ({invitations.filter((i: any) => i.status === 'pending').length})</span>,
+              label: <span className="flex items-center gap-1.5"><Mail size={15} /> Invitations ({filteredInvitations.filter((i: any) => i.status === 'pending').length})</span>,
               children: (
-                <Table columns={invitationColumns} dataSource={invitations} loading={invitesLoading} rowKey={(r: any) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
+                <Table columns={invitationColumns} dataSource={filteredInvitations} loading={invitesLoading} rowKey={(r: any) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 800 }} />
               ),
             },
           ]}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Table, Tag, Button, Input, Typography, Row, Col, Space, Dropdown, App } from 'antd';
 import { Plus, Search, Edit2, Trash2, MoreVertical, Building2, CheckCircle2, XCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCompanyList, useDeleteCompany } from '@/hooks/queries/useCompanies';
 import CompanyForm from './CompanyForm';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -13,6 +14,7 @@ const CompanyManagement: React.FC = () => {
   const [editRecord, setEditRecord] = useState<any>(null);
   const [search, setSearch] = useState('');
   const { message } = App.useApp();
+  const navigate = useNavigate();
 
   const { data: companyData, isLoading } = useCompanyList();
   const deleteMutation = useDeleteCompany();
@@ -59,8 +61,11 @@ const CompanyManagement: React.FC = () => {
               <Building2 size={16} className="text-blue-500" />
             </div>
           )}
-          <div>
-            <Text strong>{name}</Text>
+          <div
+            className="cursor-pointer"
+            onClick={() => navigate(`/admin/users?company=${record._id || record.id}`)}
+          >
+            <Text strong className="hover:text-blue-500 transition-colors">{name}</Text>
             {record.industry && <div className="text-xs text-gray-500">{record.industry}</div>}
           </div>
         </div>
