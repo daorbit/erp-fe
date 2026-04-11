@@ -104,6 +104,7 @@ const Dashboard: React.FC = () => {
   const departmentData = rawDeptData?.length
     ? rawDeptData.map((d: any) => ({ name: d.department || d.name, value: d.count ?? d.value ?? 0 }))
     : [];
+  const hasDeptData = departmentData.some((d: any) => d.value > 0);
   const monthlyData = fallbackMonthlyData;
 
   const PIE_COLORS = [primaryColor, palette.colors[1], palette.colors[2], '#f59e0b', '#8b5cf6'];
@@ -241,26 +242,38 @@ const Dashboard: React.FC = () => {
               bordered={false}
               className="!rounded-xl !shadow-sm h-full"
             >
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={departmentData}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={55}
-                    outerRadius={90}
-                    paddingAngle={4}
-                    dataKey="value"
-                    nameKey="name"
-                  >
-                    {departmentData.map((_: any, i: number) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <RTooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {hasDeptData ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={departmentData}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={55}
+                      outerRadius={90}
+                      paddingAngle={4}
+                      dataKey="value"
+                      nameKey="name"
+                    >
+                      {departmentData.map((_: any, i: number) => (
+                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                    <RTooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[300px]">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                    <Users size={24} className="text-gray-400" />
+                  </div>
+                  <Text type="secondary" className="text-sm">No employees assigned to departments yet</Text>
+                  <Text type="secondary" className="!text-xs mt-1">
+                    {departmentData.length} department{departmentData.length !== 1 ? 's' : ''} created
+                  </Text>
+                </div>
+              )}
             </Card>
           </AnimateIn>
         </Col>
