@@ -187,10 +187,12 @@ body {
    ══════════════════════════════════════════════════════════════ */
 
 .ant-input,
+.ant-input-affix-wrapper,
 .ant-select-selector,
 .ant-picker,
-.ant-input-number {
-  border-radius: 8px !important;
+.ant-input-number,
+.ant-input-password {
+  border-radius: 10px !important;
 }
 
 /* ══════════════════════════════════════════════════════════════
