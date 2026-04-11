@@ -5,7 +5,7 @@ import { Layout, Menu, Avatar, Tooltip, Drawer } from 'antd';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppDispatch } from '@/store';
 import { logout } from '@/store/authSlice';
-import { Settings, User, LogOut } from 'lucide-react';
+import { Settings, User, LogOut, Building2 } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import { navigationItems, type NavItem } from './navigation';
 import { useAppSelector } from '@/store';
@@ -103,7 +103,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
           shape="square"
           size={collapsed ? 28 : 32}
           src={(typeof user?.company === 'object' && user?.company?.logo) || '/logo.png'}
-          icon={<Settings size={16} />}
+          icon={<Building2 size={16} />}
           className="shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600"
         />
         {!collapsed && (
