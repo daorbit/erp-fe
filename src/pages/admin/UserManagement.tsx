@@ -170,7 +170,7 @@ const UserManagement: React.FC = () => {
         const name = `${r.firstName || ''} ${r.lastName || ''}`.trim() || 'N/A';
         return (
           <div className="flex items-center gap-3">
-            <Avatar className={r.isActive ? 'bg-blue-600' : 'bg-gray-400'}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            <Avatar src={r.avatar} className={r.isActive ? 'bg-blue-600' : 'bg-gray-400'}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
             <div>
               <div className={`font-medium ${!r.isActive ? 'text-gray-400 line-through' : ''}`}>{name}</div>
               <div className="text-xs text-gray-400">{r.email}</div>

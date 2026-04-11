@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Avatar, Tag, Tabs, Typography, Row, Col, Descriptions, Table, Spin, Space, Button, Drawer, Form, Input, Select, DatePicker, App } from 'antd';
-import { Mail, Phone, Calendar, Building2, ArrowLeft, Edit2, Briefcase, User } from 'lucide-react';
+import { Mail, Phone, Calendar, Building2, ArrowLeft, Edit2, Briefcase, Camera } from 'lucide-react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEmployee, useEmployeeAttendance, useEmployeeLeaves, useEmployeePayslips, useUpdateEmployee } from '@/hooks/queries/useEmployees';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
 import { useShiftList } from '@/hooks/queries/useShifts';
+import { useUploadImage } from '@/hooks/queries/useUpload';
 import { useTranslation } from '@/hooks/useTranslation';
+import api from '@/services/api';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -19,6 +21,8 @@ const EmployeeProfile: React.FC = () => {
   const { message } = App.useApp();
   const [editOpen, setEditOpen] = useState(false);
   const [form] = Form.useForm();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const uploadMutation = useUploadImage();
 
   // Auto-open edit drawer if ?edit=true
   const { data: empData, isLoading } = useEmployee(id!);
@@ -82,6 +86,23 @@ const EmployeeProfile: React.FC = () => {
     setEditOpen(true);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await uploadMutation.mutateAsync({ file, folder: 'avatars' });
+      const avatarUrl = result.data?.url;
+      if (avatarUrl) {
+        await api.put('/auth/profile', { avatar: avatarUrl });
+        message.success('Avatar updated');
+        window.location.reload();
+      }
+    } catch {
+      message.error('Failed to upload avatar');
+    }
+    e.target.value = '';
+  };
+
   const handleUpdate = async (values: any) => {
     try {
       await updateMutation.mutateAsync({
@@ -129,9 +150,15 @@ const EmployeeProfile: React.FC = () => {
       {/* Profile Header */}
       <Card bordered={false}>
         <div className="flex flex-col sm:flex-row items-start gap-6">
-          <Avatar size={80} className="bg-gradient-to-br from-blue-500 to-indigo-600 text-2xl" src={avatar}>
-            {name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-          </Avatar>
+          <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+            <Avatar size={80} className="bg-gradient-to-br from-blue-500 to-indigo-600 text-2xl" src={avatar}>
+              {name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+            </Avatar>
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploadMutation.isPending ? <Spin size="small" /> : <Camera size={20} className="text-white" />}
+            </div>
+            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+          </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1 flex-wrap">
               <Title level={4} className="!mb-0">{name}</Title>

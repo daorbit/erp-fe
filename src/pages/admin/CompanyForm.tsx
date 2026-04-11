@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
-import { Drawer, Form, Input, InputNumber, Select, Switch, App, Button, Space } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Drawer, Form, Input, InputNumber, Select, Switch, App, Button, Space, Avatar, Spin } from 'antd';
+import { Upload, X } from 'lucide-react';
 import { useCreateCompany, useUpdateCompany } from '@/hooks/queries/useCompanies';
+import { useUploadImage } from '@/hooks/queries/useUpload';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface CompanyFormProps {
@@ -22,8 +24,32 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) =>
   const { message } = App.useApp();
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany();
+  const uploadMutation = useUploadImage();
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const isEdit = !!editData;
+
+  useEffect(() => {
+    if (open && editData?.logo) setLogoPreview(editData.logo);
+    else if (open) setLogoPreview(null);
+  }, [open, editData]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await uploadMutation.mutateAsync({ file, folder: 'logos' });
+      const url = result.data?.url;
+      if (url) {
+        setLogoPreview(url);
+        form.setFieldsValue({ logo: url });
+      }
+    } catch {
+      message.error('Failed to upload logo');
+    }
+    e.target.value = '';
+  };
 
   useEffect(() => {
     if (open && editData) {
@@ -125,8 +151,26 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) =>
             <Input placeholder="e.g. Technology" />
           </Form.Item>
         </div>
-        <Form.Item name="logo" label={t('logo_url')}>
-          <Input placeholder="https://acme.com/logo.png" />
+        <Form.Item label={t('logo_url')}>
+          <div className="flex items-center gap-4">
+            {logoPreview ? (
+              <div className="relative group">
+                <Avatar shape="square" size={64} src={logoPreview} className="border" />
+                <button type="button" onClick={() => { setLogoPreview(null); form.setFieldsValue({ logo: '' }); }}
+                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <div onClick={() => logoInputRef.current?.click()}
+                className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
+                {uploadMutation.isPending ? <Spin size="small" /> : <Upload size={20} className="text-gray-400" />}
+              </div>
+            )}
+            <div className="text-xs text-gray-400">Click to upload company logo<br />JPEG, PNG, WebP (max 5MB)</div>
+            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+          </div>
+          <Form.Item name="logo" noStyle><Input type="hidden" /></Form.Item>
         </Form.Item>
 
         {/* Contact */}

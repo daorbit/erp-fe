@@ -78,7 +78,7 @@ const AttendanceList: React.FC = () => {
         const name = getEmpName(emp);
         return (
           <div className="flex items-center gap-3">
-            <Avatar className="bg-blue-600" size={32}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            <Avatar src={typeof emp === 'object' ? emp?.avatar : undefined} className="bg-blue-600" size={32}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
             <div>
               <div className="font-medium text-sm">{name}</div>
               {typeof emp === 'object' && emp?.email && <div className="text-xs text-gray-400">{emp.email}</div>}

@@ -138,7 +138,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         <div className={`shrink-0 p-3 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
           {/* User info */}
           <div className={`flex items-center gap-3 rounded-xl p-3 ${isDark ? 'bg-white/[0.04]' : 'bg-slate-50 border border-slate-200'}`}>
-            <Avatar size={38} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
+            <Avatar size={38} src={user?.avatar} icon={<User size={18} />} className="shrink-0 bg-gradient-to-br from-blue-500 to-violet-500" />
             <div className="flex-1 min-w-0">
               <span className={`block ${isDark ? 'text-white' : 'text-slate-900'} text-[13px] font-semibold truncate leading-tight`}>
                 {user ? `${user.firstName} ${user.lastName}` : 'User'}
@@ -174,7 +174,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
       ) : (
         <div className={`shrink-0 py-3 flex flex-col items-center gap-2 ${isDark ? 'border-t border-white/[0.06]' : 'border-t border-slate-200'}`}>
           <Tooltip title={user ? `${user.firstName} ${user.lastName}` : 'User'} placement="right">
-            <Avatar size={34} icon={<User size={16} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
+            <Avatar size={34} src={user?.avatar} icon={<User size={16} />} className="bg-gradient-to-br from-blue-500 to-violet-500" />
           </Tooltip>
           <Tooltip title="Logout" placement="right">
             <button

@@ -98,7 +98,7 @@ const OnboardingList: React.FC = () => {
         const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'N/A';
         return (
           <div className="flex items-center gap-3">
-            <Avatar className={r.status === 'approved' ? 'bg-green-600' : 'bg-blue-600'}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
+            <Avatar src={u.avatar} className={r.status === 'approved' ? 'bg-green-600' : 'bg-blue-600'}>{name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}</Avatar>
             <div><div className="font-medium">{name}</div><div className="text-xs text-gray-400">{u.email}</div></div>
           </div>
         );

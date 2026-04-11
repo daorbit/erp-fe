@@ -22,8 +22,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   }
 
   const token = store.getState().auth.token;
+  const isFormData = fetchOptions.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...((fetchOptions.headers as Record<string, string>) || {}),
   };
   if (token) {
@@ -85,6 +86,9 @@ const api = {
 
   delete: <T>(endpoint: string) =>
     request<T>(endpoint, { method: 'DELETE' }),
+
+  upload: <T>(endpoint: string, formData: FormData) =>
+    request<T>(endpoint, { method: 'POST', body: formData }),
 };
 
 export default api;
