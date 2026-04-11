@@ -5,8 +5,8 @@ import AppLayout from '../layouts/AppLayout';
 import { ProtectedRoute, GuestRoute, RoleGuard } from './guards';
 import ComingSoon from '../components/ComingSoon';
 
-// Toggle to show "Coming Soon" on modules that are not yet ready
-const COMING_SOON_ENABLED = false;
+// Add module names here to show "Coming Soon" for them
+const COMING_SOON_MODULES: string[] = ['Recruitment'];
 
 const Login = lazy(() => import('../pages/auth/Login'));
 const AcceptInvitation = lazy(() => import('../pages/auth/AcceptInvitation'));
@@ -77,7 +77,8 @@ function R({ roles, children }: { roles: string[]; children: React.ReactNode }) 
 }
 
 function CS({ children, moduleName }: { children: React.ReactNode; moduleName?: string }) {
-  return <ComingSoon enabled={COMING_SOON_ENABLED} moduleName={moduleName}>{children}</ComingSoon>;
+  const enabled = !!moduleName && COMING_SOON_MODULES.includes(moduleName);
+  return <ComingSoon enabled={enabled} moduleName={moduleName}>{children}</ComingSoon>;
 }
 
 export default function AppRoutes() {
