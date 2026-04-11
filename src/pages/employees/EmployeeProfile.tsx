@@ -38,16 +38,6 @@ const EmployeeProfile: React.FC = () => {
   const leaves: any[] = leavesData?.data ?? [];
   const payslips: any[] = payslipsData?.data ?? [];
 
-  // Auto-open edit drawer when navigated with ?edit=true
-  useEffect(() => {
-    if (searchParams.get('edit') === 'true' && empData?.data && !editOpen) {
-      setEditOpen(true);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [empData, searchParams]);
-
-  if (isLoading) return <div className="flex items-center justify-center h-64"><Spin size="large" /></div>;
-
   // Extract from populated userId
   const u = emp.userId || {};
   const name = `${u.firstName || emp.firstName || ''} ${u.lastName || emp.lastName || ''}`.trim() || 'Employee';
@@ -59,6 +49,14 @@ const EmployeeProfile: React.FC = () => {
   const desigName = typeof desig === 'object' ? desig.title : desig;
   const avatar = u.avatar || emp.avatar;
   const role = u.role;
+
+  // Auto-open edit drawer when navigated with ?edit=true
+  useEffect(() => {
+    if (searchParams.get('edit') === 'true' && empData?.data && !editOpen) {
+      setEditOpen(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empData, searchParams]);
 
   // Populate form when edit drawer opens
   useEffect(() => {
@@ -77,6 +75,8 @@ const EmployeeProfile: React.FC = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editOpen]);
+
+  if (isLoading) return <div className="flex items-center justify-center h-64"><Spin size="large" /></div>;
 
   const openEdit = () => {
     setEditOpen(true);
