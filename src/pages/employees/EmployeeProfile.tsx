@@ -5,6 +5,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEmployee, useEmployeeAttendance, useEmployeeLeaves, useEmployeePayslips, useUpdateEmployee } from '@/hooks/queries/useEmployees';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
+import { useShiftList } from '@/hooks/queries/useShifts';
 import { useTranslation } from '@/hooks/useTranslation';
 import dayjs from 'dayjs';
 
@@ -26,10 +27,12 @@ const EmployeeProfile: React.FC = () => {
   const { data: payslipsData, isLoading: payslipsLoading } = useEmployeePayslips(id!);
   const { data: deptData } = useDepartmentList();
   const { data: desigData } = useDesignationList();
+  const { data: shiftData } = useShiftList();
   const updateMutation = useUpdateEmployee();
 
   const departments: any[] = deptData?.data ?? [];
   const designations: any[] = desigData?.data ?? [];
+  const shiftOptions: any[] = shiftData?.data ?? [];
   const emp: any = empData?.data ?? {};
   const attendance: any[] = attendanceData?.data ?? [];
   const leaves: any[] = leavesData?.data ?? [];
@@ -68,7 +71,7 @@ const EmployeeProfile: React.FC = () => {
         designation: desig?._id || desig,
         employmentType: emp.employmentType,
         workLocation: emp.workLocation,
-        workShift: emp.workShift,
+        shift: emp.shift?._id || emp.shift,
         joinDate: emp.joinDate ? dayjs(emp.joinDate) : undefined,
       });
     }
@@ -190,7 +193,7 @@ const EmployeeProfile: React.FC = () => {
                 {emp.reportingManager ? `${emp.reportingManager.firstName || ''} ${emp.reportingManager.lastName || ''}`.trim() : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="Work Location">{emp.workLocation || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Work Shift">{emp.workShift || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Shift">{typeof emp.shift === 'object' ? `${emp.shift?.name} (${emp.shift?.startTime} - ${emp.shift?.endTime})` : (emp.workShift || '-')}</Descriptions.Item>
             </Descriptions>
           )},
           { key: 'bank', label: 'Bank & ID', children: (
@@ -256,7 +259,16 @@ const EmployeeProfile: React.FC = () => {
             <Form.Item name="joinDate" label="Join Date"><DatePicker className="w-full" /></Form.Item>
           </div>
           <Form.Item name="workLocation" label="Work Location"><Input /></Form.Item>
-          <Form.Item name="workShift" label="Work Shift"><Input /></Form.Item>
+          <Form.Item name="shift" label="Shift">
+            <Select
+              placeholder="Select shift"
+              allowClear
+              options={shiftOptions.map((s: any) => ({
+                value: s._id || s.id,
+                label: `${s.name} (${s.startTime} - ${s.endTime})`,
+              }))}
+            />
+          </Form.Item>
         </Form>
       </Drawer>
     </div>

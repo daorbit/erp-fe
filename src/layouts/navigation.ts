@@ -4,7 +4,7 @@ import {
   UserPlus, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
   IndianRupee, Wallet, Briefcase, FileSearch, Star, GraduationCap,
   BookOpen, FolderOpen, PartyPopper, Megaphone, Receipt, Package, LifeBuoy, BarChart3,
-  Activity,
+  Activity, Timer,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -56,6 +56,7 @@ export const navigationItems: NavItem[] = [
       { titleKey: 'applications', href: '/recruitment/applications', icon: Users },
     ],
   },
+  { titleKey: 'shifts', href: '/shifts', icon: Timer, roles: ADMINS },
   { titleKey: 'reports', href: '/reports', icon: BarChart3, roles: ADMINS },
 
   // ─── Management (admin + HR + manager) ─────────────────────────────────────

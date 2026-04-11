@@ -28,6 +28,7 @@ const en: Record<string, string> = {
   training: 'Training',
   programs: 'Programs',
   documents: 'Documents',
+  shifts: 'Shifts',
   holidays: 'Holidays',
   announcements: 'Announcements',
   expenses: 'Expenses',

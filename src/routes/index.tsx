@@ -41,6 +41,7 @@ const ExpenseList = lazy(() => import('../pages/expenses/ExpenseList'));
 const AssetList = lazy(() => import('../pages/assets/AssetList'));
 const TicketList = lazy(() => import('../pages/helpdesk/TicketList'));
 const Reports = lazy(() => import('../pages/reports/Reports'));
+const ShiftList = lazy(() => import('../pages/shifts/ShiftList'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 function PageSkeleton() {
@@ -109,6 +110,7 @@ export default function AppRoutes() {
       <Route path="/recruitment" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobPostings /></CS></R>} />
       <Route path="/recruitment/applications" element={<R roles={ADMINS}><CS moduleName="Recruitment"><Applications /></CS></R>} />
       <Route path="/reports" element={<R roles={ADMINS}><CS moduleName="Reports"><Reports /></CS></R>} />
+      <Route path="/shifts" element={<R roles={ADMINS}><ShiftList /></R>} />
 
       {/* Management (admin + HR + manager) */}
       <Route path="/attendance" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceList /></CS></R>} />

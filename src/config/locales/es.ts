@@ -28,6 +28,7 @@ const es: Record<string, string> = {
   training: 'Capacitaci\u00f3n',
   programs: 'Programas',
   documents: 'Documentos',
+  shifts: 'Turnos',
   holidays: 'Festivos',
   announcements: 'Anuncios',
   expenses: 'Gastos',
