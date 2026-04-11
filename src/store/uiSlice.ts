@@ -68,7 +68,7 @@ const uiSlice = createSlice({
       state.fontFamily = action.payload;
       persistUIState(state);
     },
-    setLanguage(state, action: PayloadAction<string>) {
+    setLanguage(state, action: PayloadAction<'en' | 'es' | 'hi'>) {
       state.language = action.payload;
       persistUIState(state);
     },
