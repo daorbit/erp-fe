@@ -235,27 +235,31 @@ const UserManagement: React.FC = () => {
     },
     {
       title: t('actions'), key: 'actions', width: 120,
-      render: (_: any, r: any) => (
-        <Dropdown menu={{ items: [
-          {
-            key: 'toggle',
-            icon: r.isActive ? <UserX size={14} /> : <UserCheck size={14} />,
-            label: r.isActive ? 'Disable User' : 'Enable User',
-            danger: r.isActive,
-          },
-          {
-            key: 'onboarding',
-            icon: <ClipboardCheck size={14} />,
-            label: r.onboardingRequired ? 'Remove Onboarding' : 'Require Onboarding',
-          },
-        ], onClick: ({ key }) => {
-          const id = r._id || r.id;
-          if (key === 'toggle') handleToggleStatus(id, r.isActive);
-          if (key === 'onboarding') toggleOnboardingMutation.mutate(id);
-        }}} trigger={['click']}>
-          <Button type="text" icon={<MoreVertical size={16} />} />
-        </Dropdown>
-      ),
+      render: (_: any, r: any) => {
+        const isSelf = (r._id || r.id) === currentUser?._id;
+        return (
+          <Dropdown menu={{ items: [
+            {
+              key: 'toggle',
+              icon: r.isActive ? <UserX size={14} /> : <UserCheck size={14} />,
+              label: isSelf ? 'Cannot disable yourself' : (r.isActive ? 'Disable User' : 'Enable User'),
+              danger: r.isActive && !isSelf,
+              disabled: isSelf,
+            },
+            ...(r.role !== 'super_admin' ? [{
+              key: 'onboarding',
+              icon: <ClipboardCheck size={14} />,
+              label: r.onboardingRequired ? 'Remove Onboarding' : 'Require Onboarding',
+            }] : []),
+          ], onClick: ({ key }) => {
+            const id = r._id || r.id;
+            if (key === 'toggle' && !isSelf) handleToggleStatus(id, r.isActive);
+            if (key === 'onboarding') toggleOnboardingMutation.mutate(id);
+          }}} trigger={['click']}>
+            <Button type="text" icon={<MoreVertical size={16} />} />
+          </Dropdown>
+        );
+      },
     },
   ];
 
