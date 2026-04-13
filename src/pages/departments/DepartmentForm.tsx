@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Drawer, Form, Input, Select, App, Button, Space } from 'antd';
 import { useCreateDepartment, useUpdateDepartment } from '@/hooks/queries/useDepartments';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
+import { useParentDepartmentList } from '@/hooks/queries/useParentDepartments';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface DepartmentFormProps {
@@ -17,7 +18,9 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ open, onClose, editData
   const createMutation = useCreateDepartment();
   const updateMutation = useUpdateDepartment();
   const { data: empData } = useEmployeeList();
+  const { data: parentDeptData } = useParentDepartmentList();
   const employees: any[] = empData?.data ?? [];
+  const parentDepartments: any[] = parentDeptData?.data ?? [];
 
   const isEdit = !!editData;
 
@@ -26,6 +29,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ open, onClose, editData
       form.setFieldsValue({
         name: editData.name,
         code: editData.code,
+        parentDepartment: typeof editData.parentDepartment === 'object' ? editData.parentDepartment?._id : editData.parentDepartment,
         head: typeof editData.head === 'object' ? editData.head?._id : editData.head,
         description: editData.description,
         status: editData.status,
@@ -73,6 +77,10 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ open, onClose, editData
         </Form.Item>
         <Form.Item name="code" label="Department Code" rules={[{ required: true }]}>
           <Input placeholder="e.g. ENG" />
+        </Form.Item>
+        <Form.Item name="parentDepartment" label="Parent Department" rules={[{ required: true, message: 'Parent Department is required' }]}>
+          <Select placeholder="Select Parent Department" showSearch optionFilterProp="label"
+            options={parentDepartments.map((p: any) => ({ value: p._id || p.id, label: p.name }))} />
         </Form.Item>
         <Form.Item name="head" label="Head of Department">
           <Select placeholder="Select HOD" allowClear showSearch optionFilterProp="label"
