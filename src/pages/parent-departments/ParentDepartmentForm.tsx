@@ -1,88 +1,83 @@
 import React, { useEffect } from 'react';
-import { Drawer, Form, Input, InputNumber, App, Button, Space } from 'antd';
-import { useCreateParentDepartment, useUpdateParentDepartment } from '@/hooks/queries/useParentDepartments';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Card, Form, Input, InputNumber, App, Button, Typography, Space } from 'antd';
+import { ArrowLeft } from 'lucide-react';
+import { useCreateParentDepartment, useUpdateParentDepartment, useParentDepartmentList } from '@/hooks/queries/useParentDepartments';
 
-interface ParentDepartmentFormProps {
-  open: boolean;
-  onClose: () => void;
-  editData?: any;
-}
+const { Title } = Typography;
 
-const ParentDepartmentForm: React.FC<ParentDepartmentFormProps> = ({ open, onClose, editData }) => {
+const ParentDepartmentForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const createMutation = useCreateParentDepartment();
   const updateMutation = useUpdateParentDepartment();
+  const { data: listData } = useParentDepartmentList();
 
-  const isEdit = !!editData;
+  const isEdit = !!id;
+  const editData = isEdit ? (listData?.data ?? []).find((d: any) => (d._id || d.id) === id) : null;
 
   useEffect(() => {
-    if (open && editData) {
+    if (editData) {
       form.setFieldsValue({
         name: editData.name,
         shortName: editData.shortName,
         displayOrder: editData.displayOrder,
       });
-    } else if (open) {
-      form.resetFields();
     }
-  }, [open, editData, form]);
+  }, [editData, form]);
 
   const handleSubmit = async (values: any) => {
     try {
       if (isEdit) {
-        await updateMutation.mutateAsync({ id: editData._id || editData.id, data: values });
+        await updateMutation.mutateAsync({ id, data: values });
         message.success('Parent department updated');
       } else {
         await createMutation.mutateAsync(values);
         message.success('Parent department created');
       }
-      onClose();
+      navigate('/parent-departments');
     } catch {
       message.error(`Failed to ${isEdit ? 'update' : 'create'} parent department`);
     }
   };
 
   return (
-    <Drawer
-      title={isEdit ? 'Edit Parent Department' : 'Add Parent Department'}
-      open={open}
-      onClose={onClose}
-      width={480}
-      destroyOnClose
-      extra={
-        <Space>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button
-            type="primary"
-            loading={createMutation.isPending || updateMutation.isPending}
-            onClick={() => form.submit()}
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button type="text" icon={<ArrowLeft size={20} />} onClick={() => navigate('/parent-departments')} />
+        <Title level={4} className="!mb-0">{isEdit ? 'Edit Parent Department' : 'Add Parent Department'}</Title>
+      </div>
+
+      <Card bordered={false} className="max-w-2xl">
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item
+            name="name"
+            label="Super Department Name"
+            rules={[{ required: true, message: 'Super Department Name is required' }]}
           >
-            Save
-          </Button>
-        </Space>
-      }
-    >
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        <Form.Item
-          name="name"
-          label="Super Department Name"
-          rules={[{ required: true, message: 'Super Department Name is required' }]}
-        >
-          <Input placeholder="e.g. Operations" />
-        </Form.Item>
-        <Form.Item name="displayOrder" label="Order to Display">
-          <InputNumber placeholder="e.g. 1" className="w-full" min={0} />
-        </Form.Item>
-        <Form.Item
-          name="shortName"
-          label="Short Name"
-          rules={[{ required: true, message: 'Short Name is required' }]}
-        >
-          <Input placeholder="e.g. OPS" />
-        </Form.Item>
-      </Form>
-    </Drawer>
+            <Input placeholder="e.g. Operations" />
+          </Form.Item>
+          <Form.Item name="displayOrder" label="Order to Display">
+            <InputNumber placeholder="e.g. 1" className="w-full" min={0} />
+          </Form.Item>
+          <Form.Item
+            name="shortName"
+            label="Short Name"
+            rules={[{ required: true, message: 'Short Name is required' }]}
+          >
+            <Input placeholder="e.g. OPS" />
+          </Form.Item>
+          <Space className="mt-4">
+            <Button onClick={() => navigate('/parent-departments')}>Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={createMutation.isPending || updateMutation.isPending}>
+              {isEdit ? 'Update' : 'Create'}
+            </Button>
+          </Space>
+        </Form>
+      </Card>
+    </div>
   );
 };
 

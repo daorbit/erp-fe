@@ -32,8 +32,11 @@ const AdminFillOnboarding = lazy(() => import('../pages/onboarding/AdminFillOnbo
 const EmployeeList = lazy(() => import('../pages/employees/EmployeeList'));
 const EmployeeProfile = lazy(() => import('../pages/employees/EmployeeProfile'));
 const DepartmentList = lazy(() => import('../pages/departments/DepartmentList'));
+const DepartmentForm = lazy(() => import('../pages/departments/DepartmentForm'));
 const ParentDepartmentList = lazy(() => import('../pages/parent-departments/ParentDepartmentList'));
+const ParentDepartmentForm = lazy(() => import('../pages/parent-departments/ParentDepartmentForm'));
 const DesignationList = lazy(() => import('../pages/designations/DesignationList'));
+const DesignationForm = lazy(() => import('../pages/designations/DesignationForm'));
 const AttendanceList = lazy(() => import('../pages/attendance/AttendanceList'));
 const MyAttendance = lazy(() => import('../pages/attendance/MyAttendance'));
 const LeaveList = lazy(() => import('../pages/leaves/LeaveList'));
@@ -117,8 +120,14 @@ export default function AppRoutes() {
       <Route path="/employees" element={<R roles={ADMINS}><EmployeeList /></R>} />
       <Route path="/employees/:id" element={<R roles={ADMINS}><EmployeeProfile /></R>} />
       <Route path="/departments" element={<R roles={ADMINS}><DepartmentList /></R>} />
+      <Route path="/departments/create" element={<R roles={ADMINS}><DepartmentForm /></R>} />
+      <Route path="/departments/:id/edit" element={<R roles={ADMINS}><DepartmentForm /></R>} />
       <Route path="/parent-departments" element={<R roles={ADMINS}><ParentDepartmentList /></R>} />
+      <Route path="/parent-departments/create" element={<R roles={ADMINS}><ParentDepartmentForm /></R>} />
+      <Route path="/parent-departments/:id/edit" element={<R roles={ADMINS}><ParentDepartmentForm /></R>} />
       <Route path="/designations" element={<R roles={ADMINS}><DesignationList /></R>} />
+      <Route path="/designations/create" element={<R roles={ADMINS}><DesignationForm /></R>} />
+      <Route path="/designations/:id/edit" element={<R roles={ADMINS}><DesignationForm /></R>} />
       <Route path="/payroll" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayrollList /></CS></R>} />
       <Route path="/payroll/payslip/:id" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayslipView /></CS></R>} />
       <Route path="/recruitment" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobPostings /></CS></R>} />
