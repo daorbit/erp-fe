@@ -23,8 +23,8 @@ const DesignationList: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Designation deleted');
-    } catch {
-      message.error('Failed to delete designation');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete designation');
     }
   };
 

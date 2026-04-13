@@ -76,8 +76,8 @@ const AssetList: React.FC = () => {
       message.success('Asset created');
       form.resetFields();
       setDrawerOpen(false);
-    } catch {
-      message.error('Failed to create asset');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to create asset');
     }
   };
 
@@ -88,8 +88,8 @@ const AssetList: React.FC = () => {
       assignForm.resetFields();
       setAssignOpen(false);
       setSelectedAsset(null);
-    } catch {
-      message.error('Failed to assign asset');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to assign asset');
     }
   };
 
@@ -97,8 +97,8 @@ const AssetList: React.FC = () => {
     try {
       await returnMutation.mutateAsync({ id });
       message.success('Asset returned');
-    } catch {
-      message.error('Failed to return asset');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to return asset');
     }
   };
 

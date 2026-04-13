@@ -108,8 +108,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) =>
         message.success('Company created');
       }
       onClose();
-    } catch {
-      message.error(`Failed to ${isEdit ? 'update' : 'create'} company`);
+    } catch (err: any) {
+      message.error(err?.message || `Failed to ${isEdit ? 'update' : 'create'} company`);
     }
   };
 

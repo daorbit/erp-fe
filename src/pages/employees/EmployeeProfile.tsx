@@ -94,8 +94,8 @@ const EmployeeProfile: React.FC = () => {
         message.success('Avatar updated');
         window.location.reload();
       }
-    } catch {
-      message.error('Failed to upload avatar');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to upload avatar');
     }
   };
 
@@ -110,7 +110,7 @@ const EmployeeProfile: React.FC = () => {
       });
       message.success('Employee updated');
       setEditOpen(false);
-    } catch { message.error('Failed to update'); }
+    } catch (err: any) { message.error(err?.message || 'Failed to update'); }
   };
 
   const attendanceColumns = [

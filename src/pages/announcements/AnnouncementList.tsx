@@ -48,8 +48,8 @@ const AnnouncementList: React.FC = () => {
       message.success('Announcement created');
       form.resetFields();
       setDrawerOpen(false);
-    } catch {
-      message.error('Failed to create announcement');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to create announcement');
     }
   };
 

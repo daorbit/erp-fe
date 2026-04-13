@@ -37,8 +37,8 @@ const TrainingDetail: React.FC = () => {
       message.success('Employee enrolled successfully');
       enrollForm.resetFields();
       setEnrollOpen(false);
-    } catch {
-      message.error('Failed to enroll employee');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to enroll employee');
     }
   };
 

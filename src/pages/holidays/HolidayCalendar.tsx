@@ -48,8 +48,8 @@ const HolidayCalendar: React.FC = () => {
       message.success('Holiday added');
       form.resetFields();
       setModalOpen(false);
-    } catch {
-      message.error('Failed to add holiday');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to add holiday');
     }
   };
 
@@ -57,8 +57,8 @@ const HolidayCalendar: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Holiday deleted');
-    } catch {
-      message.error('Failed to delete holiday');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete holiday');
     }
   };
 

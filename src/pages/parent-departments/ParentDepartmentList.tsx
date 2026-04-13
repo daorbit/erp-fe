@@ -34,8 +34,8 @@ const ParentDepartmentList: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Parent department deleted');
-    } catch {
-      message.error('Failed to delete parent department');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete parent department');
     }
   };
 

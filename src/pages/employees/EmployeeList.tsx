@@ -97,8 +97,8 @@ const EmployeeList: React.FC = () => {
       message.success('Employee created successfully');
       form.resetFields();
       setDrawerOpen(false);
-    } catch {
-      message.error('Failed to create employee');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to create employee');
     }
   };
 
@@ -106,8 +106,8 @@ const EmployeeList: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Employee deleted');
-    } catch {
-      message.error('Failed to delete employee');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete employee');
     }
   };
 

@@ -38,8 +38,8 @@ const ParentDepartmentForm: React.FC = () => {
         message.success('Parent department created');
       }
       navigate('/parent-departments');
-    } catch {
-      message.error(`Failed to ${isEdit ? 'update' : 'create'} parent department`);
+    } catch (err: any) {
+      message.error(err?.message || `Failed to ${isEdit ? 'update' : 'create'} parent department`);
     }
   };
 

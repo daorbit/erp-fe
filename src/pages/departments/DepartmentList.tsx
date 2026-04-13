@@ -33,8 +33,8 @@ const DepartmentList: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Department deleted');
-    } catch {
-      message.error('Failed to delete department');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete department');
     }
   };
 

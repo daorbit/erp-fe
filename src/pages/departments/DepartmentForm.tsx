@@ -66,8 +66,8 @@ const DepartmentForm: React.FC = () => {
         message.success('Department created');
       }
       navigate('/departments');
-    } catch {
-      message.error(`Failed to ${isEdit ? 'update' : 'create'} department`);
+    } catch (err: any) {
+      message.error(err?.message || `Failed to ${isEdit ? 'update' : 'create'} department`);
     }
   };
 

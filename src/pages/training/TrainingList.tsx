@@ -66,8 +66,8 @@ const TrainingList: React.FC = () => {
       message.success('Training program created');
       form.resetFields();
       setDrawerOpen(false);
-    } catch {
-      message.error('Failed to create training program');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to create training program');
     }
   };
 

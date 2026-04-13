@@ -62,8 +62,8 @@ const DesignationForm: React.FC = () => {
         message.success('Designation created');
       }
       navigate('/designations');
-    } catch {
-      message.error(`Failed to ${isEdit ? 'update' : 'create'} designation`);
+    } catch (err: any) {
+      message.error(err?.message || `Failed to ${isEdit ? 'update' : 'create'} designation`);
     }
   };
 

@@ -49,8 +49,8 @@ const DocumentList: React.FC = () => {
       message.success('Document uploaded');
       form.resetFields();
       setUploadOpen(false);
-    } catch {
-      message.error('Failed to upload document');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to upload document');
     }
   };
 
@@ -58,8 +58,8 @@ const DocumentList: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Document deleted');
-    } catch {
-      message.error('Failed to delete document');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete document');
     }
   };
 

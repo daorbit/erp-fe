@@ -62,8 +62,8 @@ const ShiftList: React.FC = () => {
       }
       setDrawerOpen(false);
       setEditRecord(null);
-    } catch {
-      message.error(`Failed to ${isEdit ? 'update' : 'create'} shift`);
+    } catch (err: any) {
+      message.error(err?.message || `Failed to ${isEdit ? 'update' : 'create'} shift`);
     }
   };
 
@@ -71,8 +71,8 @@ const ShiftList: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Shift deleted');
-    } catch {
-      message.error('Failed to delete shift');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete shift');
     }
   };
 
