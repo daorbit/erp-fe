@@ -41,7 +41,7 @@ const DepartmentList: React.FC = () => {
   const columns = [
     { title: t('name'), dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
     { title: 'Code', dataIndex: 'code', key: 'code', render: (c: string) => <Tag>{c || '-'}</Tag> },
-    { title: 'Parent Department', dataIndex: 'parentDepartment', key: 'parentDepartment', render: (p: any) => typeof p === 'object' ? p?.name : (p || '-') },
+    { title: 'Parent Department', dataIndex: 'parentDepartments', key: 'parentDepartments', render: (items: any[]) => items?.length ? items.map((p: any) => <Tag key={typeof p === 'object' ? p._id : p}>{typeof p === 'object' ? p.name : p}</Tag>) : '-' },
     { title: 'Head of Department', dataIndex: 'head', key: 'head', render: (h: any) => typeof h === 'object' ? h?.name : (h || '-') },
     { title: 'Employees', dataIndex: 'employeeCount', key: 'employeeCount', render: (c: number) => c ?? 0 },
     {

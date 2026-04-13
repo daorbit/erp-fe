@@ -50,26 +50,28 @@ const ParentDepartmentForm: React.FC = () => {
         <Title level={4} className="!mb-0">{isEdit ? 'Edit Parent Department' : 'Add Parent Department'}</Title>
       </div>
 
-      <Card bordered={false} className="max-w-2xl">
+      <Card bordered={false}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item
-            name="name"
-            label="Super Department Name"
-            rules={[{ required: true, message: 'Super Department Name is required' }]}
-          >
-            <Input placeholder="e.g. Operations" />
-          </Form.Item>
-          <Form.Item name="displayOrder" label="Order to Display">
-            <InputNumber placeholder="e.g. 1" className="w-full" min={0} />
-          </Form.Item>
-          <Form.Item
-            name="shortName"
-            label="Short Name"
-            rules={[{ required: true, message: 'Short Name is required' }]}
-          >
-            <Input placeholder="e.g. OPS" />
-          </Form.Item>
-          <Space className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6">
+            <Form.Item
+              name="name"
+              label="Super Department Name"
+              rules={[{ required: true, message: 'Super Department Name is required' }]}
+            >
+              <Input placeholder="e.g. Operations" />
+            </Form.Item>
+            <Form.Item name="displayOrder" label="Order to Display">
+              <InputNumber placeholder="e.g. 1" className="w-full" min={0} />
+            </Form.Item>
+            <Form.Item
+              name="shortName"
+              label="Short Name"
+              rules={[{ required: true, message: 'Short Name is required' }]}
+            >
+              <Input placeholder="e.g. OPS" />
+            </Form.Item>
+          </div>
+          <Space className="mt-2">
             <Button onClick={() => navigate('/parent-departments')}>Cancel</Button>
             <Button type="primary" htmlType="submit" loading={createMutation.isPending || updateMutation.isPending}>
               {isEdit ? 'Update' : 'Create'}

@@ -31,7 +31,7 @@ const DesignationList: React.FC = () => {
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', render: (t: string) => <Text strong>{t}</Text> },
     { title: 'Code', dataIndex: 'code', key: 'code', render: (c: string) => <Tag>{c || '-'}</Tag> },
-    { title: t('department'), dataIndex: 'department', key: 'department', render: (d: any) => <Tag color="blue">{typeof d === 'object' ? d?.name : (d || '-')}</Tag> },
+    { title: t('department'), dataIndex: 'departments', key: 'departments', render: (items: any[]) => items?.length ? items.map((d: any) => <Tag color="blue" key={typeof d === 'object' ? d._id : d}>{typeof d === 'object' ? d.name : d}</Tag>) : '-' },
     { title: 'Level', dataIndex: 'level', key: 'level', render: (l: any) => l ?? '-' },
     { title: 'Band', dataIndex: 'band', key: 'band', render: (b: string) => b ? <Tag color="purple">{b}</Tag> : '-' },
     { title: t('status'), dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={s === 'active' ? 'green' : 'red'}>{s}</Tag> },
