@@ -32,6 +32,7 @@ const AdminFillOnboarding = lazy(() => import('../pages/onboarding/AdminFillOnbo
 const EmployeeList = lazy(() => import('../pages/employees/EmployeeList'));
 const EmployeeProfile = lazy(() => import('../pages/employees/EmployeeProfile'));
 const DepartmentList = lazy(() => import('../pages/departments/DepartmentList'));
+const ParentDepartmentList = lazy(() => import('../pages/parent-departments/ParentDepartmentList'));
 const DesignationList = lazy(() => import('../pages/designations/DesignationList'));
 const AttendanceList = lazy(() => import('../pages/attendance/AttendanceList'));
 const MyAttendance = lazy(() => import('../pages/attendance/MyAttendance'));
@@ -116,6 +117,7 @@ export default function AppRoutes() {
       <Route path="/employees" element={<R roles={ADMINS}><EmployeeList /></R>} />
       <Route path="/employees/:id" element={<R roles={ADMINS}><EmployeeProfile /></R>} />
       <Route path="/departments" element={<R roles={ADMINS}><DepartmentList /></R>} />
+      <Route path="/parent-departments" element={<R roles={ADMINS}><ParentDepartmentList /></R>} />
       <Route path="/designations" element={<R roles={ADMINS}><DesignationList /></R>} />
       <Route path="/payroll" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayrollList /></CS></R>} />
       <Route path="/payroll/payslip/:id" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayslipView /></CS></R>} />
