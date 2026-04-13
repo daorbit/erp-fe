@@ -31,10 +31,10 @@ const LeaveList: React.FC = () => {
   const rejected = leaves.filter(l => l.status === 'rejected').length;
 
   const handleApprove = (id: string) => {
-    approveMutation.mutate({ id }, { onSuccess: () => message.success('Leave approved'), onError: () => message.error('Failed to approve') });
+    approveMutation.mutate({ id }, { onSuccess: () => message.success('Leave approved'), onError: (err: any) => message.error(err?.message || 'Failed to approve') });
   };
   const handleReject = (id: string) => {
-    rejectMutation.mutate({ id }, { onSuccess: () => message.success('Leave rejected'), onError: () => message.error('Failed to reject') });
+    rejectMutation.mutate({ id }, { onSuccess: () => message.success('Leave rejected'), onError: (err: any) => message.error(err?.message || 'Failed to reject') });
   };
   const handleCreateType = (values: any) => {
     createTypeMutation.mutate(values, { onSuccess: () => { message.success('Leave type created'); setTypeModalOpen(false); form.resetFields(); } });

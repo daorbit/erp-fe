@@ -32,7 +32,7 @@ const LeaveApply: React.FC = () => {
         message.success('Leave application submitted');
         form.resetFields();
       },
-      onError: () => message.error('Failed to submit leave application'),
+      onError: (err: any) => message.error(err?.message || 'Failed to submit leave application'),
     });
   };
 
