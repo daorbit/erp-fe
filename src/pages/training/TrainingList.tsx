@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Tag, Button, Input, Select, Drawer, Form, Progress, Row, Col, Typography, Space, Statistic, InputNumber } from 'antd';
+import { Card, Tag, Button, Input, Select, Progress, Row, Col, Typography, Space, Statistic } from 'antd';
 import { App } from 'antd';
 import { Plus, Search, BookOpen, CheckCircle2, Users, CalendarDays, Clock } from 'lucide-react';
-import { useTrainingList, useCreateTraining } from '@/hooks/queries/useTraining';
+import { useTrainingList } from '@/hooks/queries/useTraining';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
@@ -27,11 +28,10 @@ const categoryColor: Record<string, string> = {
 
 const TrainingList: React.FC = () => {
   const { t } = useTranslation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const { message } = App.useApp();
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
@@ -39,7 +39,6 @@ const TrainingList: React.FC = () => {
   const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useTrainingList({ status: statusFilter });
-  const createMutation = useCreateTraining();
 
   const programs: any[] = data?.data ?? [];
   const filtered = programs.filter((p: any) =>
@@ -54,23 +53,6 @@ const TrainingList: React.FC = () => {
     { title: 'Upcoming', value: programs.filter((p: any) => p.status === 'upcoming').length, icon: <CalendarDays size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
   ];
 
-  const handleCreate = async (values: any) => {
-    try {
-      const payload: any = {
-        ...values,
-        startDate: values.startDate ? new Date(values.startDate).toISOString() : undefined,
-        endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
-      };
-      Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
-      await createMutation.mutateAsync(payload);
-      message.success('Training program created');
-      form.resetFields();
-      setDrawerOpen(false);
-    } catch (err: any) {
-      message.error(err?.message || 'Failed to create training program');
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -78,7 +60,7 @@ const TrainingList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('training')}</Title>
           <Text type="secondary">{t('manage_training')}</Text>
         </div>
-        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>Create Program</Button>}
+        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/training/create')}>Create Program</Button>}
       </div>
 
       <Row gutter={[16, 16]}>
@@ -142,48 +124,6 @@ const TrainingList: React.FC = () => {
         </Row>
       </Card>
 
-      <Drawer title="Create Training Program" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={
-        <div className="flex justify-end gap-3">
-          <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
-        </div>
-      }>
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="title" label="Program Title" rules={[{ required: true }]}>
-            <Input placeholder="Enter program title" />
-          </Form.Item>
-          <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Select placeholder="Select category" options={[
-              { value: 'technical', label: 'Technical' },
-              { value: 'soft_skills', label: 'Soft Skills' },
-              { value: 'compliance', label: 'Compliance' },
-              { value: 'leadership', label: 'Leadership' },
-              { value: 'safety', label: 'Safety' },
-              { value: 'other', label: 'Other' },
-            ]} />
-          </Form.Item>
-          <Form.Item name="trainer" label="Trainer">
-            <Input placeholder="Trainer name" />
-          </Form.Item>
-          <Form.Item name="duration" label="Duration">
-            <Input placeholder="e.g. 2 weeks, 3 days" />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="startDate" label="Start Date">
-              <Input type="date" />
-            </Form.Item>
-            <Form.Item name="endDate" label="End Date">
-              <Input type="date" />
-            </Form.Item>
-          </div>
-          <Form.Item name="maxParticipants" label="Max Participants">
-            <InputNumber className="w-full" min={1} placeholder="Max participants" />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} placeholder="Program description" />
-          </Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 };

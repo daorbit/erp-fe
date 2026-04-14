@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, DatePicker, Select, Drawer, Form, Typography, Row, Col, Tabs, Space, Avatar, TimePicker, App } from 'antd';
+import { Card, Table, Tag, Button, DatePicker, Select, Typography, Row, Col, Tabs, Space, Avatar, App } from 'antd';
 import { Plus, UserCheck, UserX, Clock, CalendarOff } from 'lucide-react';
-import { useAttendanceList, useMarkAttendance } from '@/hooks/queries/useAttendance';
-import { useEmployeeList } from '@/hooks/queries/useEmployees';
+import { useAttendanceList } from '@/hooks/queries/useAttendance';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -12,21 +12,17 @@ const statusColor: Record<string, string> = { present: 'green', absent: 'red', l
 
 const AttendanceList: React.FC = () => {
   const { t } = useTranslation();
-  const [modalOpen, setModalOpen] = useState(false);
   const [date, setDate] = useState<string>(dayjs().format('YYYY-MM-DD'));
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
-  const [form] = Form.useForm();
   const { message } = App.useApp();
+  const navigate = useNavigate();
 
   const params: any = { date };
   if (statusFilter) params.status = statusFilter;
 
   const { data: attData, isLoading } = useAttendanceList(params);
-  const { data: empData } = useEmployeeList();
-  const markMutation = useMarkAttendance();
 
   const records: any[] = attData?.data ?? [];
-  const employees: any[] = empData?.data ?? [];
 
   const presentCount = records.filter((r: any) => r.status === 'present').length;
   const absentCount = records.filter((r: any) => r.status === 'absent').length;
@@ -44,31 +40,6 @@ const AttendanceList: React.FC = () => {
   const getEmpName = (emp: any) => {
     if (!emp || typeof emp !== 'object') return String(emp || '-');
     return `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || 'N/A';
-  };
-
-  // Employee select options — from EmployeeProfile (which has userId populated)
-  const employeeOptions = employees.map((e: any) => {
-    const u = e.userId || e;
-    const name = `${u.firstName || ''} ${u.lastName || ''}`.trim();
-    return { value: u._id || e._id || e.id, label: `${name} (${e.employeeId || ''})` };
-  });
-
-  const handleMark = async (values: any) => {
-    try {
-      const markDate = values.date?.format('YYYY-MM-DD') || date;
-      await markMutation.mutateAsync({
-        employee: values.employee,
-        date: markDate,
-        status: values.status,
-        checkIn: values.checkIn ? `${markDate}T${values.checkIn.format('HH:mm')}:00.000Z` : undefined,
-        checkOut: values.checkOut ? `${markDate}T${values.checkOut.format('HH:mm')}:00.000Z` : undefined,
-      });
-      message.success('Attendance marked');
-      form.resetFields();
-      setModalOpen(false);
-    } catch (err: any) {
-      message.error(err?.message || 'Failed to mark attendance');
-    }
   };
 
   const columns: any[] = [
@@ -115,7 +86,7 @@ const AttendanceList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><Title level={4} className="!mb-1">{t('attendance')}</Title><Text type="secondary">{t('track_attendance')}</Text></div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>{t('mark_attendance')}</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/attendance/mark')}>{t('mark_attendance')}</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -145,29 +116,6 @@ const AttendanceList: React.FC = () => {
         <Table columns={columns} dataSource={records} loading={isLoading} rowKey={(r: any) => r._id || r.id} pagination={{ pageSize: 15 }} scroll={{ x: 700 }} />
       </Card>
 
-      {/* Mark Attendance Drawer */}
-      <Drawer title={t('mark_attendance')} open={modalOpen} onClose={() => setModalOpen(false)} width={520} destroyOnClose
-        extra={<Space><Button onClick={() => setModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={markMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>
-        <Form form={form} layout="vertical" onFinish={handleMark}>
-          <Form.Item name="employee" label={t('employee')} rules={[{ required: true, message: 'Please select an employee' }]}>
-            <Select placeholder="Search employee..." showSearch optionFilterProp="label" options={employeeOptions} />
-          </Form.Item>
-          <Form.Item name="date" label={t('date')} rules={[{ required: true }]} initialValue={dayjs()}>
-            <DatePicker className="w-full" />
-          </Form.Item>
-          <Form.Item name="status" label={t('status')} rules={[{ required: true }]}>
-            <Select placeholder="Select status" options={[
-              { value: 'present', label: 'Present' }, { value: 'absent', label: 'Absent' },
-              { value: 'late', label: 'Late' }, { value: 'half_day', label: 'Half Day' },
-              { value: 'on_leave', label: 'On Leave' }, { value: 'work_from_home', label: 'Work From Home' },
-            ]} />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="checkIn" label={t('check_in')}><TimePicker className="w-full" format="HH:mm" /></Form.Item>
-            <Form.Item name="checkOut" label={t('check_out')}><TimePicker className="w-full" format="HH:mm" /></Form.Item>
-          </div>
-        </Form>
-      </Drawer>
     </div>
   );
 };

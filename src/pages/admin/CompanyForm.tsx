@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, Form, Input, InputNumber, Select, Switch, App, Button, Space, Avatar, Upload as AntUpload } from 'antd';
-import { Upload, Camera } from 'lucide-react';
-import { useCreateCompany, useUpdateCompany } from '@/hooks/queries/useCompanies';
+import { Card, Form, Input, InputNumber, Select, Switch, App, Button, Avatar, Upload as AntUpload } from 'antd';
+import { Upload, Camera, ArrowLeft } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useCreateCompany, useUpdateCompany, useCompanyList } from '@/hooks/queries/useCompanies';
 import { useUploadImage } from '@/hooks/queries/useUpload';
 import { useTranslation } from '@/hooks/useTranslation';
-
-interface CompanyFormProps {
-  open: boolean;
-  onClose: () => void;
-  editData?: any;
-}
 
 const subscriptionOptions = [
   { value: 'free', label: 'Free' },
@@ -18,21 +13,25 @@ const subscriptionOptions = [
   { value: 'enterprise', label: 'Enterprise' },
 ];
 
-const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) => {
+const CompanyForm: React.FC = () => {
   const { t } = useTranslation();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany();
   const uploadMutation = useUploadImage();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const { data: companyData } = useCompanyList();
 
-  const isEdit = !!editData;
+  const isEdit = !!id;
+  const editData = isEdit ? (companyData?.data ?? []).find((c: any) => (c._id || c.id) === id) : null;
 
   useEffect(() => {
-    if (open && editData?.logo) setLogoPreview(editData.logo);
-    else if (open) setLogoPreview(null);
-  }, [open, editData]);
+    if (editData?.logo) setLogoPreview(editData.logo);
+    else setLogoPreview(null);
+  }, [editData]);
 
   const handleLogoUpload = async (file: File) => {
     try {
@@ -48,7 +47,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) =>
   };
 
   useEffect(() => {
-    if (open && editData) {
+    if (editData) {
       form.setFieldsValue({
         name: editData.name,
         code: editData.code,
@@ -69,10 +68,8 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) =>
         country: editData.address?.country,
         zipCode: editData.address?.zipCode,
       });
-    } else if (open) {
-      form.resetFields();
     }
-  }, [open, editData, form]);
+  }, [editData, form]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -107,32 +104,19 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) =>
         await createMutation.mutateAsync(payload);
         message.success('Company created');
       }
-      onClose();
+      navigate('/admin/companies');
     } catch (err: any) {
       message.error(err?.message || `Failed to ${isEdit ? 'update' : 'create'} company`);
     }
   };
 
   return (
-    <Drawer
-      title={isEdit ? `${t('edit')} ${t('company')}` : `${t('add')} ${t('company')}`}
-      open={open}
-      onClose={onClose}
-      width={600}
-      destroyOnClose
-      extra={
-        <Space>
-          <Button onClick={onClose}>{t('cancel')}</Button>
-          <Button
-            type="primary"
-            loading={createMutation.isPending || updateMutation.isPending}
-            onClick={() => form.submit()}
-          >
-            {t('save')}
-          </Button>
-        </Space>
-      }
-    >
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Button type="text" icon={<ArrowLeft size={18} />} onClick={() => navigate('/admin/companies')} />
+        <h2 className="text-xl font-semibold m-0">{isEdit ? `${t('edit')} ${t('company')}` : `${t('add')} ${t('company')}`}</h2>
+      </div>
+      <Card bordered={false} className="max-w-3xl">
       <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ isActive: true, country: 'India', subscription: 'free' }}>
         {/* Basic Info */}
         <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">{t('basic_info')}</div>
@@ -243,8 +227,16 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ open, onClose, editData }) =>
             <Switch />
           </Form.Item>
         )}
+
+        <div className="flex justify-end gap-3 mt-6">
+          <Button onClick={() => navigate('/admin/companies')}>{t('cancel')}</Button>
+          <Button type="primary" htmlType="submit" loading={createMutation.isPending || updateMutation.isPending}>
+            {isEdit ? t('save') : t('add')} {t('company')}
+          </Button>
+        </div>
       </Form>
-    </Drawer>
+      </Card>
+    </div>
   );
 };
 

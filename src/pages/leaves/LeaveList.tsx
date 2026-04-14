@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Tabs, Drawer, Form, Input, InputNumber, Typography, Row, Col, Space, Avatar, Popconfirm } from 'antd';
+import { Card, Table, Tag, Button, Tabs, Typography, Row, Col, Space, Avatar, Popconfirm } from 'antd';
 import { App } from 'antd';
 import { Clock, CheckCircle2, XCircle, Plus } from 'lucide-react';
-import { useLeaveList, useLeaveTypeList, useApproveLeave, useRejectLeave, useCreateLeaveType } from '@/hooks/queries/useLeaves';
+import { useLeaveList, useLeaveTypeList, useApproveLeave, useRejectLeave } from '@/hooks/queries/useLeaves';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import dayjs from 'dayjs';
 
@@ -13,15 +14,13 @@ const statusColor: Record<string, string> = { pending: 'orange', approved: 'gree
 const LeaveList: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('requests');
-  const [typeModalOpen, setTypeModalOpen] = useState(false);
-  const [form] = Form.useForm();
   const { message } = App.useApp();
+  const navigate = useNavigate();
 
   const { data: leaveData, isLoading: leavesLoading } = useLeaveList();
   const { data: typeData, isLoading: typesLoading } = useLeaveTypeList();
   const approveMutation = useApproveLeave();
   const rejectMutation = useRejectLeave();
-  const createTypeMutation = useCreateLeaveType();
 
   const leaves: any[] = leaveData?.data ?? [];
   const leaveTypes: any[] = typeData?.data ?? [];
@@ -35,9 +34,6 @@ const LeaveList: React.FC = () => {
   };
   const handleReject = (id: string) => {
     rejectMutation.mutate({ id }, { onSuccess: () => message.success('Leave rejected'), onError: (err: any) => message.error(err?.message || 'Failed to reject') });
-  };
-  const handleCreateType = (values: any) => {
-    createTypeMutation.mutate(values, { onSuccess: () => { message.success('Leave type created'); setTypeModalOpen(false); form.resetFields(); } });
   };
 
   const stats = [
@@ -156,21 +152,13 @@ const LeaveList: React.FC = () => {
         {
           key: 'types', label: `Leave Types (${leaveTypes.length})`,
           children: (
-            <Card bordered={false} extra={<Button type="primary" icon={<Plus size={16} />} onClick={() => setTypeModalOpen(true)}>Add Type</Button>}>
+            <Card bordered={false} extra={<Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/leaves/types/create')}>Add Type</Button>}>
               <Table columns={typeColumns} dataSource={leaveTypes} loading={typesLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 600 }} />
             </Card>
           ),
         },
       ]} />
 
-      <Drawer title={t('add') + ' ' + t('leave_type')} open={typeModalOpen} onClose={() => setTypeModalOpen(false)} width={520} destroyOnClose
-        extra={<Space><Button onClick={() => setTypeModalOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createTypeMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button></Space>}>
-        <Form form={form} layout="vertical" onFinish={handleCreateType}>
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}><Input placeholder="e.g. Sick Leave" /></Form.Item>
-          <Form.Item name="code" label="Code" rules={[{ required: true }]}><Input placeholder="e.g. SL" /></Form.Item>
-          <Form.Item name="defaultDays" label="Default Days Per Year" rules={[{ required: true }]}><InputNumber min={0} className="w-full" /></Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 };

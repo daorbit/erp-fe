@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Tag, Button, Input, Drawer, Form, Select, Row, Col, Typography, Space, Avatar, Empty } from 'antd';
+import { Card, Tag, Button, Input, Row, Col, Typography, Space, Avatar, Empty } from 'antd';
 import { App } from 'antd';
 import { Plus, Search, Pin, Megaphone, Eye } from 'lucide-react';
-import { useAnnouncementList, useCreateAnnouncement, useMarkAnnouncementRead } from '@/hooks/queries/useAnnouncements';
+import { useAnnouncementList, useMarkAnnouncementRead } from '@/hooks/queries/useAnnouncements';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
@@ -19,10 +20,9 @@ const priorityColor: Record<string, string> = {
 
 const AnnouncementList: React.FC = () => {
   const { t } = useTranslation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const { message } = App.useApp();
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
@@ -30,7 +30,6 @@ const AnnouncementList: React.FC = () => {
   const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useAnnouncementList();
-  const createMutation = useCreateAnnouncement();
   const markReadMutation = useMarkAnnouncementRead();
 
   const announcements: any[] = data?.data ?? [];
@@ -41,17 +40,6 @@ const AnnouncementList: React.FC = () => {
 
   const pinned = filtered.filter((a: any) => a.isPinned);
   const unpinned = filtered.filter((a: any) => !a.isPinned);
-
-  const handleCreate = async (values: any) => {
-    try {
-      await createMutation.mutateAsync(values);
-      message.success('Announcement created');
-      form.resetFields();
-      setDrawerOpen(false);
-    } catch (err: any) {
-      message.error(err?.message || 'Failed to create announcement');
-    }
-  };
 
   const handleMarkRead = async (id: string) => {
     try {
@@ -93,7 +81,7 @@ const AnnouncementList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('announcements')}</Title>
           <Text type="secondary">{t('manage_announcements')}</Text>
         </div>
-        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_announcement')}</Button>}
+        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/announcements/create')}>{t('new_announcement')}</Button>}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -121,32 +109,6 @@ const AnnouncementList: React.FC = () => {
         </>
       )}
 
-      <Drawer title="New Announcement" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={
-        <div className="flex justify-end gap-3">
-          <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
-        </div>
-      }>
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-            <Input placeholder="Announcement title" />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-              <Select placeholder="Category" options={['general', 'hr', 'event', 'policy', 'urgent'].map(c => ({ value: c, label: c }))} />
-            </Form.Item>
-            <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
-              <Select placeholder="Priority" options={['low', 'normal', 'high', 'critical'].map(p => ({ value: p, label: p }))} />
-            </Form.Item>
-          </div>
-          <Form.Item name="content" label="Content" rules={[{ required: true }]}>
-            <Input.TextArea rows={6} placeholder="Announcement content..." />
-          </Form.Item>
-          <Form.Item name="isPinned" label="Pin this announcement?" valuePropName="checked">
-            <Select placeholder="No" options={[{ value: false, label: 'No' }, { value: true, label: 'Yes' }]} />
-          </Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 };

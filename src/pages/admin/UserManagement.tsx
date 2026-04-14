@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Table, Avatar, Tag, Button, Input, Select, Switch, Drawer, Form, Dropdown, Typography, Space, App, Modal, Tabs, Popconfirm, Tooltip, Upload as AntUpload, Image } from 'antd';
+import React, { useState } from 'react';
+import { Card, Table, Avatar, Tag, Button, Input, Select, Dropdown, Typography, Space, App, Modal, Tabs, Tooltip, Image } from 'antd';
 import {
-  Plus, Download, Edit2, Trash2, MoreVertical, Search, Mail, Copy, Link2,
-  UserCheck, UserX, Clock, CheckCircle2, ClipboardCheck, Camera,
+  Plus, Download, MoreVertical, Search, Mail, Copy, Link2,
+  UserCheck, UserX, ClipboardCheck,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import companyService from '@/services/companyService';
 import invitationService from '@/services/invitationService';
-import { useCreateInvitation } from '@/hooks/queries/useInvitations';
-import { useUploadImage } from '@/hooks/queries/useUpload';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
 import { useTranslation } from '@/hooks/useTranslation';
-import authService from '@/services/authService';
 import api from '@/services/api';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { exportToCsv } from '@/lib/exportCsv';
 import dayjs from 'dayjs';
 
@@ -37,17 +34,12 @@ const UserManagement: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('users');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [inviteDrawerOpen, setInviteDrawerOpen] = useState(false);
   const [invitationLink, setInvitationLink] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [companyFilter, setCompanyFilter] = useState<string | undefined>(searchParams.get('company') || undefined);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [form] = Form.useForm();
-  const [inviteForm] = Form.useForm();
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const uploadMutation = useUploadImage();
+  const navigate = useNavigate();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
@@ -80,11 +72,7 @@ const UserManagement: React.FC = () => {
   const invitations: any[] = inviteData?.data ?? [];
 
   // ─── Mutations ───────────────────────────────────────────────────────────
-  const createUserMutation = useMutation({
-    mutationFn: (data: any) => authService.register(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); },
-  });
-  const toggleStatusMutation = useMutation({
+  const createInviteMutation = useCreateInvitation();
     mutationFn: (id: string) => api.patch<any>(`/auth/users/${id}/toggle-status`),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); },
   });
@@ -95,7 +83,6 @@ const UserManagement: React.FC = () => {
   });
 
   // Sync company filter with URL params
-  const handleCompanyFilterChange = (value: string | undefined) => {
     setCompanyFilter(value);
     if (value) {
       setSearchParams({ company: value });
@@ -103,19 +90,6 @@ const UserManagement: React.FC = () => {
       setSearchParams({});
     }
   };
-
-  // Auto-set company in forms when drawer opens with a company filter active
-  useEffect(() => {
-    if (drawerOpen && companyFilter && isSuperAdmin) {
-      form.setFieldValue('company', companyFilter);
-    }
-  }, [drawerOpen, companyFilter, isSuperAdmin, form]);
-
-  useEffect(() => {
-    if (inviteDrawerOpen && companyFilter && isSuperAdmin) {
-      inviteForm.setFieldValue('company', companyFilter);
-    }
-  }, [inviteDrawerOpen, companyFilter, isSuperAdmin, inviteForm]);
 
   // ─── Filters ─────────────────────────────────────────────────────────────
   const filteredUsers = users.filter((u: any) => {
@@ -133,40 +107,8 @@ const UserManagement: React.FC = () => {
   });
 
   // ─── Avatar Upload ────────────────────────────────────────────────────────
-  const handleAvatarUpload = async (file: File) => {
-    try {
-      const result = await uploadMutation.mutateAsync({ file, folder: 'avatars' });
-      const url = result.data?.url;
-      if (url) {
-        setAvatarPreview(url);
-        form.setFieldsValue({ avatar: url });
-      }
-    } catch {
-      message.error('Failed to upload photo');
-    }
-  };
 
   // ─── Handlers ────────────────────────────────────────────────────────────
-  const handleCreate = async (values: any) => {
-    try {
-      await createUserMutation.mutateAsync(values);
-      message.success('User created successfully');
-      form.resetFields();
-      setAvatarPreview(null);
-      setDrawerOpen(false);
-    } catch (err: any) { message.error(err?.message || 'Failed to create user'); }
-  };
-
-  const handleInvite = async (values: any) => {
-    try {
-      const result = await createInviteMutation.mutateAsync(values);
-      const link = result?.data?.invitationLink;
-      inviteForm.resetFields();
-      setInviteDrawerOpen(false);
-      if (link) setInvitationLink(link);
-      else message.success('Invitation created');
-    } catch (err: any) { message.error(err?.message || 'Failed to create invitation'); }
-  };
 
   const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
     try {
@@ -323,8 +265,8 @@ const UserManagement: React.FC = () => {
             { key: 'role', title: 'Role', render: (v: string) => roleLabel[v] || v },
             { key: 'isActive', title: 'Status', render: (v: boolean) => v ? 'Active' : 'Inactive' },
           ], 'users')}>{t('export')}</Button>
-          <Button type="primary" icon={<Plus size={16} />} onClick={() => { form.resetFields(); setAvatarPreview(null); setDrawerOpen(true); }}>{t('add_user')}</Button>
-          <Button icon={<Mail size={16} />} onClick={() => { inviteForm.resetFields(); setInviteDrawerOpen(true); }}>Invite User</Button>
+          <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/admin/users/create')}>{t('add_user')}</Button>
+          <Button icon={<Mail size={16} />} onClick={() => navigate('/admin/users/invite')}>Invite User</Button>
         </Space>
       </div>
 
@@ -367,91 +309,6 @@ const UserManagement: React.FC = () => {
           ]}
         />
       </Card>
-
-      {/* Add User Drawer */}
-      <Drawer title={t('add_user')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={520} destroyOnClose
-        extra={<Space><Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createUserMutation.isPending} onClick={() => form.submit()}>{t('save')}</Button></Space>}>
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="avatar" hidden><Input /></Form.Item>
-          <div className="flex justify-center mb-4">
-            <AntUpload
-              showUploadList={false}
-              accept="image/*"
-              beforeUpload={(file) => { handleAvatarUpload(file); return false; }}
-            >
-              {avatarPreview ? (
-                <div className="relative group cursor-pointer">
-                  <Avatar size={80} src={avatarPreview} />
-                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera size={20} className="text-white" />
-                  </div>
-                </div>
-              ) : (
-                <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
-                  {uploadMutation.isPending
-                    ? <span className="text-xs text-gray-400">Uploading...</span>
-                    : <><Camera size={24} className="text-gray-400" /><span className="text-[10px] text-gray-400 mt-1">Photo</span></>
-                  }
-                </div>
-              )}
-            </AntUpload>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}><Input placeholder="Enter first name" /></Form.Item>
-            <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}><Input placeholder="Enter last name" /></Form.Item>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="email" label={t('email')} rules={[{ required: true, type: 'email' }]}><Input placeholder="Enter email" /></Form.Item>
-            <Form.Item name="password" label="Password" rules={[{ required: true, min: 8 }]}><Input.Password placeholder="Min 8 characters" /></Form.Item>
-          </div>
-          <Form.Item name="phone" label={t('phone')}><Input placeholder="+91 9999999999" /></Form.Item>
-          <Form.Item name="role" label={t('role')} rules={[{ required: true }]} initialValue="employee">
-            <Select placeholder="Select role" onChange={() => form.validateFields(['company']).catch(() => {})}
-              options={roleOptions} />
-          </Form.Item>
-          {isSuperAdmin && (
-            <Form.Item noStyle shouldUpdate={(prev: any, cur: any) => prev.role !== cur.role}>
-              {({ getFieldValue }: any) => getFieldValue('role') !== 'super_admin' ? (
-                <Form.Item name="company" label={t('company')} rules={[{ required: true, message: 'Please select a company' }]}>
-                  <Select placeholder="Select company" allowClear showSearch optionFilterProp="label" disabled={!companies.length}
-                    options={companies.map((c: any) => ({ value: c._id || c.id, label: `${c.name} (${c.code})` }))} />
-                </Form.Item>
-              ) : null}
-            </Form.Item>
-          )}
-          <Form.Item name="onboardingRequired" label="Require Onboarding (KYC)" valuePropName="checked" initialValue={false}>
-            <Switch checkedChildren="Yes" unCheckedChildren="No" />
-          </Form.Item>
-        </Form>
-      </Drawer>
-
-      {/* Invite User Drawer */}
-      <Drawer title={<span className="flex items-center gap-2"><Mail size={18} /> Invite User</span>} open={inviteDrawerOpen} onClose={() => setInviteDrawerOpen(false)} width={480} destroyOnClose
-        extra={<Space><Button onClick={() => setInviteDrawerOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={createInviteMutation.isPending} onClick={() => inviteForm.submit()}>Send Invite</Button></Space>}>
-        <div className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-700 dark:text-blue-300">
-          A unique invitation link will be generated. Share it with the user — they'll set up their own name and password. Link expires in 3 days.
-        </div>
-        <Form form={inviteForm} layout="vertical" onFinish={handleInvite}>
-          <Form.Item name="email" label={t('email')} rules={[{ required: true, type: 'email' }]}><Input placeholder="user@company.com" /></Form.Item>
-          <Form.Item name="role" label={t('role')} rules={[{ required: true }]} initialValue="employee">
-            <Select placeholder="Select role" onChange={() => inviteForm.validateFields(['company']).catch(() => {})}
-              options={roleOptions} />
-          </Form.Item>
-          {isSuperAdmin && (
-            <Form.Item noStyle shouldUpdate={(prev: any, cur: any) => prev.role !== cur.role}>
-              {({ getFieldValue }: any) => getFieldValue('role') !== 'super_admin' ? (
-                <Form.Item name="company" label={t('company')} rules={[{ required: true, message: 'Please select a company' }]}>
-                  <Select placeholder="Select company" allowClear showSearch optionFilterProp="label"
-                    options={companies.map((c: any) => ({ value: c._id || c.id, label: `${c.name} (${c.code})` }))} />
-                </Form.Item>
-              ) : null}
-            </Form.Item>
-          )}
-          <Form.Item name="onboardingRequired" label="Require Onboarding (KYC)" valuePropName="checked" initialValue={false}>
-            <Switch checkedChildren="Yes" unCheckedChildren="No" />
-          </Form.Item>
-        </Form>
-      </Drawer>
 
       {/* Invitation Link Modal */}
       <Modal title={<span className="flex items-center gap-2"><Link2 size={18} /> Invitation Link Created</span>}
