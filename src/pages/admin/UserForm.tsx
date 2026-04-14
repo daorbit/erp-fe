@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Form, Input, Select, Switch, App, Button, Typography, Upload as AntUpload, Avatar } from 'antd';
+import { Card, Form, Input, Select, Switch, App, Button, Typography, Space, Upload as AntUpload, Avatar } from 'antd';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import authService from '@/services/authService';
@@ -75,63 +75,89 @@ const UserForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button icon={<ArrowLeft size={16} />} onClick={() => navigate('/admin/users')} />
+      <div className="flex items-center gap-4">
+        <Button type="text" icon={<ArrowLeft size={20} />} onClick={() => navigate('/admin/users')} />
         <Title level={4} className="!mb-0">{t('add_user')}</Title>
       </div>
-      <Card bordered={false}>
-        <Form form={form} layout="vertical" onFinish={handleSubmit} className="max-w-2xl">
-          <Form.Item name="avatar" hidden><Input /></Form.Item>
-          <div className="flex justify-center mb-4">
-            <AntUpload showUploadList={false} accept="image/*" beforeUpload={(file) => { handleAvatarUpload(file); return false; }}>
-              {avatarPreview ? (
-                <div className="relative group cursor-pointer">
-                  <Avatar size={80} src={avatarPreview} />
-                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera size={20} className="text-white" />
-                  </div>
-                </div>
-              ) : (
-                <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
-                  {uploadMutation.isPending
-                    ? <span className="text-xs text-gray-400">Uploading...</span>
-                    : <><Camera size={24} className="text-gray-400" /><span className="text-[10px] text-gray-400 mt-1">Photo</span></>
-                  }
-                </div>
-              )}
-            </AntUpload>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}><Input placeholder="Enter first name" /></Form.Item>
-            <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}><Input placeholder="Enter last name" /></Form.Item>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="email" label={t('email')} rules={[{ required: true, type: 'email' }]}><Input placeholder="Enter email" /></Form.Item>
-            <Form.Item name="password" label="Password" rules={[{ required: true, min: 8 }]}><Input.Password placeholder="Min 8 characters" /></Form.Item>
-          </div>
-          <Form.Item name="phone" label={t('phone')}><Input placeholder="+91 9999999999" /></Form.Item>
-          <Form.Item name="role" label={t('role')} rules={[{ required: true }]} initialValue="employee">
-            <Select placeholder="Select role" options={roleOptions} />
-          </Form.Item>
-          {isSuperAdmin && (
-            <Form.Item noStyle shouldUpdate={(prev: any, cur: any) => prev.role !== cur.role}>
-              {({ getFieldValue }: any) => getFieldValue('role') !== 'super_admin' ? (
-                <Form.Item name="company" label={t('company')} rules={[{ required: true, message: 'Please select a company' }]}>
-                  <Select placeholder="Select company" allowClear showSearch optionFilterProp="label" disabled={!companies.length}
-                    options={companies.map((c: any) => ({ value: c._id || c.id, label: `${c.name} (${c.code})` }))} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Form Fields */}
+        <div className="lg:col-span-2">
+          <Card bordered={false}>
+            <Form form={form} layout="vertical" onFinish={handleSubmit}>
+              <Form.Item name="avatar" hidden><Input /></Form.Item>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}>
+                  <Input placeholder="Enter first name" />
                 </Form.Item>
-              ) : null}
-            </Form.Item>
-          )}
-          <Form.Item name="onboardingRequired" label="Require Onboarding (KYC)" valuePropName="checked" initialValue={false}>
-            <Switch checkedChildren="Yes" unCheckedChildren="No" />
-          </Form.Item>
-          <div className="flex justify-end gap-3">
-            <Button onClick={() => navigate('/admin/users')}>{t('cancel')}</Button>
-            <Button type="primary" htmlType="submit" loading={createUserMutation.isPending}>{t('save')}</Button>
-          </div>
-        </Form>
-      </Card>
+                <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
+                  <Input placeholder="Enter last name" />
+                </Form.Item>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <Form.Item name="email" label={t('email')} rules={[{ required: true, type: 'email' }]}>
+                  <Input placeholder="Enter email" />
+                </Form.Item>
+                <Form.Item name="password" label="Password" rules={[{ required: true, min: 8 }]}>
+                  <Input.Password placeholder="Min 8 characters" />
+                </Form.Item>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <Form.Item name="phone" label={t('phone')}>
+                  <Input placeholder="+91 9999999999" />
+                </Form.Item>
+                <Form.Item name="role" label={t('role')} rules={[{ required: true }]} initialValue="employee">
+                  <Select placeholder="Select role" options={roleOptions} />
+                </Form.Item>
+              </div>
+              {isSuperAdmin && (
+                <Form.Item noStyle shouldUpdate={(prev: any, cur: any) => prev.role !== cur.role}>
+                  {({ getFieldValue }: any) => getFieldValue('role') !== 'super_admin' ? (
+                    <Form.Item name="company" label={t('company')} rules={[{ required: true, message: 'Please select a company' }]}>
+                      <Select placeholder="Select company" allowClear showSearch optionFilterProp="label" disabled={!companies.length}
+                        options={companies.map((c: any) => ({ value: c._id || c.id, label: `${c.name} (${c.code})` }))} />
+                    </Form.Item>
+                  ) : null}
+                </Form.Item>
+              )}
+              <Form.Item name="onboardingRequired" label="Require Onboarding (KYC)" valuePropName="checked" initialValue={false}>
+                <Switch checkedChildren="Yes" unCheckedChildren="No" />
+              </Form.Item>
+              <Space className="mt-2">
+                <Button onClick={() => navigate('/admin/users')}>{t('cancel')}</Button>
+                <Button type="primary" htmlType="submit" loading={createUserMutation.isPending}>{t('save')}</Button>
+              </Space>
+            </Form>
+          </Card>
+        </div>
+
+        {/* Right: Avatar Upload */}
+        <div>
+          <Card bordered={false}>
+            <div className="flex flex-col items-center gap-3">
+              <AntUpload showUploadList={false} accept="image/*" beforeUpload={(file) => { handleAvatarUpload(file); return false; }}>
+                {avatarPreview ? (
+                  <div className="relative group cursor-pointer">
+                    <Avatar size={100} src={avatarPreview} />
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera size={24} className="text-white" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
+                    {uploadMutation.isPending
+                      ? <span className="text-xs text-gray-400">Uploading...</span>
+                      : <><Camera size={28} className="text-gray-400" /><span className="text-[10px] text-gray-400 mt-1">Upload Photo</span></>
+                    }
+                  </div>
+                )}
+              </AntUpload>
+              <span className="text-xs text-gray-400 text-center">Click to upload avatar<br />JPEG, PNG (max 5MB)</span>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

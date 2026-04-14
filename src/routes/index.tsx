@@ -74,6 +74,7 @@ const TrainingEnrollForm = lazy(() => import('../pages/training/TrainingEnrollFo
 const JobForm = lazy(() => import('../pages/recruitment/JobForm'));
 const CompanyForm = lazy(() => import('../pages/admin/CompanyForm'));
 const UserForm = lazy(() => import('../pages/admin/UserForm'));
+const AdminInviteUserForm = lazy(() => import('../pages/admin/InviteUserForm'));
 
 function PageSkeleton() {
   return (
@@ -133,6 +134,7 @@ export default function AppRoutes() {
       {/* Admin & HR */}
       <Route path="/admin/users" element={<R roles={['super_admin', ...ADMINS]}><UserManagement /></R>} />
       <Route path="/admin/users/create" element={<R roles={['super_admin', ...ADMINS]}><UserForm /></R>} />
+      <Route path="/admin/users/invite" element={<R roles={['super_admin', ...ADMINS]}><AdminInviteUserForm /></R>} />
       <Route path="/onboarding/new" element={<Protected><KYCOnboarding /></Protected>} />
       <Route path="/onboarding/list" element={<R roles={ADMINS}><OnboardingList /></R>} />
       <Route path="/onboarding/:userId/fill" element={<R roles={ADMINS}><AdminFillOnboarding /></R>} />

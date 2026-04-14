@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { Card, Table, Avatar, Tag, Button, Input, Select, Dropdown, Typography, Space, App, Modal, Tabs, Tooltip, Image } from 'antd';
 import {
-  Plus, Download, MoreVertical, Search, Mail, Copy, Link2,
-  UserCheck, UserX, ClipboardCheck,
+  Plus, Download, Edit2, Trash2, MoreVertical, Search, Mail, Copy, Link2,
+  UserCheck, UserX, Clock, CheckCircle2, ClipboardCheck,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import companyService from '@/services/companyService';
 import invitationService from '@/services/invitationService';
+import { useCreateInvitation } from '@/hooks/queries/useInvitations';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
 import { useTranslation } from '@/hooks/useTranslation';
 import api from '@/services/api';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { exportToCsv } from '@/lib/exportCsv';
 import dayjs from 'dayjs';
 
@@ -23,15 +24,10 @@ const roleColor: Record<string, string> = {
 const roleLabel: Record<string, string> = {
   super_admin: 'Platform Admin', admin: 'Company Admin', hr_manager: 'HR Manager', manager: 'Manager', employee: 'Employee', viewer: 'Viewer',
 };
-const baseRoleOptions = [
-  { value: 'viewer', label: 'Viewer (Read-only)' },
-  { value: 'employee', label: 'Employee' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'hr_manager', label: 'HR Manager' },
-];
 
 const UserManagement: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('users');
   const [invitationLink, setInvitationLink] = useState<string | null>(null);
@@ -39,18 +35,9 @@ const UserManagement: React.FC = () => {
   const [companyFilter, setCompanyFilter] = useState<string | undefined>(searchParams.get('company') || undefined);
   const { message } = App.useApp();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
-  const isCompanyAdmin = currentUser?.role === UserRole.ADMIN;
-
-  // Build role options based on current user's role
-  const roleOptions = [
-    ...baseRoleOptions,
-    ...((isSuperAdmin || isCompanyAdmin) ? [{ value: 'admin', label: 'Company Admin' }] : []),
-    ...(isSuperAdmin ? [{ value: 'super_admin', label: 'Platform Admin' }] : []),
-  ];
 
   // ─── Queries ─────────────────────────────────────────────────────────────
   const { data: userData, isLoading } = useQuery({
@@ -72,17 +59,17 @@ const UserManagement: React.FC = () => {
   const invitations: any[] = inviteData?.data ?? [];
 
   // ─── Mutations ───────────────────────────────────────────────────────────
-  const createInviteMutation = useCreateInvitation();
+  const toggleStatusMutation = useMutation({
     mutationFn: (id: string) => api.patch<any>(`/auth/users/${id}/toggle-status`),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); },
   });
-  const createInviteMutation = useCreateInvitation();
   const toggleOnboardingMutation = useMutation({
     mutationFn: (id: string) => api.patch<any>(`/auth/users/${id}/onboarding`),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['users'] }); },
   });
 
   // Sync company filter with URL params
+  const handleCompanyFilterChange = (value: string | undefined) => {
     setCompanyFilter(value);
     if (value) {
       setSearchParams({ company: value });
@@ -106,10 +93,7 @@ const UserManagement: React.FC = () => {
     return !companyFilter || companyId === companyFilter;
   });
 
-  // ─── Avatar Upload ────────────────────────────────────────────────────────
-
   // ─── Handlers ────────────────────────────────────────────────────────────
-
   const handleToggleStatus = async (id: string, currentlyActive: boolean) => {
     try {
       await toggleStatusMutation.mutateAsync(id);
@@ -310,7 +294,7 @@ const UserManagement: React.FC = () => {
         />
       </Card>
 
-      {/* Invitation Link Modal */}
+      {/* Invitation Link Modal (kept - not a drawer) */}
       <Modal title={<span className="flex items-center gap-2"><Link2 size={18} /> Invitation Link Created</span>}
         open={!!invitationLink} onCancel={() => setInvitationLink(null)}
         footer={<Button onClick={() => setInvitationLink(null)}>Done</Button>} width={560}>
