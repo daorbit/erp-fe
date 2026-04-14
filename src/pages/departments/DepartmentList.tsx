@@ -17,7 +17,7 @@ const DepartmentList: React.FC = () => {
   const deleteMutation = useDeleteDepartment();
 
   const departments: any[] = deptData?.data ?? [];
-  const filtered = departments.filter((d: any) => !search || d.name?.toLowerCase().includes(search.toLowerCase()) || d.code?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = departments.filter((d: any) => !search || d.name?.toLowerCase().includes(search.toLowerCase()) || d.shortName?.toLowerCase().includes(search.toLowerCase()));
 
   const totalDepts = departments.length;
   const activeDepts = departments.filter((d: any) => d.status === 'active').length;
@@ -40,9 +40,10 @@ const DepartmentList: React.FC = () => {
 
   const columns = [
     { title: t('name'), dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
-    { title: 'Code', dataIndex: 'code', key: 'code', render: (c: string) => <Tag>{c || '-'}</Tag> },
+    { title: 'Short Name', dataIndex: 'shortName', key: 'shortName', render: (c: string) => <Tag>{c || '-'}</Tag> },
     { title: 'Parent Department', dataIndex: 'parentDepartments', key: 'parentDepartments', render: (items: any[]) => items?.length ? items.map((p: any) => <Tag key={typeof p === 'object' ? p._id : p}>{typeof p === 'object' ? p.name : p}</Tag>) : '-' },
-    { title: 'Head of Department', dataIndex: 'head', key: 'head', render: (h: any) => typeof h === 'object' ? h?.name : (h || '-') },
+    // { title: 'Head of Department', dataIndex: 'head', key: 'head', render: (h: any) => typeof h === 'object' ? h?.name : (h || '-') },
+    { title: 'Display Order', dataIndex: 'displayOrder', key: 'displayOrder', render: (d: number) => d ?? 0 },
     { title: 'Employees', dataIndex: 'employeeCount', key: 'employeeCount', render: (c: number) => c ?? 0 },
     {
       title: t('status'), dataIndex: 'status', key: 'status',

@@ -34,9 +34,10 @@ const DepartmentForm: React.FC = () => {
       );
       form.setFieldsValue({
         name: editData.name,
-        code: editData.code,
+        shortName: editData.shortName,
         parentDepartments: parentDepts,
-        head: typeof editData.head === 'object' ? editData.head?._id : editData.head,
+        // head: typeof editData.head === 'object' ? editData.head?._id : editData.head,
+        displayOrder: editData.displayOrder,
         description: editData.description,
         status: editData.status,
       });
@@ -53,10 +54,11 @@ const DepartmentForm: React.FC = () => {
   const handleSubmit = async (values: any) => {
     try {
       const payload: any = { ...values };
-      if ('head' in payload) {
-        payload.headOfDepartment = payload.head;
-        delete payload.head;
-      }
+      if (payload.displayOrder != null) payload.displayOrder = Number(payload.displayOrder);
+      // if ('head' in payload) {
+      //   payload.headOfDepartment = payload.head;
+      //   delete payload.head;
+      // }
       if (isEdit) {
         await updateMutation.mutateAsync({ id, data: payload });
         message.success('Department updated');
@@ -87,14 +89,17 @@ const DepartmentForm: React.FC = () => {
                 <Form.Item name="name" label="Department Name" rules={[{ required: true }]}>
                   <Input placeholder="e.g. Engineering" />
                 </Form.Item>
-                <Form.Item name="code" label="Department Code" rules={[{ required: true }]}>
+                <Form.Item name="shortName" label="Short Name" rules={[{ required: true }]}>
                   <Input placeholder="e.g. ENG" />
                 </Form.Item>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                <Form.Item name="head" label="Head of Department">
+                {/* <Form.Item name="head" label="Head of Department">
                   <Select placeholder="Select HOD" allowClear showSearch optionFilterProp="label"
                     options={employees.map((e: any) => ({ value: e._id || e.id, label: e.name || `${e.firstName ?? ''} ${e.lastName ?? ''}` }))} />
+                </Form.Item> */}
+                <Form.Item name="displayOrder" label="Display Order">
+                  <Input type="number" placeholder="e.g. 1" />
                 </Form.Item>
                 <Form.Item name="status" label="Status" initialValue="active">
                   <Select options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
@@ -117,7 +122,7 @@ const DepartmentForm: React.FC = () => {
             <Card bordered={false}>
               <Form.Item
                 name="parentDepartments"
-                label={<Text strong>Parent Department List <Text type="danger">*</Text></Text>}
+                label={<Text strong>Parent Department List  </Text>}
                 rules={[{ required: true, message: 'Select at least one parent department' }]}
               >
                 <Checkbox.Group className="w-full">

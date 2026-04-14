@@ -3,10 +3,11 @@ import type { IQueryParams } from './api';
 export interface IDepartment {
   _id: string;
   name: string;
-  code: string;
+  shortName: string;
   description?: string;
-  headOfDepartment?: string;
+  // headOfDepartment?: string;
   parentDepartment?: string;
+  displayOrder?: number;
   isActive: boolean;
   employeeCount?: number;
   createdAt: string;
