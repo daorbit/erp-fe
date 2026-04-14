@@ -4,7 +4,7 @@ import {
   UserPlus, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
   IndianRupee, Wallet, Briefcase, FileSearch, Star, GraduationCap,
   BookOpen, FolderOpen, PartyPopper, Megaphone, Receipt, Package, LifeBuoy, BarChart3,
-  Activity, Timer,
+  Activity, Timer, GitBranch,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -32,6 +32,9 @@ export const navigationItems: NavItem[] = [
   // ─── Admin ─────────────────────────────────────────────────────────────────
   { titleKey: 'company_management', href: '/admin/companies', icon: Building2, roles: ['super_admin'] },
   { titleKey: 'user_management', href: '/admin/users', icon: Users, roles: ['super_admin', 'admin', 'hr_manager'] },
+
+  // ─── Branches ──────────────────────────────────────────────────────────────
+  { titleKey: 'branches', href: '/branches', icon: GitBranch, roles: ADMINS },
 
   // ─── HR (admin & HR manager) ───────────────────────────────────────────────
   {

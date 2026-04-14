@@ -58,6 +58,8 @@ const TicketList = lazy(() => import('../pages/helpdesk/TicketList'));
 const Reports = lazy(() => import('../pages/reports/Reports'));
 const ShiftList = lazy(() => import('../pages/shifts/ShiftList'));
 const ShiftForm = lazy(() => import('../pages/shifts/ShiftForm'));
+const BranchList = lazy(() => import('../pages/branches/BranchList'));
+const BranchForm = lazy(() => import('../pages/branches/BranchForm'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const EmployeeForm = lazy(() => import('../pages/employees/EmployeeForm'));
 const InviteUserForm = lazy(() => import('../pages/employees/InviteUserForm'));
@@ -145,6 +147,9 @@ export default function AppRoutes() {
       <Route path="/departments" element={<R roles={ADMINS}><DepartmentList /></R>} />
       <Route path="/departments/create" element={<R roles={ADMINS}><DepartmentForm /></R>} />
       <Route path="/departments/:id/edit" element={<R roles={ADMINS}><DepartmentForm /></R>} />
+      <Route path="/branches" element={<R roles={ADMINS}><BranchList /></R>} />
+      <Route path="/branches/create" element={<R roles={ADMINS}><BranchForm /></R>} />
+      <Route path="/branches/:id/edit" element={<R roles={ADMINS}><BranchForm /></R>} />
       <Route path="/parent-departments" element={<R roles={ADMINS}><ParentDepartmentList /></R>} />
       <Route path="/parent-departments/create" element={<R roles={ADMINS}><ParentDepartmentForm /></R>} />
       <Route path="/parent-departments/:id/edit" element={<R roles={ADMINS}><ParentDepartmentForm /></R>} />
