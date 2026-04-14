@@ -2,12 +2,12 @@ import type { IQueryParams } from './api';
 
 export interface IDesignation {
   _id: string;
-  title: string;
-  code: string;
-  description?: string;
-  department?: string;
-  level: number;
-  band?: string;
+  name: string;
+  shortName: string;
+  rolesAndResponsibility?: string;
+  departments?: string[];
+  displayOrder?: number;
+  employeeBand?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

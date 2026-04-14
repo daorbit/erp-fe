@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, Form, Input, InputNumber, Select, App, Button, Typography, Space, Checkbox, Divider } from 'antd';
+import { Card, Form, Input, Select, App, Button, Typography, Space, Checkbox, Divider } from 'antd';
 import { ArrowLeft, Search } from 'lucide-react';
 import { useDesignationList, useCreateDesignation, useUpdateDesignation } from '@/hooks/queries/useDesignations';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
@@ -30,12 +30,12 @@ const DesignationForm: React.FC = () => {
         typeof d === 'object' ? d._id : d
       );
       form.setFieldsValue({
-        title: editData.title,
-        code: editData.code,
+        name: editData.name,
+        shortName: editData.shortName,
         departments: depts,
-        level: editData.level,
-        band: editData.band,
-        status: editData.status,
+        displayOrder: editData.displayOrder,
+        employeeBand: editData.employeeBand,
+        rolesAndResponsibility: editData.rolesAndResponsibility,
       });
     }
   }, [editData, form]);
@@ -51,7 +51,7 @@ const DesignationForm: React.FC = () => {
     try {
       const payload: any = {
         ...values,
-        level: values.level != null ? Number(values.level) : undefined,
+        displayOrder: values.displayOrder != null ? Number(values.displayOrder) : undefined,
       };
       if (isEdit) {
         await updateMutation.mutateAsync({ id, data: payload });
@@ -80,23 +80,23 @@ const DesignationForm: React.FC = () => {
           <div className="lg:col-span-2">
             <Card bordered={false}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                <Form.Item name="title" label="Title" rules={[{ required: true }]}>
+                <Form.Item name="name" label="Designation Name" rules={[{ required: true }]}>
                   <Input placeholder="e.g. Senior Engineer" />
                 </Form.Item>
-                <Form.Item name="code" label="Code" rules={[{ required: true }]}>
+                <Form.Item name="shortName" label="Short Name" rules={[{ required: true }]}>
                   <Input placeholder="e.g. SE" />
                 </Form.Item>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                <Form.Item name="level" label="Level" rules={[{ required: true }]}>
-                  <InputNumber min={1} max={10} className="w-full" placeholder="e.g. 5" />
+                <Form.Item name="displayOrder" label="Display Order">
+                  <Input type="number" placeholder="e.g. 1" />
                 </Form.Item>
-                <Form.Item name="band" label="Band">
+                <Form.Item name="employeeBand" label="Employee Band">
                   <Input placeholder="e.g. L5" />
                 </Form.Item>
               </div>
-              <Form.Item name="status" label="Status" initialValue="active" className="max-w-xs">
-                <Select options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
+              <Form.Item name="rolesAndResponsibility" label="Roles and Responsibility">
+                <Input.TextArea rows={3} placeholder="Enter roles and responsibility" />
               </Form.Item>
               <Space className="mt-2">
                 <Button onClick={() => navigate('/designations')}>Cancel</Button>
