@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Tag, Button, Table, Tabs, Drawer, Form, Select, Row, Col, Typography, Space, Descriptions, Avatar, Progress } from 'antd';
+import { Card, Tag, Button, Table, Tabs, Row, Col, Typography, Space, Descriptions, Avatar, Progress } from 'antd';
 import { App } from 'antd';
 import { ArrowLeft, Users, Clock, CalendarDays, UserPlus, BookOpen } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTraining, useEnrollTraining } from '@/hooks/queries/useTraining';
-import { useEmployeeList } from '@/hooks/queries/useEmployees';
+import { useTraining } from '@/hooks/queries/useTraining';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
@@ -18,29 +17,11 @@ const TrainingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { message } = App.useApp();
-  const [enrollOpen, setEnrollOpen] = useState(false);
-  const [enrollForm] = Form.useForm();
-
-  const { data: empData } = useEmployeeList();
-  const employees: any[] = empData?.data ?? [];
-  const employeeOptions = employees.map((e: any) => { const u = e.userId || e; return { value: u._id || e._id, label: `${u.firstName || ''} ${u.lastName || ''} (${e.employeeId || ''})`.trim() }; });
 
   const { data, isLoading } = useTraining(id!);
-  const enrollMutation = useEnrollTraining();
 
   const program: any = data?.data ?? {};
   const participants: any[] = program.participants ?? [];
-
-  const handleEnroll = async (values: any) => {
-    try {
-      await enrollMutation.mutateAsync({ id: id!, data: values });
-      message.success('Employee enrolled successfully');
-      enrollForm.resetFields();
-      setEnrollOpen(false);
-    } catch {
-      message.error('Failed to enroll employee');
-    }
-  };
 
   const participantColumns = [
     {
@@ -92,7 +73,7 @@ const TrainingDetail: React.FC = () => {
             </Space>
           </div>
         </div>
-        <Button type="primary" icon={<UserPlus size={16} />} onClick={() => setEnrollOpen(true)}>Enroll Employee</Button>
+        <Button type="primary" icon={<UserPlus size={16} />} onClick={() => navigate(`/training/${id}/enroll`)}>Enroll Employee</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -143,13 +124,6 @@ const TrainingDetail: React.FC = () => {
         ]} />
       </Card>
 
-      <Drawer title="Enroll Employee" open={enrollOpen} onClose={() => setEnrollOpen(false)} width={520} destroyOnClose extra={<Space><Button onClick={() => setEnrollOpen(false)}>{t('cancel')}</Button><Button type="primary" loading={enrollMutation.isPending} onClick={() => enrollForm.submit()}>{t('submit')}</Button></Space>}>
-        <Form form={enrollForm} layout="vertical" onFinish={handleEnroll}>
-          <Form.Item name="employeeId" label="Employee" rules={[{ required: true }]}>
-            <Select placeholder="Search employee..." showSearch optionFilterProp="label" options={employeeOptions} />
-          </Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 };

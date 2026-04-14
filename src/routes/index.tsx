@@ -32,7 +32,11 @@ const AdminFillOnboarding = lazy(() => import('../pages/onboarding/AdminFillOnbo
 const EmployeeList = lazy(() => import('../pages/employees/EmployeeList'));
 const EmployeeProfile = lazy(() => import('../pages/employees/EmployeeProfile'));
 const DepartmentList = lazy(() => import('../pages/departments/DepartmentList'));
+const DepartmentForm = lazy(() => import('../pages/departments/DepartmentForm'));
+const ParentDepartmentList = lazy(() => import('../pages/parent-departments/ParentDepartmentList'));
+const ParentDepartmentForm = lazy(() => import('../pages/parent-departments/ParentDepartmentForm'));
 const DesignationList = lazy(() => import('../pages/designations/DesignationList'));
+const DesignationForm = lazy(() => import('../pages/designations/DesignationForm'));
 const AttendanceList = lazy(() => import('../pages/attendance/AttendanceList'));
 const MyAttendance = lazy(() => import('../pages/attendance/MyAttendance'));
 const LeaveList = lazy(() => import('../pages/leaves/LeaveList'));
@@ -53,7 +57,24 @@ const AssetList = lazy(() => import('../pages/assets/AssetList'));
 const TicketList = lazy(() => import('../pages/helpdesk/TicketList'));
 const Reports = lazy(() => import('../pages/reports/Reports'));
 const ShiftList = lazy(() => import('../pages/shifts/ShiftList'));
+const ShiftForm = lazy(() => import('../pages/shifts/ShiftForm'));
 const NotFound = lazy(() => import('../pages/NotFound'));
+const EmployeeForm = lazy(() => import('../pages/employees/EmployeeForm'));
+const InviteUserForm = lazy(() => import('../pages/employees/InviteUserForm'));
+const AnnouncementForm = lazy(() => import('../pages/announcements/AnnouncementForm'));
+const AssetForm = lazy(() => import('../pages/assets/AssetForm'));
+const AttendanceForm = lazy(() => import('../pages/attendance/AttendanceForm'));
+const DocumentForm = lazy(() => import('../pages/documents/DocumentForm'));
+const ExpenseForm = lazy(() => import('../pages/expenses/ExpenseForm'));
+const TicketForm = lazy(() => import('../pages/helpdesk/TicketForm'));
+const HolidayForm = lazy(() => import('../pages/holidays/HolidayForm'));
+const LeaveTypeForm = lazy(() => import('../pages/leaves/LeaveTypeForm'));
+const TrainingForm = lazy(() => import('../pages/training/TrainingForm'));
+const TrainingEnrollForm = lazy(() => import('../pages/training/TrainingEnrollForm'));
+const JobForm = lazy(() => import('../pages/recruitment/JobForm'));
+const CompanyForm = lazy(() => import('../pages/admin/CompanyForm'));
+const UserForm = lazy(() => import('../pages/admin/UserForm'));
+const AdminInviteUserForm = lazy(() => import('../pages/admin/InviteUserForm'));
 
 function PageSkeleton() {
   return (
@@ -107,26 +128,45 @@ export default function AppRoutes() {
 
       {/* Platform admin only */}
       <Route path="/admin/companies" element={<R roles={['super_admin']}><CompanyManagement /></R>} />
+      <Route path="/admin/companies/create" element={<R roles={['super_admin']}><CompanyForm /></R>} />
+      <Route path="/admin/companies/:id/edit" element={<R roles={['super_admin']}><CompanyForm /></R>} />
 
       {/* Admin & HR */}
       <Route path="/admin/users" element={<R roles={['super_admin', ...ADMINS]}><UserManagement /></R>} />
+      <Route path="/admin/users/create" element={<R roles={['super_admin', ...ADMINS]}><UserForm /></R>} />
+      <Route path="/admin/users/invite" element={<R roles={['super_admin', ...ADMINS]}><AdminInviteUserForm /></R>} />
       <Route path="/onboarding/new" element={<Protected><KYCOnboarding /></Protected>} />
       <Route path="/onboarding/list" element={<R roles={ADMINS}><OnboardingList /></R>} />
       <Route path="/onboarding/:userId/fill" element={<R roles={ADMINS}><AdminFillOnboarding /></R>} />
       <Route path="/employees" element={<R roles={ADMINS}><EmployeeList /></R>} />
+      <Route path="/employees/create" element={<R roles={ADMINS}><EmployeeForm /></R>} />
+      <Route path="/employees/invite" element={<R roles={ADMINS}><InviteUserForm /></R>} />
       <Route path="/employees/:id" element={<R roles={ADMINS}><EmployeeProfile /></R>} />
       <Route path="/departments" element={<R roles={ADMINS}><DepartmentList /></R>} />
+      <Route path="/departments/create" element={<R roles={ADMINS}><DepartmentForm /></R>} />
+      <Route path="/departments/:id/edit" element={<R roles={ADMINS}><DepartmentForm /></R>} />
+      <Route path="/parent-departments" element={<R roles={ADMINS}><ParentDepartmentList /></R>} />
+      <Route path="/parent-departments/create" element={<R roles={ADMINS}><ParentDepartmentForm /></R>} />
+      <Route path="/parent-departments/:id/edit" element={<R roles={ADMINS}><ParentDepartmentForm /></R>} />
       <Route path="/designations" element={<R roles={ADMINS}><DesignationList /></R>} />
+      <Route path="/designations/create" element={<R roles={ADMINS}><DesignationForm /></R>} />
+      <Route path="/designations/:id/edit" element={<R roles={ADMINS}><DesignationForm /></R>} />
       <Route path="/payroll" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayrollList /></CS></R>} />
       <Route path="/payroll/payslip/:id" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayslipView /></CS></R>} />
       <Route path="/recruitment" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobPostings /></CS></R>} />
+      <Route path="/recruitment/create" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobForm /></CS></R>} />
+      <Route path="/recruitment/:id/edit" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobForm /></CS></R>} />
       <Route path="/recruitment/applications" element={<R roles={ADMINS}><CS moduleName="Recruitment"><Applications /></CS></R>} />
       <Route path="/reports" element={<R roles={ADMINS}><CS moduleName="Reports"><Reports /></CS></R>} />
       <Route path="/shifts" element={<R roles={ADMINS}><CS moduleName="Shifts"><ShiftList /></CS></R>} />
+      <Route path="/shifts/create" element={<R roles={ADMINS}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
+      <Route path="/shifts/:id/edit" element={<R roles={ADMINS}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
 
       {/* Management (admin + HR + manager) */}
       <Route path="/attendance" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceList /></CS></R>} />
+      <Route path="/attendance/mark" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceForm /></CS></R>} />
       <Route path="/leaves" element={<R roles={MANAGEMENT}><CS moduleName="Leave Management"><LeaveList /></CS></R>} />
+      <Route path="/leaves/types/create" element={<R roles={MANAGEMENT}><CS moduleName="Leave Management"><LeaveTypeForm /></CS></R>} />
 
       {/* All company roles */}
       <Route path="/attendance/my" element={<R roles={ALL_COMPANY}><CS moduleName="Attendance"><MyAttendance /></CS></R>} />
@@ -134,13 +174,21 @@ export default function AppRoutes() {
       <Route path="/performance" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><PerformanceList /></CS></R>} />
       <Route path="/performance/review/:id" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><ReviewForm /></CS></R>} />
       <Route path="/training" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingList /></CS></R>} />
+      <Route path="/training/create" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingForm /></CS></R>} />
       <Route path="/training/:id" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingDetail /></CS></R>} />
+      <Route path="/training/:id/enroll" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingEnrollForm /></CS></R>} />
       <Route path="/documents" element={<R roles={ALL_COMPANY}><CS moduleName="Documents"><DocumentList /></CS></R>} />
+      <Route path="/documents/upload" element={<R roles={ALL_COMPANY}><CS moduleName="Documents"><DocumentForm /></CS></R>} />
       <Route path="/holidays" element={<R roles={ALL_COMPANY}><CS moduleName="Holidays"><HolidayCalendar /></CS></R>} />
+      <Route path="/holidays/create" element={<R roles={ALL_COMPANY}><CS moduleName="Holidays"><HolidayForm /></CS></R>} />
       <Route path="/announcements" element={<R roles={ALL_COMPANY}><CS moduleName="Announcements"><AnnouncementList /></CS></R>} />
+      <Route path="/announcements/create" element={<R roles={ALL_COMPANY}><CS moduleName="Announcements"><AnnouncementForm /></CS></R>} />
       <Route path="/expenses" element={<R roles={['admin', 'hr_manager', 'manager', 'viewer']}><CS moduleName="Expenses"><ExpenseList /></CS></R>} />
+      <Route path="/expenses/create" element={<R roles={['admin', 'hr_manager', 'manager', 'viewer']}><CS moduleName="Expenses"><ExpenseForm /></CS></R>} />
       <Route path="/assets" element={<R roles={ALL_COMPANY}><CS moduleName="Assets"><AssetList /></CS></R>} />
+      <Route path="/assets/create" element={<R roles={ALL_COMPANY}><CS moduleName="Assets"><AssetForm /></CS></R>} />
       <Route path="/helpdesk" element={<R roles={ALL_COMPANY}><CS moduleName="Helpdesk"><TicketList /></CS></R>} />
+      <Route path="/helpdesk/create" element={<R roles={ALL_COMPANY}><CS moduleName="Helpdesk"><TicketForm /></CS></R>} />
       <Route path="*" element={<Suspense><NotFound /></Suspense>} />
     </Routes>
   );

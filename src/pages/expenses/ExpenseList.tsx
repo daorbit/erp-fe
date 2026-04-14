@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Input, Drawer, Form, Select, Tabs, Row, Col, Typography, Space, InputNumber, Popconfirm } from 'antd';
+import { Card, Table, Tag, Button, Input, Select, Tabs, Row, Col, Typography, Space, Popconfirm } from 'antd';
 import { App } from 'antd';
 import { Plus, Search, IndianRupee, Clock, CheckCircle2, Wallet } from 'lucide-react';
-import { useExpenseList, useCreateExpense, useApproveExpense, useRejectExpense } from '@/hooks/queries/useExpenses';
+import { useExpenseList, useApproveExpense, useRejectExpense } from '@/hooks/queries/useExpenses';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
@@ -17,11 +18,10 @@ const statusColor: Record<string, string> = {
 
 const ExpenseList: React.FC = () => {
   const { t } = useTranslation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const { message } = App.useApp();
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
@@ -29,7 +29,6 @@ const ExpenseList: React.FC = () => {
   const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useExpenseList({ tab: activeTab === 'all' ? undefined : activeTab });
-  const createMutation = useCreateExpense();
   const approveMutation = useApproveExpense();
   const rejectMutation = useRejectExpense();
 
@@ -49,21 +48,6 @@ const ExpenseList: React.FC = () => {
     { title: 'Approved', value: approvedCount, icon: <CheckCircle2 size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
     { title: 'Reimbursed', value: reimbursedCount, icon: <Wallet size={20} />, color: '#8b5cf6', bg: 'bg-purple-50 dark:bg-purple-950' },
   ];
-
-  const handleCreate = async (values: any) => {
-    try {
-      const payload: any = {
-        ...values,
-        date: values.date ? new Date(values.date).toISOString() : undefined,
-      };
-      await createMutation.mutateAsync(payload);
-      message.success('Expense claim created');
-      form.resetFields();
-      setDrawerOpen(false);
-    } catch {
-      message.error('Failed to create expense');
-    }
-  };
 
   const handleApprove = async (id: string) => {
     try {
@@ -132,7 +116,7 @@ const ExpenseList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('expenses')}</Title>
           <Text type="secondary">{t('manage_expenses')}</Text>
         </div>
-        {!isViewer && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('new_expense')}</Button>}
+        {!isViewer && <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/expenses/create')}>{t('new_expense')}</Button>}
       </div>
 
       <Row gutter={[16, 16]}>
@@ -165,41 +149,6 @@ const ExpenseList: React.FC = () => {
         <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 800 }} />
       </Card>
 
-      <Drawer title="New Expense Claim" open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={
-        <div className="flex justify-end gap-3">
-          <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
-        </div>
-      }>
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="title" label="Expense Title" rules={[{ required: true }]}>
-            <Input placeholder="e.g. Travel to client site" />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-              <Select placeholder="Category" options={[
-                { value: 'travel', label: 'Travel' },
-                { value: 'meals', label: 'Meals' },
-                { value: 'accommodation', label: 'Accommodation' },
-                { value: 'transportation', label: 'Transportation' },
-                { value: 'office_supplies', label: 'Office Supplies' },
-                { value: 'training', label: 'Training' },
-                { value: 'medical', label: 'Medical' },
-                { value: 'other', label: 'Other' },
-              ]} />
-            </Form.Item>
-            <Form.Item name="amount" label="Amount (INR)" rules={[{ required: true }]}>
-              <InputNumber className="w-full" min={1} placeholder="0" prefix="₹" />
-            </Form.Item>
-          </div>
-          <Form.Item name="date" label="Date" rules={[{ required: true }]}>
-            <Input type="date" />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} placeholder="Expense details..." />
-          </Form.Item>
-        </Form>
-      </Drawer>
     </div>
   );
 };

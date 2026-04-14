@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Drawer, Form, Input, InputNumber, Select, Typography, Row, Col, Space, Avatar } from 'antd';
+import { Card, Table, Tag, Button, Typography, Row, Col, Space, Avatar } from 'antd';
 import { App } from 'antd';
 import { Briefcase, Users, Calendar, CheckCircle2, Plus, Edit2 } from 'lucide-react';
-import { useJobList, useCreateJob, useUpdateJob } from '@/hooks/queries/useRecruitment';
-import { useDepartmentList } from '@/hooks/queries/useDepartments';
+import { useJobList } from '@/hooks/queries/useRecruitment';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
@@ -18,18 +18,12 @@ const statusColor: Record<string, string> = {
 
 const JobPostings: React.FC = () => {
   const { t } = useTranslation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editingJob, setEditingJob] = useState<any>(null);
-  const [form] = Form.useForm();
   const { message } = App.useApp();
+  const navigate = useNavigate();
 
   const { data: jobData, isLoading } = useJobList();
-  const createMutation = useCreateJob();
-  const updateMutation = useUpdateJob();
 
-  const { data: deptData } = useDepartmentList();
   const jobs: any[] = jobData?.data ?? [];
-  const departments: any[] = deptData?.data ?? [];
 
   const open = jobs.filter(j => j.status === 'open').length;
   const totalApplications = jobs.reduce((sum, j) => sum + (j.applicationCount || j.applications || 0), 0);
@@ -47,8 +41,6 @@ const JobPostings: React.FC = () => {
     { title: t('name'), dataIndex: 'title', key: 'title', render: (v: string) => <span className="font-medium">{v}</span> },
     {
       title: t('department'), dataIndex: 'department', key: 'department',
-      filters: departments.map((d: any) => ({ text: d.name, value: d.name })),
-      onFilter: (value: any, record: any) => record.department === value,
       render: (v: string) => <Tag color="blue">{v}</Tag>,
     },
     { title: 'Vacancies', dataIndex: 'vacancies', key: 'vacancies' },
@@ -67,43 +59,10 @@ const JobPostings: React.FC = () => {
     {
       title: t('actions'), key: 'actions',
       render: (_: any, r: any) => (
-        <Button size="small" type="link" icon={<Edit2 size={14} />} onClick={() => { setEditingJob(r); form.setFieldsValue(r); setDrawerOpen(true); }}>{t('edit')}</Button>
+        <Button size="small" type="link" icon={<Edit2 size={14} />} onClick={() => navigate(`/recruitment/${r._id || r.id}/edit`)}>{t('edit')}</Button>
       ),
     },
   ];
-
-  const handleSubmit = (values: any) => {
-    const payload: any = {
-      title: values.title,
-      department: values.department,
-      vacancies: values.vacancies,
-      description: values.description || '',
-      location: values.location || '',
-      experience: {
-        min: values.minExperience || 0,
-        max: values.maxExperience || 0,
-      },
-      status: values.status,
-      skills: values.skills || [],
-    };
-    // Remove undefined
-    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
-    if (editingJob) {
-      updateMutation.mutate({ id: editingJob._id || editingJob.id, data: payload }, {
-        onSuccess: () => { message.success('Job updated'); closeDrawer(); },
-      });
-    } else {
-      createMutation.mutate(payload, {
-        onSuccess: () => { message.success('Job created'); closeDrawer(); },
-      });
-    }
-  };
-
-  const closeDrawer = () => {
-    setDrawerOpen(false);
-    setEditingJob(null);
-    form.resetFields();
-  };
 
   return (
     <div className="space-y-6">
@@ -112,7 +71,7 @@ const JobPostings: React.FC = () => {
           <Title level={4} className="!mb-1">{t('job_postings')}</Title>
           <Text type="secondary">{t('manage_recruitment')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('create_job')}</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/recruitment/create')}>{t('create_job')}</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -137,49 +96,6 @@ const JobPostings: React.FC = () => {
         <Table columns={columns} dataSource={jobs} loading={isLoading} rowKey={(r) => r._id || r.id} pagination={{ pageSize: 10 }} scroll={{ x: 700 }} />
       </Card>
 
-      <Drawer title={editingJob ? 'Edit Job' : 'Create Job'} open={drawerOpen} onClose={closeDrawer} width={520}>
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="title" label="Job Title" rules={[{ required: true }]}>
-            <Input placeholder="e.g. Senior Software Engineer" />
-          </Form.Item>
-          <Form.Item name="department" label="Department" rules={[{ required: true }]}>
-            <Select placeholder="Select department" allowClear showSearch optionFilterProp="label" options={departments.map((d: any) => ({ value: d._id || d.id, label: d.name }))} />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="vacancies" label="Vacancies" rules={[{ required: true }]}>
-              <InputNumber min={1} className="w-full" />
-            </Form.Item>
-            <Form.Item name="status" label="Status" rules={[{ required: true }]}>
-              <Select placeholder="Status" options={[
-                { value: 'open', label: 'Open' },
-                { value: 'closed', label: 'Closed' },
-                { value: 'draft', label: 'Draft' },
-                { value: 'on_hold', label: 'On Hold' },
-              ]} />
-            </Form.Item>
-          </div>
-          <Form.Item name="location" label="Location" rules={[{ required: true }]}>
-            <Input placeholder="e.g. Bangalore, Remote" />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="minExperience" label="Min Experience (yrs)">
-              <InputNumber min={0} className="w-full" />
-            </Form.Item>
-            <Form.Item name="maxExperience" label="Max Experience (yrs)">
-              <InputNumber min={0} className="w-full" />
-            </Form.Item>
-          </div>
-          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-            <TextArea rows={4} placeholder="Job description..." />
-          </Form.Item>
-          <div className="flex justify-end gap-3">
-            <Button onClick={closeDrawer}>{t('cancel')}</Button>
-            <Button type="primary" htmlType="submit" loading={createMutation.isPending || updateMutation.isPending}>
-              {editingJob ? 'Update' : 'Create'}
-            </Button>
-          </div>
-        </Form>
-      </Drawer>
     </div>
   );
 };

@@ -38,6 +38,7 @@ export const navigationItems: NavItem[] = [
     titleKey: 'hr_management', icon: Contact, roles: ADMINS,
     children: [
       { titleKey: 'employees', href: '/employees', icon: Users },
+      { titleKey: 'parent_departments', href: '/parent-departments', icon: Building2 },
       { titleKey: 'departments', href: '/departments', icon: Building2 },
       { titleKey: 'designations', href: '/designations', icon: Award },
     ],

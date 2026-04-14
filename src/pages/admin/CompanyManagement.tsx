@@ -3,15 +3,12 @@ import { Card, Table, Tag, Button, Input, Typography, Row, Col, Space, Dropdown,
 import { Plus, Search, Edit2, Trash2, MoreVertical, Building2, CheckCircle2, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCompanyList, useDeleteCompany } from '@/hooks/queries/useCompanies';
-import CompanyForm from './CompanyForm';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
 const CompanyManagement: React.FC = () => {
   const { t } = useTranslation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState<any>(null);
   const [search, setSearch] = useState('');
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -113,10 +110,7 @@ const CompanyManagement: React.FC = () => {
                 key: 'edit',
                 icon: <Edit2 size={14} />,
                 label: t('edit'),
-                onClick: () => {
-                  setEditRecord(r);
-                  setDrawerOpen(true);
-                },
+                onClick: () => navigate(`/admin/companies/${r._id || r.id}/edit`),
               },
               {
                 key: 'delete',
@@ -147,10 +141,7 @@ const CompanyManagement: React.FC = () => {
         <Button
           type="primary"
           icon={<Plus size={16} />}
-          onClick={() => {
-            setEditRecord(null);
-            setDrawerOpen(true);
-          }}
+          onClick={() => navigate('/admin/companies/create')}
         >
           {t('add_company')}
         </Button>
@@ -197,14 +188,6 @@ const CompanyManagement: React.FC = () => {
         />
       </Card>
 
-      <CompanyForm
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setEditRecord(null);
-        }}
-        editData={editRecord}
-      />
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Input, Drawer, Form, Select, Row, Col, Typography, Space, Avatar, List, Divider } from 'antd';
+import { Card, Table, Tag, Button, Input, Drawer, Select, Row, Col, Typography, Space, Avatar, List, Divider } from 'antd';
 import { App } from 'antd';
 import { Plus, Search, AlertCircle, Clock, CheckCircle2, MessageSquare, Send } from 'lucide-react';
-import { useTicketList, useCreateTicket, useAddTicketComment, useUpdateTicketStatus } from '@/hooks/queries/useHelpdesk';
+import { useTicketList, useAddTicketComment, useUpdateTicketStatus } from '@/hooks/queries/useHelpdesk';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
@@ -18,13 +19,12 @@ const priorityColor: Record<string, string> = {
 
 const TicketList: React.FC = () => {
   const { t } = useTranslation();
-  const [createOpen, setCreateOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [searchText, setSearchText] = useState('');
   const [comment, setComment] = useState('');
   const { message } = App.useApp();
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
@@ -32,7 +32,6 @@ const TicketList: React.FC = () => {
   const isViewer = currentUser?.role === UserRole.VIEWER;
 
   const { data, isLoading } = useTicketList();
-  const createMutation = useCreateTicket();
   const commentMutation = useAddTicketComment();
   const statusMutation = useUpdateTicketStatus();
 
@@ -54,17 +53,6 @@ const TicketList: React.FC = () => {
     { title: 'In Progress', value: inProgressCount, icon: <Clock size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
     { title: 'Resolved Today', value: resolvedToday, icon: <CheckCircle2 size={20} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950' },
   ];
-
-  const handleCreate = async (values: any) => {
-    try {
-      await createMutation.mutateAsync(values);
-      message.success('Ticket created');
-      form.resetFields();
-      setCreateOpen(false);
-    } catch {
-      message.error('Failed to create ticket');
-    }
-  };
 
   const handleComment = async () => {
     if (!comment.trim() || !selectedTicket) return;
@@ -141,7 +129,7 @@ const TicketList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('helpdesk')}</Title>
           <Text type="secondary">{t('manage_helpdesk')}</Text>
         </div>
-        {!isViewer && <Button type="primary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>{t('create_ticket')}</Button>}
+        {!isViewer && <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/helpdesk/create')}>{t('create_ticket')}</Button>}
       </div>
 
       <Row gutter={[16, 16]}>
@@ -168,31 +156,6 @@ const TicketList: React.FC = () => {
         </div>
         <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 900 }} />
       </Card>
-
-      {/* Create Drawer */}
-      <Drawer title="New Ticket" open={createOpen} onClose={() => setCreateOpen(false)} width={500} footer={
-        <div className="flex justify-end gap-3">
-          <Button onClick={() => setCreateOpen(false)}>{t('cancel')}</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
-        </div>
-      }>
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="subject" label="Subject" rules={[{ required: true }]}>
-            <Input placeholder="Ticket subject" />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-              <Select placeholder="Category" options={['it', 'hr', 'admin', 'finance', 'facilities', 'other'].map(c => ({ value: c, label: c }))} />
-            </Form.Item>
-            <Form.Item name="priority" label="Priority" rules={[{ required: true }]}>
-              <Select placeholder="Priority" options={['low', 'medium', 'high', 'critical'].map(p => ({ value: p, label: p }))} />
-            </Form.Item>
-          </div>
-          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-            <Input.TextArea rows={4} placeholder="Describe your issue..." />
-          </Form.Item>
-        </Form>
-      </Drawer>
 
       {/* Detail Drawer */}
       <Drawer title={selectedTicket?.subject ?? 'Ticket Detail'} open={detailOpen} onClose={() => { setDetailOpen(false); setSelectedTicket(null); }} width={500}>

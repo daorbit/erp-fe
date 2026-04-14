@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Card, Table, Tag, Button, Input, Drawer, Form, Select, Row, Col, Typography, Space, Popconfirm } from 'antd';
 import { App } from 'antd';
 import { Plus, Search, Monitor, CheckCircle2, Package, Wrench, UserPlus, RotateCcw } from 'lucide-react';
-import { useAssetList, useCreateAsset, useAssignAsset, useReturnAsset } from '@/hooks/queries/useAssets';
+import { useAssetList, useAssignAsset, useReturnAsset } from '@/hooks/queries/useAssets';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppSelector } from '@/store';
 import { UserRole } from '@/types/enums';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
@@ -19,13 +20,12 @@ const conditionColor: Record<string, string> = {
 
 const AssetList: React.FC = () => {
   const { t } = useTranslation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const [searchText, setSearchText] = useState('');
   const { message } = App.useApp();
-  const [form] = Form.useForm();
   const [assignForm] = Form.useForm();
+  const navigate = useNavigate();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.HR_MANAGER;
@@ -37,7 +37,6 @@ const AssetList: React.FC = () => {
   const employeeOptions = employees.map((e: any) => { const u = e.userId || e; return { value: u._id || e._id, label: `${u.firstName || ''} ${u.lastName || ''} (${e.employeeId || ''})`.trim() }; });
 
   const { data, isLoading } = useAssetList();
-  const createMutation = useCreateAsset();
   const assignMutation = useAssignAsset();
   const returnMutation = useReturnAsset();
 
@@ -59,28 +58,6 @@ const AssetList: React.FC = () => {
     { title: 'In Repair', value: inRepair, icon: <Wrench size={20} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950' },
   ];
 
-  const handleCreate = async (values: any) => {
-    try {
-      const payload: any = {
-        name: values.name,
-        assetTag: values.assetTag,
-        category: values.category,
-        brand: values.brand,
-        condition: values.condition,
-        serialNumber: values.serialNumber,
-        purchaseDate: values.purchaseDate ? new Date(values.purchaseDate).toISOString() : undefined,
-        notes: values.description,
-      };
-      Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
-      await createMutation.mutateAsync(payload);
-      message.success('Asset created');
-      form.resetFields();
-      setDrawerOpen(false);
-    } catch {
-      message.error('Failed to create asset');
-    }
-  };
-
   const handleAssign = async (values: any) => {
     try {
       await assignMutation.mutateAsync({ id: selectedAsset._id ?? selectedAsset.id, data: values });
@@ -88,8 +65,8 @@ const AssetList: React.FC = () => {
       assignForm.resetFields();
       setAssignOpen(false);
       setSelectedAsset(null);
-    } catch {
-      message.error('Failed to assign asset');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to assign asset');
     }
   };
 
@@ -97,8 +74,8 @@ const AssetList: React.FC = () => {
     try {
       await returnMutation.mutateAsync({ id });
       message.success('Asset returned');
-    } catch {
-      message.error('Failed to return asset');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to return asset');
     }
   };
 
@@ -160,7 +137,7 @@ const AssetList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('assets')}</Title>
           <Text type="secondary">{t('manage_assets')}</Text>
         </div>
-        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => setDrawerOpen(true)}>{t('add_asset')}</Button>}
+        {isAdmin && <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/assets/create')}>{t('add_asset')}</Button>}
       </div>
 
       <Row gutter={[16, 16]}>
@@ -187,44 +164,6 @@ const AssetList: React.FC = () => {
         </div>
         <Table columns={columns} dataSource={filtered} rowKey={(r: any) => r._id ?? r.id} loading={isLoading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 900 }} />
       </Card>
-
-      <Drawer title={t('add_asset')} open={drawerOpen} onClose={() => setDrawerOpen(false)} width={500} footer={
-        <div className="flex justify-end gap-3">
-          <Button onClick={() => setDrawerOpen(false)}>{t('cancel')}</Button>
-          <Button type="primary" loading={createMutation.isPending} onClick={() => form.submit()}>{t('submit')}</Button>
-        </div>
-      }>
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="name" label="Asset Name" rules={[{ required: true }]}>
-            <Input placeholder="e.g. MacBook Pro 14" />
-          </Form.Item>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-              <Select placeholder="Category" options={['laptop', 'desktop', 'monitor', 'phone', 'furniture', 'other'].map(c => ({ value: c, label: c }))} />
-            </Form.Item>
-            <Form.Item name="brand" label="Brand">
-              <Input placeholder="Brand name" />
-            </Form.Item>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="assetTag" label="Asset Tag" rules={[{ required: true, pattern: /^AST-\d{4}-\d{3,}$/, message: 'Format: AST-YYYY-NNN' }]}>
-              <Input placeholder="e.g. AST-2026-001" />
-            </Form.Item>
-            <Form.Item name="condition" label="Condition" rules={[{ required: true }]}>
-              <Select placeholder="Condition" options={['new', 'good', 'fair', 'poor'].map(c => ({ value: c, label: c }))} />
-            </Form.Item>
-          </div>
-          <Form.Item name="serialNumber" label="Serial Number">
-            <Input placeholder="Serial number" />
-          </Form.Item>
-          <Form.Item name="purchaseDate" label="Purchase Date">
-            <Input type="date" />
-          </Form.Item>
-          <Form.Item name="description" label="Notes">
-            <Input.TextArea rows={2} placeholder="Additional notes" />
-          </Form.Item>
-        </Form>
-      </Drawer>
 
       <Drawer title={t('assign')} open={assignOpen} onClose={() => { setAssignOpen(false); setSelectedAsset(null); }} width={520} destroyOnClose extra={<Space><Button onClick={() => { setAssignOpen(false); setSelectedAsset(null); }}>{t('cancel')}</Button><Button type="primary" loading={assignMutation.isPending} onClick={() => assignForm.submit()}>{t('assign')}</Button></Space>}>
         <Form form={assignForm} layout="vertical" onFinish={handleAssign}>

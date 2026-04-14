@@ -7,6 +7,7 @@ const en: Record<string, string> = {
   hr_management: 'HR Management',
   employees: 'Employees',
   departments: 'Departments',
+  parent_departments: 'Parent Departments',
   designations: 'Designations',
   onboarding: 'Onboarding',
   new_employee_kyc: 'New Employee KYC',

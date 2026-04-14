@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Table, Tag, Button, Input, Typography, Row, Col, Space, Dropdown, App } from 'antd';
 import { Plus, Search, Edit2, Trash2, MoreVertical, Building2, Users, CheckCircle2 } from 'lucide-react';
 import { useDepartmentList, useDeleteDepartment } from '@/hooks/queries/useDepartments';
-import DepartmentForm from './DepartmentForm';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
 
 const DepartmentList: React.FC = () => {
   const { t } = useTranslation();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState<any>(null);
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const { message } = App.useApp();
 
@@ -34,14 +33,15 @@ const DepartmentList: React.FC = () => {
     try {
       await deleteMutation.mutateAsync(id);
       message.success('Department deleted');
-    } catch {
-      message.error('Failed to delete department');
+    } catch (err: any) {
+      message.error(err?.message || 'Failed to delete department');
     }
   };
 
   const columns = [
     { title: t('name'), dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
     { title: 'Code', dataIndex: 'code', key: 'code', render: (c: string) => <Tag>{c || '-'}</Tag> },
+    { title: 'Parent Department', dataIndex: 'parentDepartments', key: 'parentDepartments', render: (items: any[]) => items?.length ? items.map((p: any) => <Tag key={typeof p === 'object' ? p._id : p}>{typeof p === 'object' ? p.name : p}</Tag>) : '-' },
     { title: 'Head of Department', dataIndex: 'head', key: 'head', render: (h: any) => typeof h === 'object' ? h?.name : (h || '-') },
     { title: 'Employees', dataIndex: 'employeeCount', key: 'employeeCount', render: (c: number) => c ?? 0 },
     {
@@ -57,7 +57,7 @@ const DepartmentList: React.FC = () => {
       title: t('actions'), key: 'actions', width: 80,
       render: (_: any, r: any) => (
         <Dropdown menu={{ items: [
-          { key: 'edit', icon: <Edit2 size={14} />, label: t('edit'), onClick: () => { setEditRecord(r); setModalOpen(true); } },
+          { key: 'edit', icon: <Edit2 size={14} />, label: t('edit'), onClick: () => { navigate(`/departments/${r._id || r.id}/edit`); } },
           { key: 'delete', icon: <Trash2 size={14} />, label: t('delete'), danger: true, onClick: () => handleDelete(r._id || r.id) },
         ]}} trigger={['click']}>
           <Button type="text" icon={<MoreVertical size={16} />} />
@@ -73,7 +73,7 @@ const DepartmentList: React.FC = () => {
           <Title level={4} className="!mb-1">{t('departments')}</Title>
           <Text type="secondary">{t('manage_departments')}</Text>
         </div>
-        <Button type="primary" icon={<Plus size={16} />} onClick={() => { setEditRecord(null); setModalOpen(true); }}>{t('add_department')}</Button>
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => navigate('/departments/create')}>{t('add_department')}</Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -100,8 +100,6 @@ const DepartmentList: React.FC = () => {
         </div>
         <Table columns={columns} dataSource={filtered} loading={isLoading} rowKey={(r: any) => r._id || r.id || r.key} pagination={{ pageSize: 10 }} scroll={{ x: 700 }} />
       </Card>
-
-      <DepartmentForm open={modalOpen} onClose={() => { setModalOpen(false); setEditRecord(null); }} editData={editRecord} />
     </div>
   );
 };
