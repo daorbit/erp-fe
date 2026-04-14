@@ -112,7 +112,8 @@ const DesignationForm: React.FC = () => {
             <Card bordered={false}>
               <Form.Item
                 name="departments"
-                label={<Text strong>Department List</Text>}
+                label={<Text strong>Department List <Text type="danger">*</Text></Text>}
+                rules={[{ required: true, message: 'Select at least one department' }]}
               >
                 <Checkbox.Group className="w-full">
                   <div className="mb-3">
