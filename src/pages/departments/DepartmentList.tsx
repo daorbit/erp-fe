@@ -41,7 +41,8 @@ const DepartmentList: React.FC = () => {
   const columns = [
     { title: t('name'), dataIndex: 'name', key: 'name', render: (n: string) => <Text strong>{n}</Text> },
     { title: 'Short Name', dataIndex: 'shortName', key: 'shortName', render: (c: string) => <Tag>{c || '-'}</Tag> },
-    { title: 'Parent Department', dataIndex: 'parentDepartments', key: 'parentDepartments', render: (items: any[]) => items?.length ? items.map((p: any) => <Tag key={typeof p === 'object' ? p._id : p}>{typeof p === 'object' ? p.name : p}</Tag>) : '-' },
+    { title: 'Parent Department', dataIndex: 'parentDepartment', key: 'parentDepartment', render: (p: any) => p ? <Tag>{typeof p === 'object' ? p.name : p}</Tag> : '-' },
+    { title: 'Branches', dataIndex: 'branches', key: 'branches', render: (items: any[]) => items?.length ? items.map((b: any) => <Tag color="blue" key={typeof b === 'object' ? b._id : b}>{typeof b === 'object' ? b.name : b}</Tag>) : '-' },
     // { title: 'Head of Department', dataIndex: 'head', key: 'head', render: (h: any) => typeof h === 'object' ? h?.name : (h || '-') },
     { title: 'Display Order', dataIndex: 'displayOrder', key: 'displayOrder', render: (d: number) => d ?? 0 },
     { title: 'Employees', dataIndex: 'employeeCount', key: 'employeeCount', render: (c: number) => c ?? 0 },

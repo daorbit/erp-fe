@@ -5,6 +5,7 @@ import { ArrowLeft, Search } from 'lucide-react';
 import { useCreateDepartment, useUpdateDepartment, useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import { useParentDepartmentList } from '@/hooks/queries/useParentDepartments';
+import { useBranchList } from '@/hooks/queries/useBranches';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
@@ -20,22 +21,28 @@ const DepartmentForm: React.FC = () => {
   const { data: empData } = useEmployeeList();
   const { data: parentDeptData } = useParentDepartmentList();
   const { data: deptData } = useDepartmentList();
+  const { data: branchData } = useBranchList();
   const employees: any[] = empData?.data ?? [];
   const parentDepartments: any[] = parentDeptData?.data ?? [];
-  const [parentSearch, setParentSearch] = useState('');
+  const branches: any[] = branchData?.data ?? [];
+  const [branchSearch, setBranchSearch] = useState('');
 
   const isEdit = !!id;
   const editData = isEdit ? (deptData?.data ?? []).find((d: any) => (d._id || d.id) === id) : null;
 
   useEffect(() => {
     if (editData) {
-      const parentDepts = (editData.parentDepartments ?? []).map((p: any) =>
-        typeof p === 'object' ? p._id : p
+      const parentDept = editData.parentDepartment
+        ? (typeof editData.parentDepartment === 'object' ? editData.parentDepartment._id : editData.parentDepartment)
+        : undefined;
+      const branchIds = (editData.branches ?? []).map((b: any) =>
+        typeof b === 'object' ? b._id : b
       );
       form.setFieldsValue({
         name: editData.name,
         shortName: editData.shortName,
-        parentDepartments: parentDepts,
+        parentDepartment: parentDept,
+        branches: branchIds,
         // head: typeof editData.head === 'object' ? editData.head?._id : editData.head,
         displayOrder: editData.displayOrder,
         description: editData.description,
@@ -44,12 +51,12 @@ const DepartmentForm: React.FC = () => {
     }
   }, [editData, form]);
 
-  const filteredParentDepts = useMemo(() => {
-    if (!parentSearch) return parentDepartments;
-    return parentDepartments.filter((p: any) =>
-      p.name?.toLowerCase().includes(parentSearch.toLowerCase())
+  const filteredBranches = useMemo(() => {
+    if (!branchSearch) return branches;
+    return branches.filter((b: any) =>
+      b.name?.toLowerCase().includes(branchSearch.toLowerCase())
     );
-  }, [parentDepartments, parentSearch]);
+  }, [branches, branchSearch]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -94,13 +101,15 @@ const DepartmentForm: React.FC = () => {
                 </Form.Item>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                {/* <Form.Item name="head" label="Head of Department">
-                  <Select placeholder="Select HOD" allowClear showSearch optionFilterProp="label"
-                    options={employees.map((e: any) => ({ value: e._id || e.id, label: e.name || `${e.firstName ?? ''} ${e.lastName ?? ''}` }))} />
-                </Form.Item> */}
                 <Form.Item name="displayOrder" label="Display Order">
                   <Input type="number" placeholder="e.g. 1" />
                 </Form.Item>
+                <Form.Item name="parentDepartment" label="Parent Department" rules={[{ required: true, message: 'Parent department is required' }]}>
+                  <Select placeholder="Select parent department" allowClear showSearch optionFilterProp="label"
+                    options={parentDepartments.map((p: any) => ({ value: p._id || p.id, label: p.name }))} />
+                </Form.Item>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                 <Form.Item name="status" label="Status" initialValue="active">
                   <Select options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]} />
                 </Form.Item>
@@ -117,34 +126,33 @@ const DepartmentForm: React.FC = () => {
             </Card>
           </div>
 
-          {/* Right: Parent Department Checkbox List */}
+          {/* Right: Branch Checkbox List */}
           <div>
             <Card bordered={false}>
               <Form.Item
-                name="parentDepartments"
-                label={<Text strong>Parent Department List  </Text>}
-                rules={[{ required: true, message: 'Select at least one parent department' }]}
+                name="branches"
+                label={<Text strong>Branch List</Text>}
               >
                 <Checkbox.Group className="w-full">
                   <div className="mb-3">
                     <Input
                       prefix={<Search size={14} />}
                       placeholder="Search..."
-                      value={parentSearch}
-                      onChange={e => setParentSearch(e.target.value)}
+                      value={branchSearch}
+                      onChange={e => setBranchSearch(e.target.value)}
                       allowClear
                       size="small"
                     />
                   </div>
                   <Divider className="!my-2" />
                   <div className="max-h-[400px] overflow-y-auto space-y-2 pr-1">
-                    {filteredParentDepts.map((p: any) => (
-                      <div key={p._id || p.id}>
-                        <Checkbox value={p._id || p.id}>{p.name}</Checkbox>
+                    {filteredBranches.map((b: any) => (
+                      <div key={b._id || b.id}>
+                        <Checkbox value={b._id || b.id}>{b.name}</Checkbox>
                       </div>
                     ))}
-                    {filteredParentDepts.length === 0 && (
-                      <Text type="secondary" className="text-sm">No parent departments found</Text>
+                    {filteredBranches.length === 0 && (
+                      <Text type="secondary" className="text-sm">No branches found</Text>
                     )}
                   </div>
                 </Checkbox.Group>
