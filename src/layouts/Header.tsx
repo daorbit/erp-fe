@@ -81,7 +81,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
         <Tooltip title={collapsed ? t('expand_sidebar') : t('collapse_sidebar')}>
           <AntButton
             type="text"
-            icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelRightOpen size={18} />}
+            icon={collapsed ? <PanelLeftOpen size={18} className="mt-2"/> : <PanelRightOpen size={18} className="mt-2"/>}
             onClick={toggleSidebar}
             className="hidden md:inline-flex"
           />
