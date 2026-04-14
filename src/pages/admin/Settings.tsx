@@ -3,11 +3,11 @@ import {
   Card, Tabs, Input, Select, Switch, Button, Typography, Divider, Space, InputNumber, App,
 } from 'antd';
 import {
-  Save, Check, Sun, Moon, Droplet, Bell, Lock, Type, Globe, Palette,
+  Save, Check, Sun, Moon, Droplet, Bell, Lock, Type, Globe, Palette, Clock,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
-  setThemeMode, setThemeColor, setFontFamily, setLanguage, setBgStyle,
+  setThemeMode, setThemeColor, setFontFamily, setLanguage, setBgStyle, setTimezone,
 } from '@/store/uiSlice';
 import { colorPalettes, fontFamilies, bgPresets, type ThemeColor } from '@/config/theme';
 import { languages } from '@/config/i18n';
@@ -44,6 +44,7 @@ const Settings: React.FC = () => {
   const fontFamily = useAppSelector((s) => s.ui.fontFamily);
   const language = useAppSelector((s) => s.ui.language) as Language;
   const bgStyle = useAppSelector((s) => s.ui.bgStyle) || 'default';
+  const timezone = useAppSelector((s) => s.ui.timezone) || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
     Object.fromEntries(notificationItems.map((n) => [n.id, n.defaultOn])),
   );
@@ -318,6 +319,81 @@ const Settings: React.FC = () => {
               <Button type="primary" icon={<Save size={18} />} onClick={() => message.success('Security settings saved')}>
                 {t('save')} Security Settings
               </Button>
+            </div>
+          </Card>
+        </AnimateIn>
+      ),
+    },
+    {
+      key: 'timezone',
+      label: <span className="flex items-center gap-2"><Clock size={18} /> Timezone</span>,
+      children: (
+        <AnimateIn>
+          <Card size="small" title="Timezone Settings" className="!rounded-xl">
+            <div className="space-y-4 max-w-2xl">
+              <Text type="secondary">Choose your timezone. All dates and times across the app will be displayed in this timezone.</Text>
+              <Select
+                showSearch
+                className="w-full"
+                placeholder="Select timezone"
+                value={timezone}
+                onChange={(val) => dispatch(setTimezone(val))}
+                optionFilterProp="label"
+                options={[
+                  { label: '(UTC-12:00) Baker Island', value: 'Etc/GMT+12' },
+                  { label: '(UTC-11:00) Pago Pago', value: 'Pacific/Pago_Pago' },
+                  { label: '(UTC-10:00) Honolulu (HST)', value: 'Pacific/Honolulu' },
+                  { label: '(UTC-09:00) Anchorage (AKST)', value: 'America/Anchorage' },
+                  { label: '(UTC-08:00) Los Angeles (PST)', value: 'America/Los_Angeles' },
+                  { label: '(UTC-07:00) Denver (MST)', value: 'America/Denver' },
+                  { label: '(UTC-06:00) Chicago (CST)', value: 'America/Chicago' },
+                  { label: '(UTC-05:00) New York (EST)', value: 'America/New_York' },
+                  { label: '(UTC-04:00) Halifax (AST)', value: 'America/Halifax' },
+                  { label: '(UTC-03:30) St. Johns (NST)', value: 'America/St_Johns' },
+                  { label: '(UTC-03:00) São Paulo (BRT)', value: 'America/Sao_Paulo' },
+                  { label: '(UTC-02:00) South Georgia', value: 'Atlantic/South_Georgia' },
+                  { label: '(UTC-01:00) Azores', value: 'Atlantic/Azores' },
+                  { label: '(UTC+00:00) London (GMT)', value: 'Europe/London' },
+                  { label: '(UTC+01:00) Paris (CET)', value: 'Europe/Paris' },
+                  { label: '(UTC+02:00) Cairo (EET)', value: 'Africa/Cairo' },
+                  { label: '(UTC+03:00) Moscow (MSK)', value: 'Europe/Moscow' },
+                  { label: '(UTC+03:30) Tehran (IRST)', value: 'Asia/Tehran' },
+                  { label: '(UTC+04:00) Dubai (GST)', value: 'Asia/Dubai' },
+                  { label: '(UTC+04:30) Kabul (AFT)', value: 'Asia/Kabul' },
+                  { label: '(UTC+05:00) Karachi (PKT)', value: 'Asia/Karachi' },
+                  { label: '(UTC+05:30) Kolkata (IST)', value: 'Asia/Kolkata' },
+                  { label: '(UTC+05:45) Kathmandu (NPT)', value: 'Asia/Kathmandu' },
+                  { label: '(UTC+06:00) Dhaka (BST)', value: 'Asia/Dhaka' },
+                  { label: '(UTC+06:30) Yangon (MMT)', value: 'Asia/Yangon' },
+                  { label: '(UTC+07:00) Bangkok (ICT)', value: 'Asia/Bangkok' },
+                  { label: '(UTC+08:00) Singapore (SGT)', value: 'Asia/Singapore' },
+                  { label: '(UTC+08:00) Hong Kong (HKT)', value: 'Asia/Hong_Kong' },
+                  { label: '(UTC+09:00) Tokyo (JST)', value: 'Asia/Tokyo' },
+                  { label: '(UTC+09:30) Adelaide (ACST)', value: 'Australia/Adelaide' },
+                  { label: '(UTC+10:00) Sydney (AEST)', value: 'Australia/Sydney' },
+                  { label: '(UTC+11:00) Noumea (NCT)', value: 'Pacific/Noumea' },
+                  { label: '(UTC+12:00) Auckland (NZST)', value: 'Pacific/Auckland' },
+                  { label: '(UTC+13:00) Apia (WSST)', value: 'Pacific/Apia' },
+                ]}
+              />
+              <Card size="small" className="!rounded-lg">
+                <div className="text-sm">
+                  <Text type="secondary">Current time in selected timezone:</Text>
+                  <div className="text-lg font-semibold mt-1">
+                    {new Intl.DateTimeFormat('en-US', {
+                      timeZone: timezone,
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      timeZoneName: 'short',
+                    }).format(new Date())}
+                  </div>
+                </div>
+              </Card>
             </div>
           </Card>
         </AnimateIn>

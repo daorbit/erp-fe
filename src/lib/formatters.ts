@@ -1,3 +1,13 @@
+import { store } from '@/store';
+
+function getTimezone(): string {
+  try {
+    return store.getState().ui.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+}
+
 export function formatINR(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -11,6 +21,7 @@ export function formatDate(date: string | Date): string {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: getTimezone(),
   }).format(new Date(date));
 }
 
@@ -21,6 +32,7 @@ export function formatDateTime(date: string | Date): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: getTimezone(),
   }).format(new Date(date));
 }
 
@@ -28,6 +40,7 @@ export function formatTime(date: string | Date): string {
   return new Intl.DateTimeFormat('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: getTimezone(),
   }).format(new Date(date));
 }
 

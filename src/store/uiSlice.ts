@@ -15,6 +15,7 @@ interface UIState {
   borderRadius: BorderRadius;
   compactMode: boolean;
   bgStyle: string;
+  timezone: string;
 }
 
 function loadUIState(): UIState {
@@ -37,6 +38,7 @@ function getDefaults(): UIState {
     borderRadius: 'default',
     compactMode: false,
     bgStyle: 'default',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
 }
 
@@ -94,12 +96,16 @@ const uiSlice = createSlice({
       state.bgStyle = action.payload;
       persistUIState(state);
     },
+    setTimezone(state, action: PayloadAction<string>) {
+      state.timezone = action.payload;
+      persistUIState(state);
+    },
   },
 });
 
 export const {
   toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor,
   setFontFamily, setLanguage, setFontSize, setAnimationLevel,
-  setBorderRadius, setCompactMode, setBgStyle,
+  setBorderRadius, setCompactMode, setBgStyle, setTimezone,
 } = uiSlice.actions;
 export default uiSlice.reducer;
