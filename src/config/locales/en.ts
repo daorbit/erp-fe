@@ -214,6 +214,80 @@ const en: Record<string, string> = {
   results: 'results',
   of: 'of',
   page: 'Page',
+
+  // ─── NwayERP-style navigation (Master / Transaction / Reports / Setting) ───
+  nav_master: 'Master',
+  nav_transaction: 'Transaction',
+  nav_reports: 'Reports',
+  nav_setting: 'Setting',
+
+  // Master submodule parents
+  nav_parent_department: 'Parent Department',
+  nav_department: 'Department',
+  nav_designation: 'Designation',
+  nav_salary_head: 'Salary Head',
+  nav_salary_structure: 'Salary Structure',
+  nav_employee: 'Employee',
+  nav_leave: 'Leave',
+  nav_user: 'User',
+  nav_tds: 'TDS',
+  nav_other: 'Other',
+  nav_sim: 'Sim',
+  nav_employee_group: 'Employee Group',
+
+  // Shared leaf labels (reused across submodules; dedup'd by href)
+  nav_add: 'Add',
+  nav_list: 'List',
+  nav_merge: 'Merge',
+  nav_no_of_employee: 'No. of Employee',
+  nav_assign_salary_head: 'Assign Salary Head',
+
+  // Employee leaves
+  nav_employee_branch_shift: 'Employee Branch Shift',
+  nav_multiple_shift_transfer: 'Multiple Shift Transfer',
+  nav_resignation: 'Resignation',
+  nav_multiple_salary_struc: 'Multiple Salary Structure',
+  nav_multiple_salary_appraisal: 'Multiple Salary Appraisal',
+  nav_multiple_update: 'Multiple Update',
+  nav_multiple_branch_transfer: 'Multiple Branch Transfer',
+  nav_multiple_rep_emp_update: 'Multiple Rep. Emp. Update',
+  nav_full_and_final_statement: 'Full And Final Statement',
+  nav_temporary_employee: 'Temporary Employee',
+  nav_document_update: 'Document Update',
+
+  // Leave leaves
+  nav_leave_leaf: 'Leave',
+  nav_emp_leave_opening: 'Emp Leave Opening',
+  nav_closing_leave_transfer: 'Closing Leave Transfer',
+  nav_branch_wise_holiday: 'Branch Wise Holiday',
+  nav_leave_finyear: 'Leave Finyear',
+
+  // User leaves
+  nav_user_add: 'User Add',
+  nav_user_list: 'User List',
+  nav_user_rights: 'User Rights',
+  nav_reset_password: 'Reset Password',
+  nav_day_authorization: 'Day Authorization',
+
+  // TDS leaves
+  nav_exemption_master: 'Exemption Master',
+  nav_other_income_master: 'Other Income Master',
+
+  // Other leaves
+  nav_qualification: 'Qualification',
+  nav_bank: 'Bank',
+  nav_sms_email_alert: 'SMS Email Alert',
+  nav_tag: 'Tag',
+  nav_city: 'City',
+  nav_document: 'Document',
+  nav_shift: 'Shift',
+  nav_important_form: 'Important Form',
+  nav_level: 'Level',
+  nav_grade_form: 'Grade Form',
+  nav_att_upload_site: 'Att. Upload Site',
+  nav_att_auto_mail_sms_setting: 'Att. Auto Mail / SMS Setting',
+  nav_image_gallery: 'Image Gallery',
+  nav_manage_messages: 'Manage Messages',
 };
 
 export default en;

@@ -53,3 +53,22 @@ export function useDeleteDesignation() {
     },
   });
 }
+
+export function useMergeDesignations() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { fromDesignation: string; toDesignation: string }) =>
+      designationService.merge(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: designationKeys.all });
+    },
+  });
+}
+
+// Branch is optional — pass undefined to count across the whole company.
+export function useDesignationEmployeeCount(branchId?: string) {
+  return useQuery({
+    queryKey: [...designationKeys.all, 'employee-count', branchId ?? 'all'],
+    queryFn: () => designationService.employeeCount(branchId ? { branch: branchId } : undefined),
+  });
+}

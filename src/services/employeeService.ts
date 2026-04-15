@@ -35,6 +35,14 @@ const employeeService = {
 
   uploadDocument: (id: string, formData: FormData) =>
     api.post<any>(`${EMPLOYEES_URL}/${id}/documents`, formData),
+
+  /** Apply a whitelisted set of field updates to many employees at once. */
+  bulkUpdate: (employeeIds: string[], set: Record<string, unknown>) =>
+    api.post<any>(`${EMPLOYEES_URL}/bulk-update`, { employeeIds, set }),
+
+  /** Compute a Full & Final statement for one employee. */
+  fullAndFinal: (id: string) =>
+    api.get<any>(`${EMPLOYEES_URL}/${id}/full-and-final`),
 };
 
 export default employeeService;

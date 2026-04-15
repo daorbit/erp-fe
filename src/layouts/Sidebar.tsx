@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Layout, Menu, Avatar, Tooltip, Drawer } from 'antd';
+import { Layout, Menu, Avatar, Tooltip, Drawer, Input } from 'antd';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppDispatch } from '@/store';
 import { logout } from '@/store/authSlice';
-import { Settings, User, LogOut, Building2 } from 'lucide-react';
+import { Settings, User, LogOut, Building2, Search as SearchIcon } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import { navigationItems, type NavItem } from './navigation';
 import { useAppSelector } from '@/store';
@@ -32,30 +32,91 @@ interface SidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
 }
 
-function buildMenuItems(items: NavItem[], t: (key: string) => string): MenuProps['items'] {
+function buildMenuItems(items: NavItem[], t: (key: string) => string, depth = 0): MenuProps['items'] {
+  const iconSize = depth === 0 ? 18 : depth === 1 ? 16 : 14;
   return items.map((item) => {
     const Icon = item.icon;
-    if (item.children) {
+    if (item.children && item.children.length > 0) {
       return {
         key: item.titleKey,
-        icon: <Icon size={18} />,
+        icon: <Icon size={iconSize} />,
         label: t(item.titleKey),
-        children: item.children.map((child) => {
-          const ChildIcon = child.icon;
-          return {
-            key: child.href || child.titleKey,
-            icon: <ChildIcon size={16} />,
-            label: t(child.titleKey),
-          };
-        }),
+        children: buildMenuItems(item.children, t, depth + 1),
       };
     }
     return {
       key: item.href || item.titleKey,
-      icon: <Icon size={18} />,
+      icon: <Icon size={iconSize} />,
       label: t(item.titleKey),
     };
   });
+}
+
+// Walk the tree; return the titleKeys of every ancestor whose subtree contains `pathname`.
+function computeOpenKeys(items: NavItem[], pathname: string): string[] {
+  const open: string[] = [];
+  const walk = (nodes: NavItem[]): boolean => {
+    let hit = false;
+    for (const node of nodes) {
+      if (node.href === pathname) { hit = true; continue; }
+      if (node.children && walk(node.children)) {
+        open.push(node.titleKey);
+        hit = true;
+      }
+    }
+    return hit;
+  };
+  walk(items);
+  return open;
+}
+
+/**
+ * Filter the nav tree by case-insensitive search against translated titles.
+ * Keep a node if it matches OR any descendant matches; descendant pruning
+ * keeps the rendered subtree compact while preserving parent context.
+ */
+function filterNavBySearch(items: NavItem[], query: string, t: (key: string) => string): NavItem[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return items;
+
+  const recurse = (nodes: NavItem[]): NavItem[] => {
+    const out: NavItem[] = [];
+    for (const node of nodes) {
+      const title = t(node.titleKey).toLowerCase();
+      const selfMatches = title.includes(q);
+      if (node.children && node.children.length > 0) {
+        const childMatches = recurse(node.children);
+        if (selfMatches || childMatches.length > 0) {
+          // If the node itself matched, keep all its children so the user can
+          // see the full subtree. Otherwise keep only the matching descendants.
+          out.push({ ...node, children: selfMatches ? node.children : childMatches });
+        }
+      } else if (selfMatches) {
+        out.push(node);
+      }
+    }
+    return out;
+  };
+  return recurse(items);
+}
+
+/**
+ * Collect every parent titleKey in the tree — used as openKeys when searching
+ * so the user immediately sees all matching descendants without manually
+ * expanding submenus.
+ */
+function collectAllParentKeys(items: NavItem[]): string[] {
+  const keys: string[] = [];
+  const walk = (nodes: NavItem[]) => {
+    for (const node of nodes) {
+      if (node.children && node.children.length > 0) {
+        keys.push(node.titleKey);
+        walk(node.children);
+      }
+    }
+  };
+  walk(items);
+  return keys;
 }
 
 export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
@@ -74,19 +135,29 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
     onMobileOpenChange?.(false);
   };
 
-  const filteredNav = useMemo(() => filterNavByRole(navigationItems, user?.role), [user?.role]);
-  const menuItems = useMemo(() => buildMenuItems(filteredNav, t), [filteredNav, t]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const roleFilteredNav = useMemo(
+    () => filterNavByRole(navigationItems, user?.role),
+    [user?.role],
+  );
+  // When searching, narrow the role-filtered nav further by the query.
+  const visibleNav = useMemo(
+    () => filterNavBySearch(roleFilteredNav, searchQuery, t),
+    [roleFilteredNav, searchQuery, t],
+  );
+  const menuItems = useMemo(() => buildMenuItems(visibleNav, t), [visibleNav, t]);
   const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
 
-  const openKeys = useMemo(() => {
-    const keys: string[] = [];
-    filteredNav.forEach((item) => {
-      if (item.children?.some((c) => c.href === location.pathname)) {
-        keys.push(item.titleKey);
-      }
-    });
-    return keys;
-  }, [filteredNav, location.pathname]);
+  // While searching, expand every parent so the matches are visible.
+  // When not searching, fall back to the standard "open ancestors of current
+  // route" behaviour.
+  const openKeys = useMemo(
+    () => (searchQuery.trim()
+      ? collectAllParentKeys(visibleNav)
+      : computeOpenKeys(visibleNav, location.pathname)),
+    [visibleNav, searchQuery, location.pathname],
+  );
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key.startsWith('/')) {
@@ -120,9 +191,28 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         )}
       </div>
 
+      {/* Search — hidden when sidebar is collapsed because there's no room */}
+      {!collapsed && (
+        <div className={`shrink-0 px-3 pt-3 pb-2 ${isDark ? 'border-b border-white/[0.04]' : 'border-b border-slate-100'}`}>
+          <Input
+            size="small"
+            placeholder="Search..."
+            allowClear
+            prefix={<SearchIcon size={14} className={isDark ? 'text-white/40' : 'text-slate-400'} />}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      )}
+
       {/* Menu */}
       <div className="sidebar-scrollbar-hidden flex-1 overflow-y-auto overflow-x-hidden py-2">
         <Menu
+          // Re-mount the menu whenever the search query changes so
+          // `defaultOpenKeys` is re-applied (it's only honoured on mount).
+          // This makes search results auto-expand without us needing to flip
+          // to controlled openKeys (which would break user click-to-collapse).
+          key={searchQuery || 'idle'}
           mode="inline"
           theme={isDark ? 'dark' : 'light'}
           selectedKeys={selectedKeys}
@@ -132,6 +222,11 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
           inlineCollapsed={collapsed}
           style={{ border: 'none', background: 'transparent' }}
         />
+        {searchQuery.trim() && menuItems && menuItems.length === 0 && (
+          <div className={`px-4 py-3 text-xs ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
+            No menu items match “{searchQuery}”.
+          </div>
+        )}
       </div>
 
       {/* User Footer */}

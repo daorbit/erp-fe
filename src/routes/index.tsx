@@ -78,6 +78,70 @@ const CompanyForm = lazy(() => import('../pages/admin/CompanyForm'));
 const UserForm = lazy(() => import('../pages/admin/UserForm'));
 const AdminInviteUserForm = lazy(() => import('../pages/admin/InviteUserForm'));
 
+// Master (NwayERP-style)
+const MasterParentDepartmentAdd = lazy(() => import('../pages/master/parent-department/Add'));
+const MasterParentDepartmentList = lazy(() => import('../pages/master/parent-department/List'));
+const MasterDepartmentAdd = lazy(() => import('../pages/master/department/Add'));
+const MasterDepartmentList = lazy(() => import('../pages/master/department/List'));
+const MasterDepartmentMerge = lazy(() => import('../pages/master/department/Merge'));
+const MasterDesignationAdd = lazy(() => import('../pages/master/designation/Add'));
+const MasterDesignationList = lazy(() => import('../pages/master/designation/List'));
+const MasterDesignationMerge = lazy(() => import('../pages/master/designation/Merge'));
+const MasterDesignationEmployeeCount = lazy(() => import('../pages/master/designation/EmployeeCount'));
+const MasterEmployeeGroup = lazy(() => import('../pages/master/employee-group/Index'));
+const MasterSalaryHeadAdd = lazy(() => import('../pages/master/salary-head/Add'));
+const MasterSalaryHeadList = lazy(() => import('../pages/master/salary-head/List'));
+const MasterSalaryStructure = lazy(() => import('../pages/master/salary-structure/Index'));
+const MasterSalaryStructureAssignHead = lazy(() => import('../pages/master/salary-structure/AssignHead'));
+
+// Master → Other (13 simple masters)
+const MasterQualification = lazy(() => import('../pages/master/other/Qualification'));
+const MasterDocumentMaster = lazy(() => import('../pages/master/other/DocumentMaster'));
+const MasterTag = lazy(() => import('../pages/master/other/Tag'));
+const MasterLevel = lazy(() => import('../pages/master/other/Level'));
+const MasterGrade = lazy(() => import('../pages/master/other/Grade'));
+const MasterBank = lazy(() => import('../pages/master/other/Bank'));
+const MasterCity = lazy(() => import('../pages/master/other/City'));
+const MasterImportantForm = lazy(() => import('../pages/master/other/ImportantForm'));
+const MasterSimAdd = lazy(() => import('../pages/master/other/Sim'));
+const MasterSimList = lazy(() => import('../pages/master/other/SimList'));
+const MasterAttUploadSite = lazy(() => import('../pages/master/other/AttUploadSite'));
+const MasterAttAutoNotification = lazy(() => import('../pages/master/other/AttAutoNotification'));
+const MasterLeaveFinyear = lazy(() => import('../pages/master/leave/Finyear'));
+const MasterOtherIncome = lazy(() => import('../pages/master/tds/OtherIncome'));
+
+// Phase 2: Employee + Resignation + User + Leave + TDS + Other
+const MasterEmployeeAdd = lazy(() => import('../pages/master/employee/Add'));
+const MasterEmployeeList = lazy(() => import('../pages/master/employee/List'));
+const MasterEmployeeResignation = lazy(() => import('../pages/master/employee/Resignation'));
+const MasterUserAdd = lazy(() => import('../pages/master/user/UserAdd'));
+const MasterUserList = lazy(() => import('../pages/master/user/UserList'));
+const MasterUserRights = lazy(() => import('../pages/master/user/UserRights'));
+const MasterUserResetPassword = lazy(() => import('../pages/master/user/ResetPassword'));
+const MasterUserDayAuth = lazy(() => import('../pages/master/user/DayAuthorization'));
+const MasterLeaveType = lazy(() => import('../pages/master/leave/LeaveType'));
+const MasterEmpLeaveOpening = lazy(() => import('../pages/master/leave/EmpLeaveOpening'));
+const MasterClosingLeaveTransfer = lazy(() => import('../pages/master/leave/ClosingLeaveTransfer'));
+const MasterHoliday = lazy(() => import('../pages/master/leave/Holiday'));
+const MasterOptionalHoliday = lazy(() => import('../pages/master/leave/OptionalHoliday'));
+const MasterTdsExemption = lazy(() => import('../pages/master/tds/Exemption'));
+const MasterSmsEmailAlert = lazy(() => import('../pages/master/other/SmsEmailAlert'));
+const MasterImageGallery = lazy(() => import('../pages/master/other/ImageGallery'));
+const MasterManageMessages = lazy(() => import('../pages/master/other/ManageMessages'));
+
+// Phase 3: Employee auxiliary ops + Shift master
+const MasterEmployeeBranchShift = lazy(() => import('../pages/master/employee/BranchShift'));
+const MasterEmployeeMultipleShiftTransfer = lazy(() => import('../pages/master/employee/MultipleShiftTransfer'));
+const MasterEmployeeMultipleBranchTransfer = lazy(() => import('../pages/master/employee/MultipleBranchTransfer'));
+const MasterEmployeeMultipleUpdate = lazy(() => import('../pages/master/employee/MultipleUpdate'));
+const MasterEmployeeMultipleReportingUpdate = lazy(() => import('../pages/master/employee/MultipleReportingUpdate'));
+const MasterEmployeeMultipleSalaryStructure = lazy(() => import('../pages/master/employee/MultipleSalaryStructure'));
+const MasterEmployeeMultipleSalaryAppraisal = lazy(() => import('../pages/master/employee/MultipleSalaryAppraisal'));
+const MasterEmployeeFullAndFinal = lazy(() => import('../pages/master/employee/FullAndFinal'));
+const MasterEmployeeTemporary = lazy(() => import('../pages/master/employee/TemporaryEmployee'));
+const MasterEmployeeDocumentUpdate = lazy(() => import('../pages/master/employee/DocumentUpdate'));
+const MasterShift = lazy(() => import('../pages/master/other/Shift'));
+
 function PageSkeleton() {
   return (
     <div className="p-6 space-y-6">
@@ -194,7 +258,135 @@ export default function AppRoutes() {
       <Route path="/assets/create" element={<R roles={ALL_COMPANY}><CS moduleName="Assets"><AssetForm /></CS></R>} />
       <Route path="/helpdesk" element={<R roles={ALL_COMPANY}><CS moduleName="Helpdesk"><TicketList /></CS></R>} />
       <Route path="/helpdesk/create" element={<R roles={ALL_COMPANY}><CS moduleName="Helpdesk"><TicketForm /></CS></R>} />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Master — Parent Department (live)
+         ══════════════════════════════════════════════════════════════════════ */}
+      <Route path="/master/parent-department/add" element={<R roles={ADMINS}><MasterParentDepartmentAdd /></R>} />
+      <Route path="/master/parent-department/edit/:id" element={<R roles={ADMINS}><MasterParentDepartmentAdd /></R>} />
+      <Route path="/master/parent-department/list" element={<R roles={ADMINS}><MasterParentDepartmentList /></R>} />
+
+      {/* Master — Department (live) */}
+      <Route path="/master/department/add" element={<R roles={ADMINS}><MasterDepartmentAdd /></R>} />
+      <Route path="/master/department/edit/:id" element={<R roles={ADMINS}><MasterDepartmentAdd /></R>} />
+      <Route path="/master/department/list" element={<R roles={ADMINS}><MasterDepartmentList /></R>} />
+      <Route path="/master/department/merge" element={<R roles={ADMINS}><MasterDepartmentMerge /></R>} />
+
+      {/* Master — Designation (live) */}
+      <Route path="/master/designation/add" element={<R roles={ADMINS}><MasterDesignationAdd /></R>} />
+      <Route path="/master/designation/edit/:id" element={<R roles={ADMINS}><MasterDesignationAdd /></R>} />
+      <Route path="/master/designation/list" element={<R roles={ADMINS}><MasterDesignationList /></R>} />
+      <Route path="/master/designation/merge" element={<R roles={ADMINS}><MasterDesignationMerge /></R>} />
+      <Route path="/master/designation/employee-count" element={<R roles={ADMINS}><MasterDesignationEmployeeCount /></R>} />
+
+      {/* Master — Employee Group (combined page) */}
+      <Route path="/master/employee-group" element={<R roles={ADMINS}><MasterEmployeeGroup /></R>} />
+
+      {/* Master — Salary Head */}
+      <Route path="/master/salary-head/add" element={<R roles={ADMINS}><MasterSalaryHeadAdd /></R>} />
+      <Route path="/master/salary-head/edit/:id" element={<R roles={ADMINS}><MasterSalaryHeadAdd /></R>} />
+      <Route path="/master/salary-head/list" element={<R roles={ADMINS}><MasterSalaryHeadList /></R>} />
+
+      {/* Master — Salary Structure (combined Add+List + Assign Head) */}
+      <Route path="/master/salary-structure/list" element={<R roles={ADMINS}><MasterSalaryStructure /></R>} />
+      <Route path="/master/salary-structure/add" element={<R roles={ADMINS}><MasterSalaryStructure /></R>} />
+      <Route path="/master/salary-structure/assign" element={<R roles={ADMINS}><MasterSalaryStructureAssignHead /></R>} />
+
+      {/* Master → Other */}
+      <Route path="/master/other/qualification" element={<R roles={ADMINS}><MasterQualification /></R>} />
+      <Route path="/master/other/bank" element={<R roles={ADMINS}><MasterBank /></R>} />
+      <Route path="/master/other/tag" element={<R roles={ADMINS}><MasterTag /></R>} />
+      <Route path="/master/other/city" element={<R roles={ADMINS}><MasterCity /></R>} />
+      <Route path="/master/other/document" element={<R roles={ADMINS}><MasterDocumentMaster /></R>} />
+      <Route path="/master/other/important-form" element={<R roles={ADMINS}><MasterImportantForm /></R>} />
+      <Route path="/master/other/level" element={<R roles={ADMINS}><MasterLevel /></R>} />
+      <Route path="/master/other/grade-form" element={<R roles={ADMINS}><MasterGrade /></R>} />
+      <Route path="/master/other/attendance-upload-site" element={<R roles={ADMINS}><MasterAttUploadSite /></R>} />
+      <Route path="/master/other/attendance-auto-mail-sms" element={<R roles={ADMINS}><MasterAttAutoNotification /></R>} />
+      <Route path="/master/other/sim/add" element={<R roles={ADMINS}><MasterSimAdd /></R>} />
+      <Route path="/master/other/sim/list" element={<R roles={ADMINS}><MasterSimList /></R>} />
+
+      {/* Master → Leave */}
+      <Route path="/master/leave/finyear" element={<R roles={ADMINS}><MasterLeaveFinyear /></R>} />
+
+      {/* Master → TDS */}
+      <Route path="/master/tds/other-income" element={<R roles={ADMINS}><MasterOtherIncome /></R>} />
+      <Route path="/master/tds/exemption" element={<R roles={ADMINS}><MasterTdsExemption /></R>} />
+
+      {/* Master → Employee (Phase 2) */}
+      <Route path="/master/employee/add" element={<R roles={ADMINS}><MasterEmployeeAdd /></R>} />
+      <Route path="/master/employee/edit/:id" element={<R roles={ADMINS}><MasterEmployeeAdd /></R>} />
+      <Route path="/master/employee/list" element={<R roles={ADMINS}><MasterEmployeeList /></R>} />
+      <Route path="/master/employee/resignation" element={<R roles={ADMINS}><MasterEmployeeResignation /></R>} />
+
+      {/* Master → User */}
+      <Route path="/master/user/add" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
+      <Route path="/master/user/edit/:id" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
+      <Route path="/master/user/list" element={<R roles={ADMINS}><MasterUserList /></R>} />
+      <Route path="/master/user/rights" element={<R roles={ADMINS}><MasterUserRights /></R>} />
+      <Route path="/master/user/reset-password" element={<R roles={ADMINS}><MasterUserResetPassword /></R>} />
+      <Route path="/master/user/day-authorization" element={<R roles={ADMINS}><MasterUserDayAuth /></R>} />
+
+      {/* Master → Leave */}
+      <Route path="/master/leave/leave" element={<R roles={ADMINS}><MasterLeaveType /></R>} />
+      <Route path="/master/leave/opening" element={<R roles={ADMINS}><MasterEmpLeaveOpening /></R>} />
+      <Route path="/master/leave/closing-transfer" element={<R roles={ADMINS}><MasterClosingLeaveTransfer /></R>} />
+      <Route path="/master/leave/branch-holiday" element={<R roles={ADMINS}><MasterHoliday /></R>} />
+      <Route path="/master/leave/branch-holiday/optional" element={<R roles={ADMINS}><MasterOptionalHoliday /></R>} />
+
+      {/* Master → Other (Phase 2 remaining) */}
+      <Route path="/master/other/sms-email-alert" element={<R roles={ADMINS}><MasterSmsEmailAlert /></R>} />
+      <Route path="/master/other/image-gallery" element={<R roles={ADMINS}><MasterImageGallery /></R>} />
+      <Route path="/master/other/manage-messages" element={<R roles={ADMINS}><MasterManageMessages /></R>} />
+
+      {/* Master → Employee (Phase 3 auxiliary ops) */}
+      <Route path="/master/employee/branch-shift" element={<R roles={ADMINS}><MasterEmployeeBranchShift /></R>} />
+      <Route path="/master/employee/multiple-shift-transfer" element={<R roles={ADMINS}><MasterEmployeeMultipleShiftTransfer /></R>} />
+      <Route path="/master/employee/multiple-branch-transfer" element={<R roles={ADMINS}><MasterEmployeeMultipleBranchTransfer /></R>} />
+      <Route path="/master/employee/multiple-update" element={<R roles={ADMINS}><MasterEmployeeMultipleUpdate /></R>} />
+      <Route path="/master/employee/multiple-reporting-update" element={<R roles={ADMINS}><MasterEmployeeMultipleReportingUpdate /></R>} />
+      <Route path="/master/employee/multiple-salary-structure" element={<R roles={ADMINS}><MasterEmployeeMultipleSalaryStructure /></R>} />
+      <Route path="/master/employee/multiple-salary-appraisal" element={<R roles={ADMINS}><MasterEmployeeMultipleSalaryAppraisal /></R>} />
+      <Route path="/master/employee/full-and-final" element={<R roles={ADMINS}><MasterEmployeeFullAndFinal /></R>} />
+      <Route path="/master/employee/temporary" element={<R roles={ADMINS}><MasterEmployeeTemporary /></R>} />
+      <Route path="/master/employee/document-update" element={<R roles={ADMINS}><MasterEmployeeDocumentUpdate /></R>} />
+
+      {/* Master → Other — Shift */}
+      <Route path="/master/other/shift" element={<R roles={ADMINS}><MasterShift /></R>} />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          NwayERP-style Master / Transaction / Reports / Setting placeholders.
+          Each route renders ComingSoon with a descriptive module name.
+          Filled in progressively as the user provides per-module screenshots.
+         ══════════════════════════════════════════════════════════════════════ */}
+      {NEW_PLACEHOLDER_ROUTES.map(([path, label]) => (
+        <Route
+          key={path}
+          path={path}
+          element={<R roles={ADMINS}><ComingSoon moduleName={label}>{null}</ComingSoon></R>}
+        />
+      ))}
+
       <Route path="*" element={<Suspense><NotFound /></Suspense>} />
     </Routes>
   );
 }
+
+// Data-driven: one row per leaf route. Add entries here and they become live routes.
+const NEW_PLACEHOLDER_ROUTES: [path: string, label: string][] = [
+  // Top-level stubs
+  ['/transaction', 'Transaction'],
+  ['/reports-hub', 'Reports'],
+  ['/setting', 'Setting'],
+
+  // Master → Parent Department — LIVE (see routes above)
+  // Master → Department — LIVE (see routes above)
+
+  // Master → Designation — LIVE (see routes above)
+  // Master → Salary Head — LIVE (see routes above)
+  // Master → Salary Structure — LIVE (see routes above)
+
+  // All Master submodule routes are now LIVE — see the concrete Route
+  // declarations above. Only the top-level Transaction / Reports / Setting
+  // landing pages remain as placeholders until the user provides screenshots.
+];
