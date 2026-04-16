@@ -8,7 +8,7 @@ const { Title } = Typography;
 // which already renders the month-grid view shown in the NwayERP screenshot.
 const HolidayPage: React.FC = () => (
   <div className="space-y-4">
-    <div className="flex items-center justify-between border-b pb-3">
+    <div className="flex items-center justify-between  pb-3">
       <Title level={4} className="!mb-0">Holiday Calendar</Title>
     </div>
     <Card bordered={false}>

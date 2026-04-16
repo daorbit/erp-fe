@@ -61,7 +61,7 @@ const FullAndFinal: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b pb-3">
+      <div className="flex items-center justify-between  pb-3">
         <Title level={4} className="!mb-0">Full And Final Statement</Title>
         <Button type="link" icon={<ListIcon size={14} />} onClick={() => navigate('/master/employee/list')}>List</Button>
       </div>

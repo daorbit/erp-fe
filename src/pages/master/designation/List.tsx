@@ -88,7 +88,7 @@ const DesignationList: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b pb-3">
+      <div className="flex items-center justify-between  pb-3">
         <div>
           <Title level={4} className="!mb-0">Designation List</Title>
           <div style={{ fontSize: 12, color: '#999' }}>Total Number of Record : {total} Found</div>

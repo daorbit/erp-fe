@@ -57,7 +57,7 @@ const ParentDepartmentAdd: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Header bar: title on the left, List shortcut on the right (matches NwayERP). */}
-      <div className="flex items-center justify-between border-b pb-3">
+      <div className="flex items-center justify-between pb-3">
         <Title level={4} className="!mb-0">{isEdit ? 'Edit Parent Department' : 'Parent Department'}</Title>
         <Button
           type="link"
