@@ -35,8 +35,8 @@ function QuickAction({ icon, label, color, onClick }: QuickActionProps) {
           group-hover:scale-110 transition-all duration-200`}>
           {icon}
         </div>
-        <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400
-          group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors
+        <span className="text-[11px] font-medium text-[var(--text-secondary)]
+          group-hover:text-[var(--text-primary)] transition-colors
           text-center leading-tight truncate w-full">
           {label}
         </span>
@@ -66,29 +66,29 @@ function WidgetCard({ title, children, accentColor = 'from-cyan-500 to-blue-500'
   }, [onRefresh]);
 
   return (
-    <div className={`bg-white dark:bg-gray-800/60 rounded-2xl shadow-sm dark:shadow-none
-      border border-gray-100 dark:border-gray-700/50 overflow-hidden
+    <div className={`bg-[var(--bg-card)] rounded-2xl shadow-sm
+      border border-[var(--border-color)] overflow-hidden
       break-inside-avoid mb-5 ${className}`}>
       <div className={`h-0.5 bg-gradient-to-r ${accentColor}`} />
       <div className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center gap-2.5">
-          {icon && <span className="text-gray-400 dark:text-gray-500">{icon}</span>}
-          <h3 className="font-semibold text-sm text-gray-800 dark:text-gray-200 m-0">{title}</h3>
+          {icon && <span className="text-[var(--text-secondary)]">{icon}</span>}
+          <h3 className="font-semibold text-sm text-[var(--text-primary)] m-0">{title}</h3>
         </div>
         <div className="flex items-center gap-0.5">
           <button
             onClick={handleRefresh}
             className="w-7 h-7 flex items-center justify-center rounded-lg
-              hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600
-              dark:hover:text-gray-300 transition"
+              hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]
+              transition"
           >
             <RefreshCw size={13} className={spinning ? 'animate-spin' : ''} />
           </button>
           <button
             onClick={() => setCollapsed((c) => !c)}
             className="w-7 h-7 flex items-center justify-center rounded-lg
-              hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600
-              dark:hover:text-gray-300 transition"
+              hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]
+              transition"
           >
             {collapsed ? <Plus size={13} /> : <Minus size={13} />}
           </button>
@@ -106,7 +106,7 @@ function WidgetCard({ title, children, accentColor = 'from-cyan-500 to-blue-500'
 // ─── Empty Widget ────────────────────────────────────────────────────────────
 function WidgetEmpty({ text = 'No records found' }: { text?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
+    <div className="flex flex-col items-center justify-center py-8 text-[var(--text-secondary)]">
       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={text} />
     </div>
   );
@@ -161,7 +161,7 @@ const Dashboard: React.FC = () => {
 
       {/* ─── Dashboard heading ───────────────────────────────────────────── */}
       <AnimateIn variant="fadeIn">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mt-10">
+        <h2 className="text-lg font-bold text-[var(--text-primary)] mt-10">
           Dashboard
         </h2>
       </AnimateIn>
@@ -180,7 +180,7 @@ const Dashboard: React.FC = () => {
                 <div className="py-6 flex flex-col items-center gap-3">
                   <Input
                     placeholder="Enter Employee Name OR Employee Code"
-                    prefix={<Search size={14} className="text-gray-400" />}
+                    prefix={<Search size={14} className="text-[var(--text-secondary)]" />}
                     value={quickSearchQuery}
                     onChange={(e) => setQuickSearchQuery(e.target.value)}
                     className="!max-w-[340px]"
@@ -203,10 +203,10 @@ const Dashboard: React.FC = () => {
                       {(b.firstName || b.name || 'E')[0]}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      <div className="text-sm font-medium text-[var(--text-primary)] truncate">
                         {b.firstName || b.name || 'Employee'} {b.lastName || ''}
                       </div>
-                      <div className="text-xs text-gray-400 truncate">{b.department || b.designation || ''}</div>
+                      <div className="text-xs text-[var(--text-secondary)] truncate">{b.department || b.designation || ''}</div>
                     </div>
                   </div>
                 ))}
@@ -258,16 +258,16 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                   <button
                     onClick={() => onChange(value.subtract(1, 'month'))}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)]"
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="font-semibold text-sm text-gray-700 dark:text-gray-300">
+                  <span className="font-semibold text-sm text-[var(--text-primary)]">
                     {value.format('MMMM YYYY')}
                   </span>
                   <button
                     onClick={() => onChange(value.add(1, 'month'))}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)]"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -285,7 +285,7 @@ const Dashboard: React.FC = () => {
                 <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-1">
                   PAYROLL
                 </div>
-                <div className="text-xs text-gray-400">Company image gallery</div>
+                <div className="text-xs text-[var(--text-secondary)]">Company image gallery</div>
               </div>
             </div>
           </WidgetCard>
@@ -337,10 +337,10 @@ const Dashboard: React.FC = () => {
                       {(a.firstName || a.name || 'E')[0]}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      <div className="text-sm font-medium text-[var(--text-primary)] truncate">
                         {a.firstName || a.name || 'Employee'} {a.lastName || ''}
                       </div>
-                      <div className="text-xs text-gray-400 truncate">
+                      <div className="text-xs text-[var(--text-secondary)] truncate">
                         {a.years ? `${a.years} years` : a.joinDate ? fmtDate(a.joinDate) : ''}
                       </div>
                     </div>
