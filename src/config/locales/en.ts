@@ -439,6 +439,43 @@ const en: Record<string, string> = {
 
   // ─── Employee Search ────────────────────────────────────────────────────────
   nav_employee_search: 'Employee Search',
+
+  // ─── Admin Module navigation ────────────────────────────────────────────────
+  nav_adm_company: 'Company',
+  nav_adm_site_plant_project: 'Site / Plant / Project',
+  nav_adm_site_location: 'Site Location',
+  nav_adm_location_route: 'Location Route',
+  nav_adm_via_route: 'Via Route',
+  nav_adm_add_user_by_mapping: 'Add User By Mapping',
+  nav_adm_user_rights_summary: 'User Rights Summary',
+  nav_adm_day_auth_by_user: 'Day Authorization (By User)',
+  nav_adm_day_auth_by_entity: 'Day Authorization (By Entity)',
+  nav_adm_copy_site_right: 'Copy Site Right',
+  nav_adm_copy_user_site_right: 'Copy User Site Right',
+  nav_adm_message_from_mng: 'Message From Mng.',
+  nav_adm_gst: 'GST',
+  nav_adm_gst_master: 'GST Master',
+  nav_adm_state: 'State',
+  nav_adm_item_ledger_update: 'Item Ledger Update',
+  nav_adm_sms_alert_on_voucher: 'SMS Alert On Voucher',
+  nav_adm_mis_project_setting: 'MIS Project Setting',
+  nav_adm_front_image_gallery: 'Front Image Gallery',
+  nav_adm_site_document_master: 'Site Document Master',
+  nav_adm_mobile_app_count: 'Mobile App Count',
+
+  // Admin Module — Reports
+  nav_adm_login_log: 'Login Log',
+  nav_adm_company_report: 'Company Report',
+  nav_adm_site_report: 'Site Report',
+  nav_adm_location_report: 'Location Report',
+  nav_adm_voucher_status_report: 'Voucher Status Report',
+  nav_adm_user_work_report: 'User Work Report',
+  nav_adm_send_sms: 'Send SMS',
+  nav_adm_stock_report: 'Stock Report',
+  nav_adm_machine_insurance_alert: 'Machine Insurance Alert',
+  nav_adm_site_wise_users_list: 'Site Wise Users List',
+  nav_adm_user_right_summary: 'User Right Summary',
+  nav_adm_idle_user_report: 'Idle User Report',
 };
 
 export default en;

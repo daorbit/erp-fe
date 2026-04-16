@@ -19,6 +19,9 @@ import {
   // Setting additions
   Search, FileType, Notebook, HandCoins, DollarSign, Factory,
   SlidersHorizontal, ListChecks, ChevronsRight,
+  // Admin module additions
+  MapPinned, Route, Clipboard, FolderKey, Smartphone as SmartphoneIcon,
+  LogIn, Send, UsersRound, Clock4, FileWarning,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -518,3 +521,120 @@ export const navigationItems: NavItem[] = [
   { titleKey: 'audit_logs', href: '/admin/audit-logs', icon: Activity, roles: ['super_admin', 'admin'] },
   // { titleKey: 'settings', href: '/admin/settings', icon: Settings },
 ];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ADMIN Module Navigation (module switcher = "admin")
+// ══════════════════════════════════════════════════════════════════════════════
+export const adminModuleNav: NavItem[] = [
+  { titleKey: 'dashboard', href: '/admin-module', icon: LayoutDashboard },
+  {
+    titleKey: 'nav_master', icon: Database,
+    children: [
+      {
+        titleKey: 'nav_adm_company', icon: Building2,
+        children: [
+          { titleKey: 'nav_list', href: '/admin-module/master/company/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_adm_site_plant_project', icon: Building,
+        children: [
+          { titleKey: 'nav_add', href: '/admin-module/master/site/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/admin-module/master/site/list', icon: List },
+          { titleKey: 'nav_document', href: '/admin-module/master/site/document', icon: FileText },
+        ],
+      },
+      {
+        titleKey: 'nav_adm_site_location', icon: MapPinned,
+        children: [
+          { titleKey: 'nav_add', href: '/admin-module/master/site-location/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/admin-module/master/site-location/list', icon: List },
+          { titleKey: 'nav_adm_location_route', href: '/admin-module/master/site-location/location-route', icon: Route },
+          { titleKey: 'nav_adm_via_route', href: '/admin-module/master/site-location/via-route', icon: Route },
+        ],
+      },
+      {
+        titleKey: 'nav_user', icon: UserCog,
+        children: [
+          { titleKey: 'nav_add', href: '/admin-module/master/user/add', icon: Plus },
+          { titleKey: 'nav_adm_add_user_by_mapping', href: '/admin-module/master/user/add-by-mapping', icon: Link2 },
+          { titleKey: 'nav_list', href: '/admin-module/master/user/list', icon: List },
+          { titleKey: 'nav_adm_user_rights_summary', href: '/admin-module/master/user/rights-summary', icon: ShieldCheck },
+          { titleKey: 'nav_adm_day_auth_by_user', href: '/admin-module/master/user/day-auth-by-user', icon: CalendarCheck },
+          { titleKey: 'nav_adm_day_auth_by_entity', href: '/admin-module/master/user/day-auth-by-entity', icon: CalendarCheck },
+          { titleKey: 'nav_adm_copy_site_right', href: '/admin-module/master/user/copy-site-right', icon: Copy },
+          { titleKey: 'nav_adm_copy_user_site_right', href: '/admin-module/master/user/copy-user-site-right', icon: Copy },
+          { titleKey: 'nav_reset_password', href: '/admin-module/master/user/reset-password', icon: KeyRound },
+        ],
+      },
+      { titleKey: 'nav_adm_message_from_mng', href: '/admin-module/master/message-from-mng', icon: MessageSquare },
+      {
+        titleKey: 'nav_adm_gst', icon: Receipt,
+        children: [
+          { titleKey: 'nav_adm_gst_master', href: '/admin-module/master/gst/master', icon: Receipt },
+        ],
+      },
+      {
+        titleKey: 'nav_adm_state', icon: MapPin,
+        children: [
+          { titleKey: 'nav_add', href: '/admin-module/master/state/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/admin-module/master/state/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_city', icon: MapPin,
+        children: [
+          { titleKey: 'nav_add', href: '/admin-module/master/city/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/admin-module/master/city/list', icon: List },
+        ],
+      },
+      { titleKey: 'nav_adm_item_ledger_update', href: '/admin-module/master/item-ledger-update', icon: Clipboard },
+      {
+        titleKey: 'nav_adm_sms_alert_on_voucher', icon: BellRing,
+        children: [
+          { titleKey: 'nav_add', href: '/admin-module/master/sms-alert-voucher/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/admin-module/master/sms-alert-voucher/list', icon: List },
+        ],
+      },
+      { titleKey: 'nav_adm_mis_project_setting', href: '/admin-module/master/mis-project-setting', icon: Settings },
+      { titleKey: 'nav_adm_front_image_gallery', href: '/admin-module/master/front-image-gallery', icon: ImageIcon },
+      { titleKey: 'nav_adm_site_document_master', href: '/admin-module/master/site-document-master', icon: FolderOpen },
+      {
+        titleKey: 'nav_adm_mobile_app_count', icon: SmartphoneIcon,
+        children: [
+          { titleKey: 'nav_add', href: '/admin-module/master/mobile-app-count/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/admin-module/master/mobile-app-count/list', icon: List },
+        ],
+      },
+    ],
+  },
+  {
+    titleKey: 'nav_reports', icon: BarChart3,
+    children: [
+      { titleKey: 'nav_adm_login_log', href: '/admin-module/reports/login-log', icon: LogIn },
+      { titleKey: 'nav_adm_company_report', href: '/admin-module/reports/company', icon: Building2 },
+      { titleKey: 'nav_adm_site_report', href: '/admin-module/reports/site', icon: Building },
+      { titleKey: 'nav_adm_location_report', href: '/admin-module/reports/location', icon: MapPinned },
+      { titleKey: 'nav_adm_voucher_status_report', href: '/admin-module/reports/voucher-status', icon: FileCheck },
+      { titleKey: 'nav_adm_user_work_report', href: '/admin-module/reports/user-work', icon: UsersRound },
+      {
+        titleKey: 'nav_adm_send_sms', icon: Send,
+        children: [
+          { titleKey: 'nav_adm_stock_report', href: '/admin-module/reports/send-sms/stock-report', icon: FileBarChart },
+          { titleKey: 'nav_adm_machine_insurance_alert', href: '/admin-module/reports/send-sms/machine-insurance-alert', icon: FileWarning },
+        ],
+      },
+      { titleKey: 'nav_adm_site_wise_users_list', href: '/admin-module/reports/site-wise-users', icon: Users },
+      { titleKey: 'nav_adm_user_right_summary', href: '/admin-module/reports/user-right-summary', icon: ShieldCheck },
+      { titleKey: 'nav_adm_idle_user_report', href: '/admin-module/reports/idle-user', icon: Clock4 },
+    ],
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Module → Navigation map
+// ══════════════════════════════════════════════════════════════════════════════
+export const moduleNavigationMap: Record<string, NavItem[]> = {
+  human_resource: navigationItems,
+  admin: adminModuleNav,
+};

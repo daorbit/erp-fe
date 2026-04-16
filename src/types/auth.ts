@@ -23,6 +23,7 @@ export interface IUser {
   onboardingCompleted: boolean;
   isActive: boolean;
   lastLogin?: string;
+  allowedModules?: string[];
   createdAt: string;
   updatedAt: string;
 }

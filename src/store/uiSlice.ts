@@ -16,6 +16,7 @@ interface UIState {
   compactMode: boolean;
   bgStyle: string;
   timezone: string;
+  activeErpModule: string;
 }
 
 function loadUIState(): UIState {
@@ -39,6 +40,7 @@ function getDefaults(): UIState {
     compactMode: false,
     bgStyle: 'default',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    activeErpModule: 'human_resource',
   };
 }
 
@@ -100,12 +102,16 @@ const uiSlice = createSlice({
       state.timezone = action.payload;
       persistUIState(state);
     },
+    setActiveErpModule(state, action: PayloadAction<string>) {
+      state.activeErpModule = action.payload;
+      persistUIState(state);
+    },
   },
 });
 
 export const {
   toggleSidebar, setSidebarCollapsed, setThemeMode, setThemeColor,
   setFontFamily, setLanguage, setFontSize, setAnimationLevel,
-  setBorderRadius, setCompactMode, setBgStyle, setTimezone,
+  setBorderRadius, setCompactMode, setBgStyle, setTimezone, setActiveErpModule,
 } = uiSlice.actions;
 export default uiSlice.reducer;

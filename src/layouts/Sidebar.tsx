@@ -1,17 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Layout, Menu, Avatar, Tooltip, Drawer, Input } from 'antd';
+import { Layout, Menu, Avatar, Tooltip, Drawer, Input, Select } from 'antd';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppDispatch } from '@/store';
 import { logout } from '@/store/authSlice';
+import { setActiveErpModule } from '@/store/uiSlice';
 import { Settings, User, LogOut, Building2, Search as SearchIcon } from 'lucide-react';
 import type { MenuProps } from 'antd';
-import { navigationItems, type NavItem } from './navigation';
+import { navigationItems, moduleNavigationMap, type NavItem } from './navigation';
 import { useAppSelector } from '@/store';
 import EmployeeSearchDialog from '@/components/EmployeeSearchDialog';
 
 const { Sider } = Layout;
+
+import { ERP_MODULE_OPTIONS } from '@/types/enums';
 
 function filterNavByRole(items: NavItem[], userRole?: string): NavItem[] {
   return items
@@ -139,9 +142,51 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   const [searchQuery, setSearchQuery] = useState('');
   const [empSearchOpen, setEmpSearchOpen] = useState(false);
 
+  // Module switcher — only for company-level users (not platform super_admin).
+  // Company admin sees all modules (WIP ones disabled).
+  // Other users see only their allowedModules (WIP ones still disabled).
+  const userModuleOptions = useMemo(() => {
+    if (user?.role === 'super_admin') return []; // platform admin — no module switcher
+    const base = user?.role === 'admin'
+      ? ERP_MODULE_OPTIONS                                         // company admin sees all
+      : ERP_MODULE_OPTIONS.filter((m) => user?.allowedModules?.includes(m.value)); // others see assigned only
+    if (base.length === 0) return [];
+    return base.map((m) => ({
+      value: m.value,
+      label: m.enabled ? m.label : `${m.label} (WIP)`,
+      disabled: !m.enabled,
+    }));
+  }, [user?.role, user?.allowedModules]);
+
+  // Module → dashboard route mapping
+  const moduleDashboardRoute: Record<string, string> = {
+    human_resource: '/admin',
+    admin: '/admin-module',
+  };
+
+  // Active module from Redux (persisted in localStorage)
+  const activeModule = useAppSelector((s) => s.ui.activeErpModule) || 'human_resource';
+
+  // When module changes, persist to Redux/localStorage and navigate to that module's dashboard
+  const handleModuleChange = useCallback((value: string) => {
+    dispatch(setActiveErpModule(value));
+    const route = moduleDashboardRoute[value] || '/admin';
+    navigate(route);
+    onMobileOpenChange?.(false);
+  }, [dispatch, navigate, onMobileOpenChange]);
+
+  // Pick navigation tree based on active module.
+  // super_admin always uses the default navigationItems (platform nav).
+  // Company users switch nav based on their selected module.
+  const activeNavItems = useMemo(() => {
+    if (user?.role === 'super_admin') return navigationItems;
+    if (userModuleOptions.length === 0) return navigationItems; // no modules assigned → default HR nav
+    return moduleNavigationMap[activeModule] || navigationItems;
+  }, [user?.role, activeModule, userModuleOptions]);
+
   const roleFilteredNav = useMemo(
-    () => filterNavByRole(navigationItems, user?.role),
-    [user?.role],
+    () => filterNavByRole(activeNavItems, user?.role),
+    [activeNavItems, user?.role],
   );
   // When searching, narrow the role-filtered nav further by the query.
   const visibleNav = useMemo(
@@ -192,11 +237,27 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
                 : (typeof user?.company === 'object' && user?.company?.name) || 'ERP'}
             </span>
             <span className={`block ${isDark ? 'text-white/40' : 'text-slate-400'} text-[10px] font-medium`}>
-              {user?.role === 'super_admin' ? 'Platform Admin' : 'HR Management'}
+              {user?.role === 'super_admin'
+                ? 'Platform Admin'
+                : ERP_MODULE_OPTIONS.find((m) => m.value === activeModule)?.label || 'HR Management'}
             </span>
           </div>
         )}
       </div>
+
+      {/* Module Switcher — shown only when user has allowedModules assigned */}
+      {!collapsed && userModuleOptions.length > 0 && (
+        <div className={`shrink-0 px-3 pt-2.5 pb-2 ${isDark ? 'border-b border-white/[0.06]' : 'border-b border-slate-200'}`}>
+          <Select
+            size="small"
+            value={activeModule}
+            onChange={handleModuleChange}
+            options={userModuleOptions}
+            className="w-full"
+            popupMatchSelectWidth={false}
+          />
+        </div>
+      )}
 
       {/* Search — hidden when sidebar is collapsed because there's no room */}
       {!collapsed && (

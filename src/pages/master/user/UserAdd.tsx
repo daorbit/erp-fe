@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Card, Form, Input, Radio, Select, Button, Space, Typography, Checkbox, App,
 } from 'antd';
-import { USER_TYPE_OPTIONS, UserCategory } from '@/types/enums';
+import { USER_TYPE_OPTIONS, UserCategory, ERP_MODULE_OPTIONS } from '@/types/enums';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import api from '@/services/api';
@@ -35,6 +35,7 @@ const UserAdd: React.FC = () => {
         remark: values.remark,
         allowedDepartments: values.allowedDepartments ?? [],
         allowedBranches: values.allowedBranches ?? [],
+        allowedModules: values.allowedModules ?? [],
       };
       if (isEdit && id) {
         await api.put(`/admin/users/${id}`, payload);
@@ -101,6 +102,17 @@ const UserAdd: React.FC = () => {
             </Form.Item>
             <Form.Item name="allowedBranches" label="Branch" labelCol={{ span: 8 }} wrapperCol={{ span: 14 }}>
               <Select mode="multiple" placeholder="Select branches" options={opts(branches?.data ?? [])} />
+            </Form.Item>
+            <Form.Item name="allowedModules" label="ERP Modules" labelCol={{ span: 8 }} wrapperCol={{ span: 14 }}>
+              <Select
+                mode="multiple"
+                placeholder="Select modules"
+                options={ERP_MODULE_OPTIONS.map((m) => ({
+                  value: m.value,
+                  label: m.label,
+                  disabled: !m.enabled,
+                }))}
+              />
             </Form.Item>
           </div>
           <div className="flex justify-center mt-2">

@@ -145,6 +145,9 @@ const MasterEmployeeTemporary = lazy(() => import('../pages/master/employee/Temp
 const MasterEmployeeDocumentUpdate = lazy(() => import('../pages/master/employee/DocumentUpdate'));
 const MasterShift = lazy(() => import('../pages/master/other/Shift'));
 
+// Admin Module
+const AdminModuleDashboard = lazy(() => import('../pages/admin-module/Dashboard'));
+
 function PageSkeleton() {
   return (
     <div className="p-6 space-y-6">
@@ -378,10 +381,70 @@ export default function AppRoutes() {
         <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
       ))}
 
+      {/* ══════════════════════════════════════════════════════════════════════
+          Admin Module (ERP module = "admin") — dashboard + sub-routes
+         ══════════════════════════════════════════════════════════════════════ */}
+      <Route path="/admin-module" element={<R roles={ADMINS}><AdminModuleDashboard /></R>} />
+      {ADMIN_MODULE_ROUTES.map((path) => (
+        <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
+      ))}
+
       <Route path="*" element={<Suspense><NotFound /></Suspense>} />
     </Routes>
   );
 }
+
+// ─── Admin Module routes (InProgress) ─────────────────────────────────────────
+const ADMIN_MODULE_ROUTES: string[] = [
+  // Master → Company
+  '/admin-module/master/company/list',
+  // Master → Site / Plant / Project
+  '/admin-module/master/site/add',
+  '/admin-module/master/site/list',
+  '/admin-module/master/site/document',
+  // Master → Site Location
+  '/admin-module/master/site-location/add',
+  '/admin-module/master/site-location/list',
+  '/admin-module/master/site-location/location-route',
+  '/admin-module/master/site-location/via-route',
+  // Master → User
+  '/admin-module/master/user/add',
+  '/admin-module/master/user/add-by-mapping',
+  '/admin-module/master/user/list',
+  '/admin-module/master/user/rights-summary',
+  '/admin-module/master/user/day-auth-by-user',
+  '/admin-module/master/user/day-auth-by-entity',
+  '/admin-module/master/user/copy-site-right',
+  '/admin-module/master/user/copy-user-site-right',
+  '/admin-module/master/user/reset-password',
+  // Master → Others
+  '/admin-module/master/message-from-mng',
+  '/admin-module/master/gst/master',
+  '/admin-module/master/state/add',
+  '/admin-module/master/state/list',
+  '/admin-module/master/city/add',
+  '/admin-module/master/city/list',
+  '/admin-module/master/item-ledger-update',
+  '/admin-module/master/sms-alert-voucher/add',
+  '/admin-module/master/sms-alert-voucher/list',
+  '/admin-module/master/mis-project-setting',
+  '/admin-module/master/front-image-gallery',
+  '/admin-module/master/site-document-master',
+  '/admin-module/master/mobile-app-count/add',
+  '/admin-module/master/mobile-app-count/list',
+  // Reports
+  '/admin-module/reports/login-log',
+  '/admin-module/reports/company',
+  '/admin-module/reports/site',
+  '/admin-module/reports/location',
+  '/admin-module/reports/voucher-status',
+  '/admin-module/reports/user-work',
+  '/admin-module/reports/send-sms/stock-report',
+  '/admin-module/reports/send-sms/machine-insurance-alert',
+  '/admin-module/reports/site-wise-users',
+  '/admin-module/reports/user-right-summary',
+  '/admin-module/reports/idle-user',
+];
 
 // ─── Transaction routes (InProgress) ──────────────────────────────────────────
 const TRANSACTION_ROUTES: string[] = [

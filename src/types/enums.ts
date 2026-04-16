@@ -524,6 +524,33 @@ export const USER_TYPE_OPTIONS = [
   { value: UserType.USER, label: 'USER' },
 ];
 
+export enum ErpModule {
+  ADMIN = 'admin',
+  ADMIN_ACCOUNTS = 'admin_accounts',
+  CORRESPONDENCE = 'correspondence',
+  HUMAN_RESOURCE = 'human_resource',
+  MACHINERY = 'machinery',
+  MIS_ADMIN = 'mis_admin',
+  PRODUCTION = 'production',
+  PROJECT_MANAGEMENT = 'project_management',
+  PURCHASE = 'purchase',
+  STORE = 'store',
+  TENDER = 'tender',
+}
+export const ERP_MODULE_OPTIONS: { value: ErpModule; label: string; enabled: boolean }[] = [
+  { value: ErpModule.ADMIN, label: 'ADMIN', enabled: true },
+  { value: ErpModule.ADMIN_ACCOUNTS, label: 'ADMIN-ACCOUNTS', enabled: false },
+  { value: ErpModule.CORRESPONDENCE, label: 'CORRESPONDENCE', enabled: false },
+  { value: ErpModule.HUMAN_RESOURCE, label: 'HUMAN-RESOURCE', enabled: true },
+  { value: ErpModule.MACHINERY, label: 'MACHINERY', enabled: false },
+  { value: ErpModule.MIS_ADMIN, label: 'MIS-ADMIN', enabled: false },
+  { value: ErpModule.PRODUCTION, label: 'PRODUCTION', enabled: false },
+  { value: ErpModule.PROJECT_MANAGEMENT, label: 'PROJECT-MANAGEMENT', enabled: false },
+  { value: ErpModule.PURCHASE, label: 'PURCHASE', enabled: false },
+  { value: ErpModule.STORE, label: 'STORE', enabled: false },
+  { value: ErpModule.TENDER, label: 'TENDER', enabled: false },
+];
+
 export const TITLE_OPTIONS = [
   { value: 'Mr.', label: 'Mr.' },
   { value: 'Mrs.', label: 'Mrs.' },
