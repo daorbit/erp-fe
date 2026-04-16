@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { Card, Typography, Row, Col, Input, Table, Calendar, Tag, Empty, Select } from 'antd';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Card, Typography, Row, Col, Input, Table, Calendar, Tag, Empty, Select, Tooltip } from 'antd';
 import {
   Users, ClipboardList, Clock, Palmtree, CalendarCheck, Banknote,
   CircleDollarSign, IndianRupee, UserCheck, UserX, Search,
   Cake, PartyPopper, FileCheck, UserPlus, CarFront, Award, AlertTriangle,
-  Megaphone, ChevronRight,
+  Megaphone, ChevronRight, RefreshCw, Minus, Plus,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -53,9 +53,19 @@ interface WidgetCardProps {
   borderColor?: string;
   className?: string;
   minHeight?: number;
+  onRefresh?: () => void;
 }
 
-function WidgetCard({ title, children, borderColor = 'border-t-cyan-500', className = '', minHeight = 220 }: WidgetCardProps) {
+function WidgetCard({ title, children, borderColor = 'border-t-cyan-500', className = '', minHeight = 220, onRefresh }: WidgetCardProps) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [spinning, setSpinning] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setSpinning(true);
+    onRefresh?.();
+    setTimeout(() => setSpinning(false), 600);
+  }, [onRefresh]);
+
   return (
     <Card
       bordered={false}
@@ -65,10 +75,30 @@ function WidgetCard({ title, children, borderColor = 'border-t-cyan-500', classN
       <div className={`border-t-[3px] ${borderColor}`}>
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
           <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{title}</span>
+          <div className="flex items-center gap-1">
+            <Tooltip title="Refresh">
+              <button
+                onClick={handleRefresh}
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+              >
+                <RefreshCw size={13} className={spinning ? 'animate-spin' : ''} />
+              </button>
+            </Tooltip>
+            <Tooltip title={collapsed ? 'Expand' : 'Collapse'}>
+              <button
+                onClick={() => setCollapsed((c) => !c)}
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+              >
+                {collapsed ? <Plus size={13} /> : <Minus size={13} />}
+              </button>
+            </Tooltip>
+          </div>
         </div>
-        <div className="px-4 py-3" style={{ minHeight }}>
-          {children}
-        </div>
+        {!collapsed && (
+          <div className="px-4 py-3" style={{ minHeight }}>
+            {children}
+          </div>
+        )}
       </div>
     </Card>
   );
