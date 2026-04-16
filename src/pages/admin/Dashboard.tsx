@@ -6,7 +6,7 @@ import {
   Cake, PartyPopper, RefreshCw, Minus, Plus,
   ChevronLeft, ChevronRight, UserPlus, CarFront, Award,
   AlertTriangle, Megaphone, FileText, ShieldCheck, BriefcaseBusiness,
-  LayoutGrid, TrendingUp,
+  TrendingUp,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -274,20 +274,6 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
             />
-          </WidgetCard>
-        </AnimateIn>
-
-        {/* Image Gallery */}
-        <AnimateIn variant="fadeUp" delay={0.2}>
-          <WidgetCard title="Image Gallery" accentColor="from-yellow-400 to-orange-500" icon={<LayoutGrid size={16} />}>
-            <div className="flex items-center justify-center h-[180px] bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl">
-              <div className="text-center">
-                <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-1">
-                  PAYROLL
-                </div>
-                <div className="text-xs text-[var(--text-secondary)]">Company image gallery</div>
-              </div>
-            </div>
           </WidgetCard>
         </AnimateIn>
 
