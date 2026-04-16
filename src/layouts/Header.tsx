@@ -59,7 +59,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
       {notifications.map((n, i) => (
         <div
           key={i}
-          className="py-2 border-b last:border-b-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-1 rounded"
+          className="py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 px-1 rounded"
         >
           <div className="text-sm font-medium">{n.name}</div>
           <div className="text-xs text-gray-500">{n.message} — {n.time}</div>
