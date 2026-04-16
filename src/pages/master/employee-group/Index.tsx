@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Card, Form, Input, Button, Space, Typography, Checkbox, App, Alert, Table, Popconfirm, InputNumber,
+  Card, Form, Input, Button, Typography, Checkbox, App, Alert, Table, Popconfirm, InputNumber,
 } from 'antd';
 import { Edit2, Trash2 } from 'lucide-react';
 import {
@@ -121,93 +121,102 @@ const EmployeeGroupPage: React.FC = () => {
     },
   ];
 
+  const [branchSearch, setBranchSearch] = useState('');
+  const filteredBranches = useMemo(
+    () => branches.filter((b: any) => b.name?.toLowerCase().includes(branchSearch.toLowerCase())),
+    [branches, branchSearch],
+  );
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between  pb-3">
-        <Title level={4} className="!mb-0">Employee Group</Title>
-      </div>
+      <Title level={4} className="!mb-0">Employee Group</Title>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* Top section: form + branch card */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 items-start">
         {/* Left — form */}
         <Card bordered={false}>
-          <Form form={form} layout="horizontal" onFinish={handleSubmit}>
-            <Form.Item
-              name="name"
-              label="Employee Group"
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              rules={[{ required: true, message: 'Employee Group name is required' }]}
-            >
-              <Input maxLength={100} autoFocus />
-            </Form.Item>
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <Form.Item
+                name="name"
+                label={<> Employee Group</>}
+                rules={[{ required: true, message: 'Employee Group name is required' }]}
+              >
+                <Input placeholder="e.g. Group A" maxLength={100} autoFocus />
+              </Form.Item>
 
-            <Form.Item
-              name="shortName"
-              label="Short Name"
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-            >
-              <Input maxLength={20} style={{ width: 220 }} />
-            </Form.Item>
+              <Form.Item name="shortName" label="Short Name">
+                <Input placeholder="e.g. GA" maxLength={20} />
+              </Form.Item>
+            </div>
 
-            <Form.Item
-              label={<span>Branch List <Text type="danger">*</Text></span>}
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-            >
-              <div className="border rounded p-3 max-h-[360px] overflow-y-auto">
-                {branches.length === 0 ? (
-                  <Alert type="warning" message="No branches available." showIcon />
-                ) : (
-                  <>
-                    <Checkbox checked={allChecked} indeterminate={indeterminate}
-                      onChange={(e) => handleAllToggle(e.target.checked)}
-                      style={{ fontWeight: 600, marginBottom: 8 }}>
-                      ALL
-                    </Checkbox>
-                    <Checkbox.Group value={selectedBranches}
-                      onChange={(vals) => setSelectedBranches(vals as string[])}
-                      style={{ display: 'flex', flexDirection: 'column' }}>
-                      {branches.map((b: any) => (
-                        <Checkbox key={b._id || b.id} value={b._id || b.id}>{b.name}</Checkbox>
-                      ))}
-                    </Checkbox.Group>
-                  </>
-                )}
-              </div>
-            </Form.Item>
-
-            <div className="flex justify-center">
-              <Space>
-                <Button type="primary" htmlType="submit"
-                  loading={createMutation.isPending || updateMutation.isPending}>
-                  Save
-                </Button>
-                <Button onClick={resetForm}>Clear</Button>
-                <Button onClick={resetForm}>Close</Button>
-              </Space>
+            <div className="flex gap-3 mt-2">
+              <Button onClick={resetForm}>Cancel</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={createMutation.isPending || updateMutation.isPending}
+              >
+                {editingId ? 'Update' : 'Create'}
+              </Button>
             </div>
           </Form>
         </Card>
 
-        {/* Right — list */}
-        <Card bordered={false}>
-          <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: '70px 1fr 110px 70px 70px' }}>
-            <Input size="small" placeholder="#" value={filters.sno}
-              onChange={(e) => setFilters({ ...filters, sno: e.target.value })} />
-            <Input size="small" placeholder="Filter Group" value={filters.name}
-              onChange={(e) => setFilters({ ...filters, name: e.target.value })} allowClear />
-            <InputNumber size="small" placeholder="#"
-              value={filters.siteCount ? Number(filters.siteCount) : undefined}
-              onChange={(v) => setFilters({ ...filters, siteCount: v == null ? '' : String(v) })}
-              className="w-full" />
-            <div /><div />
+        {/* Right — Branch List */}
+        <Card
+          title={<><Text type="danger">*</Text> Branch List</>}
+          bordered={false}
+          bodyStyle={{ padding: '12px 16px' }}
+          className="h-fit"
+        >
+          <Input.Search
+            placeholder="Search..."
+            allowClear
+            value={branchSearch}
+            onChange={(e) => setBranchSearch(e.target.value)}
+            className="mb-3"
+          />
+          <div className="max-h-[280px] overflow-y-auto space-y-2">
+            {branches.length === 0 ? (
+              <Alert type="warning" message="No branches available." showIcon />
+            ) : (
+              <>
+                <Checkbox checked={allChecked} indeterminate={indeterminate}
+                  onChange={(e) => handleAllToggle(e.target.checked)}
+                  style={{ fontWeight: 600 }}>
+                  ALL
+                </Checkbox>
+                <Checkbox.Group value={selectedBranches}
+                  onChange={(vals) => setSelectedBranches(vals as string[])}
+                  className="flex flex-col gap-1">
+                  {filteredBranches.map((b: any) => (
+                    <Checkbox key={b._id || b.id} value={b._id || b.id}>{b.name}</Checkbox>
+                  ))}
+                </Checkbox.Group>
+              </>
+            )}
           </div>
-          <Table columns={columns} dataSource={filtered} loading={isLoading}
-            rowKey={(r: any) => r._id || r.id} pagination={{ pageSize: 20 }}
-            size="small" bordered />
         </Card>
       </div>
+
+      {/* Bottom — list table */}
+      <Card bordered={false}>
+        <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: '70px 1fr 110px 70px 70px' }}>
+          <Input size="small" placeholder="#" value={filters.sno}
+            onChange={(e) => setFilters({ ...filters, sno: e.target.value })} />
+          <Input size="small" placeholder="Filter Group" value={filters.name}
+            onChange={(e) => setFilters({ ...filters, name: e.target.value })} allowClear />
+          <InputNumber size="small" placeholder="#"
+            value={filters.siteCount ? Number(filters.siteCount) : undefined}
+            onChange={(v) => setFilters({ ...filters, siteCount: v == null ? '' : String(v) })}
+            className="w-full" />
+          <div /><div />
+        </div>
+        <Table columns={columns} dataSource={filtered} loading={isLoading}
+          rowKey={(r: any) => r._id || r.id} pagination={{ pageSize: 20 }}
+          size="small" bordered />
+      </Card>
     </div>
   );
 };
