@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Form, Input, InputNumber, Select, Button, Space, Typography, Checkbox, App, Alert } from 'antd';
-import { List as ListIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import {
   useCreateDesignation,
   useUpdateDesignation,
@@ -32,6 +32,15 @@ const DesignationAdd: React.FC = () => {
   const departments = deptListData?.data ?? [];
   const allDeptIds = useMemo(() => departments.map((d: any) => d._id || d.id), [departments]);
   const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
+  const [deptSearch, setDeptSearch] = useState('');
+
+  const filteredDepts = useMemo(
+    () =>
+      departments.filter((d: any) =>
+        d.name.toLowerCase().includes(deptSearch.toLowerCase()),
+      ),
+    [departments, deptSearch],
+  );
 
   useEffect(() => {
     if (editData) {
@@ -42,6 +51,7 @@ const DesignationAdd: React.FC = () => {
         name: editData.name,
         shortName: editData.shortName,
         displayOrder: editData.displayOrder ?? 0,
+        status: editData.status ?? 'Active',
         employeeBand: editData.employeeBand,
         rolesAndResponsibility: editData.rolesAndResponsibility,
         departments: editDepts,
@@ -77,134 +87,123 @@ const DesignationAdd: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between pb-3">
-        <Title level={4} className="!mb-0">{isEdit ? 'Edit Designation' : 'Designation'}</Title>
-        <Button type="link" icon={<ListIcon size={14} />} onClick={() => navigate('/master/designation/list')}>
-          List
-        </Button>
+      <div className="flex items-center gap-3 pb-2">
+        <ArrowLeft
+          size={20}
+          className="cursor-pointer"
+          onClick={() => navigate('/master/designation/list')}
+        />
+        <Title level={4} className="!mb-0">
+          {isEdit ? 'Edit Designation' : 'Add Designation'}
+        </Title>
       </div>
 
-      <Card bordered={false}>
-        <Form
-          form={form}
-          layout="horizontal"
-          onFinish={handleSubmit}
-          initialValues={{ displayOrder: 0, departments: [] }}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left — scalar fields */}
-            <div>
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 items-start">
+        <Card bordered={false}>
+          <Form
+            form={form}
+            layout="vertical"
+            requiredMark={false}
+            onFinish={handleSubmit}
+            initialValues={{ displayOrder: 0, status: 'Active', departments: [] }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
               <Form.Item
                 name="name"
-                label="Designation Name"
-                labelCol={{ span: 8 }}
-                wrapperCol={{ span: 16 }}
+                label={<><Text type="danger">* </Text>Designation Name</>}
                 rules={[{ required: true, message: 'Designation Name is required' }]}
               >
-                <Input maxLength={100} autoFocus />
+                <Input placeholder="e.g. Manager" maxLength={100} autoFocus />
               </Form.Item>
 
               <Form.Item
                 name="shortName"
-                label="Short Name"
-                labelCol={{ span: 8 }}
-                wrapperCol={{ span: 16 }}
+                label={<><Text type="danger">* </Text>Short Name</>}
                 rules={[{ required: true, message: 'Short Name is required' }]}
               >
-                <Input maxLength={20} style={{ width: 140 }} />
+                <Input placeholder="e.g. MGR" maxLength={20} />
               </Form.Item>
 
-              <Form.Item
-                name="displayOrder"
-                label="Display Order"
-                labelCol={{ span: 8 }}
-                wrapperCol={{ span: 16 }}
-              >
-                <InputNumber min={0} style={{ width: 140 }} />
+              <Form.Item name="displayOrder" label="Display Order">
+                <InputNumber placeholder="e.g. 1" min={0} className="!w-full" />
               </Form.Item>
 
-              <Form.Item
-                name="employeeBand"
-                label="Employee Band"
-                labelCol={{ span: 8 }}
-                wrapperCol={{ span: 16 }}
-              >
+              <Form.Item name="status" label="Status">
                 <Select
-                  placeholder="Please Select"
-                  allowClear
-                  options={EMPLOYEE_BAND_OPTIONS}
+                  options={[
+                    { value: 'Active', label: 'Active' },
+                    { value: 'Inactive', label: 'Inactive' },
+                  ]}
                 />
               </Form.Item>
 
-              <Form.Item
-                name="rolesAndResponsibility"
-                label="Roles and Responsibility"
-                labelCol={{ span: 8 }}
-                wrapperCol={{ span: 16 }}
-              >
-                <TextArea rows={4} maxLength={1000} showCount />
+              <Form.Item name="employeeBand" label="Employee Band">
+                <Select placeholder="Please Select" allowClear options={EMPLOYEE_BAND_OPTIONS} />
               </Form.Item>
             </div>
 
-            {/* Right — Department List multi-select */}
-            <div>
-              <Form.Item
-                name="departments"
-                label={<span>Department List <Text type="danger">*</Text></span>}
-                labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}
-                rules={[{
-                  validator: () =>
-                    selectedDepts.length > 0
-                      ? Promise.resolve()
-                      : Promise.reject(new Error('Select at least one department')),
-                }]}
-              >
-                <div className="border rounded p-3 max-h-[360px] overflow-y-auto">
-                  {departments.length === 0 ? (
-                    <Alert type="warning" message="No departments available. Create a department first." showIcon />
-                  ) : (
-                    <>
-                      <Checkbox
-                        checked={allChecked}
-                        indeterminate={indeterminate}
-                        onChange={(e) => handleAllToggle(e.target.checked)}
-                        style={{ fontWeight: 600, marginBottom: 8 }}
-                      >
-                        ALL
-                      </Checkbox>
-                      <Checkbox.Group
-                        value={selectedDepts}
-                        onChange={(vals) => {
-                          const next = vals as string[];
-                          setSelectedDepts(next);
-                          form.setFieldValue('departments', next);
-                        }}
-                        style={{ display: 'flex', flexDirection: 'column' }}
-                      >
-                        {departments.map((d: any) => (
-                          <Checkbox key={d._id || d.id} value={d._id || d.id}>
-                            {d.name}
-                          </Checkbox>
-                        ))}
-                      </Checkbox.Group>
-                    </>
-                  )}
-                </div>
-              </Form.Item>
-            </div>
-          </div>
+            <Form.Item name="rolesAndResponsibility" label="Roles and Responsibility">
+              <TextArea rows={4} maxLength={1000} showCount placeholder="Roles and responsibility description" />
+            </Form.Item>
 
-          <div className="flex justify-center mt-4">
-            <Space>
-              <Button type="primary" htmlType="submit" loading={createMutation.isPending || updateMutation.isPending}>
-                Save
+            <Space className="mt-2">
+              <Button onClick={() => navigate('/master/designation/list')}>Cancel</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={createMutation.isPending || updateMutation.isPending}
+              >
+                {isEdit ? 'Update' : 'Create'}
               </Button>
-              <Button onClick={() => navigate('/master/designation/list')}>Close</Button>
             </Space>
+          </Form>
+        </Card>
+
+        {/* Right Card — Department List */}
+        <Card
+          bordered={false}
+          title={<><Text type="danger">* </Text>Department List</>}
+        >
+          <Input.Search
+            placeholder="Search..."
+            value={deptSearch}
+            onChange={(e) => setDeptSearch(e.target.value)}
+            className="mb-3"
+            allowClear
+          />
+          <div className="max-h-[280px] overflow-y-auto space-y-2">
+            {departments.length === 0 ? (
+              <Alert type="warning" message="No departments available. Create a department first." showIcon />
+            ) : (
+              <>
+                <Checkbox
+                  checked={allChecked}
+                  indeterminate={indeterminate}
+                  onChange={(e) => handleAllToggle(e.target.checked)}
+                  style={{ fontWeight: 600, marginBottom: 4 }}
+                >
+                  ALL
+                </Checkbox>
+                <Checkbox.Group
+                  value={selectedDepts}
+                  onChange={(vals) => {
+                    const next = vals as string[];
+                    setSelectedDepts(next);
+                    form.setFieldValue('departments', next);
+                  }}
+                  style={{ display: 'flex', flexDirection: 'column' }}
+                >
+                  {filteredDepts.map((d: any) => (
+                    <Checkbox key={d._id || d.id} value={d._id || d.id}>
+                      {d.name}
+                    </Checkbox>
+                  ))}
+                </Checkbox.Group>
+              </>
+            )}
           </div>
-        </Form>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

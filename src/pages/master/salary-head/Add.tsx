@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Form, Input, InputNumber, Select, Button, Space, Typography, App } from 'antd';
-import { List as ListIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import {
   useCreateSalaryHead,
   useUpdateSalaryHead,
@@ -9,7 +9,7 @@ import {
 } from '@/hooks/queries/useSalaryHeads';
 import { HEAD_TYPE_OPTIONS, HeadType } from '@/types/enums';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const SalaryHeadAdd: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +33,7 @@ const SalaryHeadAdd: React.FC = () => {
         printName: editData.printName,
         headType: editData.headType,
         displayOrder: editData.displayOrder ?? 0,
+        status: editData.status ?? 'Active',
       });
     }
   }, [editData, form]);
@@ -54,51 +55,70 @@ const SalaryHeadAdd: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between  pb-3">
-        <Title level={4} className="!mb-0">{isEdit ? 'Edit Salary Head' : 'Salary Head'}</Title>
-        <Button type="link" icon={<ListIcon size={14} />} onClick={() => navigate('/master/salary-head/list')}>
-          List
-        </Button>
+      <div className="flex items-center gap-3 pb-2">
+       
+        <Title level={4} className="!mb-0">
+          {isEdit ? 'Edit Salary Head' : 'Add Salary Head'}
+        </Title>
       </div>
 
       <Card bordered={false}>
-        <Form form={form} layout="horizontal" onFinish={handleSubmit}
-          initialValues={{ displayOrder: 0, headType: HeadType.ADDITION }}>
-          {/* Two-column layout mirrors the screenshot. */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
-            <Form.Item name="name" label="Salary Head Name"
-              labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}
-              rules={[{ required: true, message: 'Salary Head Name is required' }]}>
-              <Input maxLength={100} autoFocus />
+        <Form
+          form={form}
+          layout="vertical"
+          requiredMark={false}
+          onFinish={handleSubmit}
+          initialValues={{ displayOrder: 0, headType: HeadType.ADDITION, status: 'Active' }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <Form.Item
+              name="name"
+              label={<><Text type="danger">* </Text>Salary Head Name</>}
+              rules={[{ required: true, message: 'Salary Head Name is required' }]}
+            >
+              <Input placeholder="e.g. Basic Pay" maxLength={100} autoFocus />
             </Form.Item>
 
-            <Form.Item name="headType" label="Head Type"
-              labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}
-              rules={[{ required: true, message: 'Head Type is required' }]}>
+            <Form.Item
+              name="headType"
+              label={<><Text type="danger">* </Text>Head Type</>}
+              rules={[{ required: true, message: 'Head Type is required' }]}
+            >
               <Select options={HEAD_TYPE_OPTIONS} />
             </Form.Item>
 
-            <Form.Item name="printName" label="Print Name"
-              labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}
-              rules={[{ required: true, message: 'Print Name is required' }]}>
-              <Input maxLength={50} style={{ width: 200 }} />
+            <Form.Item
+              name="printName"
+              label={<><Text type="danger">* </Text>Print Name</>}
+              rules={[{ required: true, message: 'Print Name is required' }]}
+            >
+              <Input placeholder="e.g. Basic" maxLength={50} />
             </Form.Item>
 
-            <Form.Item name="displayOrder" label="Order"
-              labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
-              <InputNumber min={0} style={{ width: 120 }} />
+            <Form.Item name="displayOrder" label="Display Order">
+              <InputNumber placeholder="e.g. 1" min={0} className="!w-full" />
+            </Form.Item>
+
+            <Form.Item name="status" label="Status">
+              <Select
+                options={[
+                  { value: 'Active', label: 'Active' },
+                  { value: 'Inactive', label: 'Inactive' },
+                ]}
+              />
             </Form.Item>
           </div>
 
-          <div className="flex justify-center mt-4">
-            <Space>
-              <Button type="primary" htmlType="submit"
-                loading={createMutation.isPending || updateMutation.isPending}>
-                Save
-              </Button>
-              <Button onClick={() => navigate('/master/salary-head/list')}>Close</Button>
-            </Space>
-          </div>
+          <Space className="mt-2">
+            <Button onClick={() => navigate('/master/salary-head/list')}>Cancel</Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={createMutation.isPending || updateMutation.isPending}
+            >
+              {isEdit ? 'Update' : 'Create'}
+            </Button>
+          </Space>
         </Form>
       </Card>
     </div>

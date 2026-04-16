@@ -115,7 +115,7 @@ const DesignationList: React.FC = () => {
         <Table columns={columns} dataSource={filtered} loading={isLoading}
           rowKey={(r: any) => r._id || r.id}
           pagination={{ pageSize: 20, showSizeChanger: true }}
-          size="small" bordered scroll={{ x: 900 }} />
+          size="large" bordered scroll={{ x: 900 }} />
       </Card>
     </div>
   );
