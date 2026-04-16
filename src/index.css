@@ -63,7 +63,7 @@ body {
   letter-spacing: 0.06em !important;
   color: #8492a6 !important;
   background: #f8fafc !important;
-  border-bottom: 2px solid var(--border-color) !important;
+  border-bottom: none !important;
   padding: 10px 16px !important;
   white-space: nowrap;
 }
@@ -252,7 +252,7 @@ body {
 .dark {
   --bg-primary: #09090b;
   --bg-card: #111113;
-  --border-color: #000;
+  --border-color: #1e1e22;
   --text-primary: #e5e7eb;
   --text-secondary: #9ca3af;
 }
