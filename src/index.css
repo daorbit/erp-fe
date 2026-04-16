@@ -39,6 +39,8 @@ body {
 
 .sidebar-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
 .sidebar-scrollbar-hidden::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 /* ══════════════════════════════════════════════════════════════
    PRODUCTION TABLE UI
