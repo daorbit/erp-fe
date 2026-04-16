@@ -4,7 +4,6 @@ const or_: Record<string, string> = {
   admin_panel: 'ଆଡମିନ୍ ପ୍ୟାନେଲ',
   user_management: 'ବ୍ୟବହାରକାରୀ ପରିଚାଳନା',
   settings: 'ସେଟିଂସ୍',
-  hr_management: 'HR ପରିଚାଳନା',
   employees: 'କର୍ମଚାରୀ',
   departments: 'ବିଭାଗ',
   designations: 'ପଦବୀ',

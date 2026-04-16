@@ -4,7 +4,6 @@ const mr: Record<string, string> = {
   admin_panel: 'प्रशासक पॅनेल',
   user_management: 'वापरकर्ता व्यवस्थापन',
   settings: 'सेटिंग्ज',
-  hr_management: 'HR व्यवस्थापन',
   employees: 'कर्मचारी',
   departments: 'विभाग',
   designations: 'पदनाम',

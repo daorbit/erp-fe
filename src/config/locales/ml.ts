@@ -4,7 +4,6 @@ const ml: Record<string, string> = {
   admin_panel: 'അഡ്മിന്‍ പാനല്‍',
   user_management: 'ഉപയോക്തൃ മാനേജ്മെന്റ്',
   settings: 'ക്രമീകരണങ്ങള്‍',
-  hr_management: 'HR മാനേജ്മെന്റ്',
   employees: 'ജീവനക്കാര്‍',
   departments: 'വിഭാഗങ്ങള്‍',
   designations: 'പദവികള്‍',

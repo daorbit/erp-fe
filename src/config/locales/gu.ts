@@ -4,7 +4,6 @@ const gu: Record<string, string> = {
   admin_panel: 'એડમિન પેનલ',
   user_management: 'વપરાશકર્તા વ્યવસ્થાપન',
   settings: 'સેટિંગ્સ',
-  hr_management: 'HR વ્યવસ્થાપન',
   employees: 'કર્મચારીઓ',
   departments: 'વિભાગો',
   designations: 'હોદ્દાઓ',

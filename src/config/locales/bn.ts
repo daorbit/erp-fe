@@ -4,7 +4,6 @@ const bn: Record<string, string> = {
   admin_panel: 'অ্যাডমিন প্যানেল',
   user_management: 'ব্যবহারকারী ব্যবস্থাপনা',
   settings: 'সেটিংস',
-  hr_management: 'HR ব্যবস্থাপনা',
   employees: 'কর্মচারী',
   departments: 'বিভাগ',
   designations: 'পদবী',

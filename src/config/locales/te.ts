@@ -4,7 +4,6 @@ const te: Record<string, string> = {
   admin_panel: 'అడ్మిన్ ప్యానెల్',
   user_management: 'వినియోగదారు నిర్వహణ',
   settings: 'సెట్టింగ్‌లు',
-  hr_management: 'HR నిర్వహణ',
   employees: 'ఉద్యోగులు',
   departments: 'విభాగాలు',
   designations: 'హోదాలు',

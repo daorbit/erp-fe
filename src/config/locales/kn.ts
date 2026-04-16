@@ -4,7 +4,6 @@ const kn: Record<string, string> = {
   admin_panel: 'ನಿರ್ವಾಹಕ ಫಲಕ',
   user_management: 'ಬಳಕೆದಾರ ನಿರ್ವಹಣೆ',
   settings: 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
-  hr_management: 'HR ನಿರ್ವಹಣೆ',
   employees: 'ಉದ್ಯೋಗಿಗಳು',
   departments: 'ವಿಭಾಗಗಳು',
   designations: 'ಹುದ್ದೆಗಳು',

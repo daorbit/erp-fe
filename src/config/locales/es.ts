@@ -4,7 +4,6 @@ const es: Record<string, string> = {
   admin_panel: 'Panel Admin',
   user_management: 'Gesti\u00f3n de Usuarios',
   settings: 'Configuraci\u00f3n',
-  hr_management: 'Gesti\u00f3n de RRHH',
   employees: 'Empleados',
   departments: 'Departamentos',
   designations: 'Designaciones',

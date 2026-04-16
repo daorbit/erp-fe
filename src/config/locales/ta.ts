@@ -4,7 +4,6 @@ const ta: Record<string, string> = {
   admin_panel: 'நிர்வாகி குழு',
   user_management: 'பயனர் மேலாண்மை',
   settings: 'அமைப்புகள்',
-  hr_management: 'HR மேலாண்மை',
   employees: 'ஊழியர்கள்',
   departments: 'துறைகள்',
   designations: 'பதவிகள்',

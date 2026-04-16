@@ -1,6 +1,6 @@
 import {
   type LucideIcon,
-  LayoutDashboard, Users, Settings, Contact, Building2, Award,
+  LayoutDashboard, Users, Settings, Building2, Award,
   UserPlus, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
   IndianRupee, Wallet, Briefcase, FileSearch, Star, GraduationCap,
   BookOpen, FolderOpen, PartyPopper, Megaphone, Receipt, Package, LifeBuoy, BarChart3,
@@ -453,16 +453,6 @@ export const navigationItems: NavItem[] = [
   // ─── Branches ──────────────────────────────────────────────────────────────
   { titleKey: 'branches', href: '/branches', icon: GitBranch, roles: ADMINS },
 
-  // ─── HR (admin & HR manager) ───────────────────────────────────────────────
-  {
-    titleKey: 'hr_management', icon: Contact, roles: ADMINS,
-    children: [
-      { titleKey: 'employees', href: '/employees', icon: Users },
-      { titleKey: 'parent_departments', href: '/parent-departments', icon: Building2 },
-      { titleKey: 'departments', href: '/departments', icon: Building2 },
-      { titleKey: 'designations', href: '/designations', icon: Award },
-    ],
-  },
   { titleKey: 'onboarding', href: '/onboarding/list', icon: UserPlus, roles: ADMINS },
   {
     titleKey: 'payroll', icon: IndianRupee, roles: ADMINS,

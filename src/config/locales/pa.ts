@@ -4,7 +4,6 @@ const pa: Record<string, string> = {
   admin_panel: 'ਐਡਮਿਨ ਪੈਨਲ',
   user_management: 'ਉਪਭੋਗਤਾ ਪ੍ਰਬੰਧਨ',
   settings: 'ਸੈਟਿੰਗਾਂ',
-  hr_management: 'HR ਪ੍ਰਬੰਧਨ',
   employees: 'ਕਰਮਚਾਰੀ',
   departments: 'ਵਿਭਾਗ',
   designations: 'ਅਹੁਦੇ',
