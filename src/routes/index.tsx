@@ -129,6 +129,9 @@ const MasterSmsEmailAlert = lazy(() => import('../pages/master/other/SmsEmailAle
 const MasterImageGallery = lazy(() => import('../pages/master/other/ImageGallery'));
 const MasterManageMessages = lazy(() => import('../pages/master/other/ManageMessages'));
 
+// InProgress page for Transaction & Reports modules
+const InProgress = lazy(() => import('../pages/InProgress'));
+
 // Phase 3: Employee auxiliary ops + Shift master
 const MasterEmployeeBranchShift = lazy(() => import('../pages/master/employee/BranchShift'));
 const MasterEmployeeMultipleShiftTransfer = lazy(() => import('../pages/master/employee/MultipleShiftTransfer'));
@@ -355,16 +358,24 @@ export default function AppRoutes() {
       <Route path="/master/other/shift" element={<R roles={ADMINS}><MasterShift /></R>} />
 
       {/* ══════════════════════════════════════════════════════════════════════
-          NwayERP-style Master / Transaction / Reports / Setting placeholders.
-          Each route renders ComingSoon with a descriptive module name.
-          Filled in progressively as the user provides per-module screenshots.
+          Setting — all sub-routes → InProgress
          ══════════════════════════════════════════════════════════════════════ */}
-      {NEW_PLACEHOLDER_ROUTES.map(([path, label]) => (
-        <Route
-          key={path}
-          path={path}
-          element={<R roles={ADMINS}><ComingSoon moduleName={label}>{null}</ComingSoon></R>}
-        />
+      {SETTING_ROUTES.map((path) => (
+        <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
+      ))}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Transaction — all sub-routes → InProgress
+         ══════════════════════════════════════════════════════════════════════ */}
+      {TRANSACTION_ROUTES.map((path) => (
+        <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
+      ))}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Reports — all sub-routes → InProgress
+         ══════════════════════════════════════════════════════════════════════ */}
+      {REPORT_ROUTES.map((path) => (
+        <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
       ))}
 
       <Route path="*" element={<Suspense><NotFound /></Suspense>} />
@@ -372,21 +383,167 @@ export default function AppRoutes() {
   );
 }
 
-// Data-driven: one row per leaf route. Add entries here and they become live routes.
-const NEW_PLACEHOLDER_ROUTES: [path: string, label: string][] = [
-  // Top-level stubs
-  ['/transaction', 'Transaction'],
-  ['/reports-hub', 'Reports'],
-  ['/setting', 'Setting'],
+// ─── Transaction routes (InProgress) ──────────────────────────────────────────
+const TRANSACTION_ROUTES: string[] = [
+  // Leave
+  '/transaction/leave/monthly-allotment',
+  '/transaction/leave/yearly-allotment',
+  '/transaction/leave/deduction',
+  '/transaction/leave/application-add',
+  '/transaction/leave/application-list',
+  '/transaction/leave/remove-pending',
+  // On Duty
+  '/transaction/on-duty/add',
+  '/transaction/on-duty/list',
+  '/transaction/on-duty/remove-pending',
+  '/transaction/on-duty/multiple',
+  '/transaction/on-duty/multiple-list',
+  // Over Time
+  '/transaction/overtime/add',
+  '/transaction/overtime/list',
+  '/transaction/overtime/calculation',
+  '/transaction/overtime/remove-pending',
+  '/transaction/overtime/multiple',
+  '/transaction/overtime/multiple-list',
+  // Attendance
+  '/transaction/attendance/month-wise',
+  '/transaction/attendance/day-wise',
+  '/transaction/attendance/employee-wise',
+  '/transaction/attendance/summary',
+  '/transaction/attendance/machine-punch/employee-wise',
+  '/transaction/attendance/machine-punch/day-wise',
+  '/transaction/attendance/multiple-punch',
+  '/transaction/attendance/import',
+  '/transaction/attendance/week-off',
+  '/transaction/attendance/copy',
+  // Loan / Advance
+  '/transaction/loan-advance/add',
+  '/transaction/loan-advance/list',
+  // Other Add./Ded.
+  '/transaction/other-add-ded/addition',
+  '/transaction/other-add-ded/deduction',
+  '/transaction/other-add-ded/installment',
+  '/transaction/other-add-ded/day-deduction',
+  '/transaction/other-add-ded/import',
+  '/transaction/other-add-ded/deduction-xml-import',
+  // PT/TDS Deduction
+  '/transaction/pt-tds/pt-deduction',
+  '/transaction/pt-tds/tds-deduction',
+  '/transaction/pt-tds/tds-exemption',
+  // Salary Pre-Process
+  '/transaction/salary-pre-process/sandwich-policy',
+  '/transaction/salary-pre-process/leave-process',
+  '/transaction/salary-pre-process/half-day-leave-verify',
+  '/transaction/salary-pre-process/incentive-calculation',
+  '/transaction/salary-pre-process/leave-transfer',
+  '/transaction/salary-pre-process/leave-encashment',
+  '/transaction/salary-pre-process/leave-allot-through-att',
+  // Salary
+  '/transaction/salary/calculation',
+  '/transaction/salary/list',
+  // Sim Allotment
+  '/transaction/sim-allotment/add',
+  '/transaction/sim-allotment/list',
+  '/transaction/sim-allotment/mobile-bill-deduction',
+  '/transaction/sim-allotment/multiple-mob-bill-ded',
+  '/transaction/sim-allotment/mob-bill-ded-list',
+  // More Transaction → Notice Board
+  '/transaction/notice-board/add',
+  '/transaction/notice-board/list',
+];
 
-  // Master → Parent Department — LIVE (see routes above)
-  // Master → Department — LIVE (see routes above)
+// ─── Reports routes (InProgress) ─────────────────────────────────────────────
+const REPORT_ROUTES: string[] = [
+  // Leave
+  '/reports/leave/ledger',
+  '/reports/leave/calendar',
+  '/reports/leave/encashment',
+  // Attendance
+  '/reports/attendance/month-wise',
+  '/reports/attendance/day-wise',
+  '/reports/attendance/employee-wise',
+  '/reports/attendance/machine-punch',
+  '/reports/attendance/sitewise',
+  '/reports/attendance/daily-att-camera',
+  '/reports/attendance/emp-att-camera',
+  // Salary
+  '/reports/salary/month-payslip',
+  '/reports/salary/emp-payslip',
+  '/reports/salary/emp-salary-structure',
+  '/reports/salary/monthly-salary-graph',
+  '/reports/salary/summary',
+  '/reports/salary/gross-summary',
+  '/reports/salary/short-hours-deduction',
+  '/reports/salary/payment-voucher',
+  // Taxation
+  '/reports/taxation/month-sheet',
+  '/reports/taxation/yearly-sheet',
+  '/reports/taxation/emp-sheet',
+  // Customize Report
+  '/reports/customize',
+  // Employee
+  '/reports/employee/report',
+  '/reports/employee/branch-wise',
+  '/reports/employee/branch-transfer',
+  '/reports/employee/tree',
+  '/reports/employee/id-card',
+  '/reports/employee/appraisal-due',
+  '/reports/employee/appraisal',
+  '/reports/employee/promotion',
+  '/reports/employee/relative',
+  '/reports/employee/education',
+  '/reports/employee/document-det',
+  '/reports/employee/prev-org-det',
+  '/reports/employee/tds-regime',
+  // Standalone reports
+  '/reports/employee-ledger',
+  '/reports/compliance-register',
+  '/reports/loan-advance-detail',
+  '/reports/other-add-ded',
+  '/reports/mobile-bill',
+  '/reports/full-and-final',
+  '/reports/employee-gratuity',
+  // Statement
+  '/reports/statement/leave',
+  '/reports/statement/on-duty',
+  '/reports/statement/over-time',
+  '/reports/statement/exp-reimbursement',
+  // TDS Deduction
+  '/reports/tds-deduction/exemption',
+  '/reports/tds-deduction/planning',
+];
 
-  // Master → Designation — LIVE (see routes above)
-  // Master → Salary Head — LIVE (see routes above)
-  // Master → Salary Structure — LIVE (see routes above)
-
-  // All Master submodule routes are now LIVE — see the concrete Route
-  // declarations above. Only the top-level Transaction / Reports / Setting
-  // landing pages remain as placeholders until the user provides screenshots.
+// ─── Setting routes (InProgress) ─────────────────────────────────────────────
+const SETTING_ROUTES: string[] = [
+  // PF / ESIC Rate Editor
+  '/setting/pf-esic-rate/add',
+  '/setting/pf-esic-rate/list',
+  // PT Rate Setting
+  '/setting/pt-rate/add',
+  '/setting/pt-rate/list',
+  // TDS Rate Editor
+  '/setting/tds-rate/add',
+  '/setting/tds-rate/list',
+  // National Pension Scheme
+  '/setting/national-pension/add',
+  '/setting/national-pension/list',
+  // Letter Format
+  '/setting/letter-format/add',
+  '/setting/letter-format/list',
+  // Report Editor
+  '/setting/report-editor/relieving-letter',
+  '/setting/report-editor/resignation-letter',
+  '/setting/report-editor/terms-and-condition',
+  // Standalone settings
+  '/setting/leave-od-ot',
+  '/setting/bonus-cal-formula',
+  '/setting/deduction-cal-formula',
+  '/setting/labour-welfare-fund',
+  '/setting/emp-section-setting',
+  // Mandatory Field
+  '/setting/mandatory-field/employee-master',
+  // More standalone
+  '/setting/leave-allotment-policy',
+  '/setting/loan-advance-setting',
+  '/setting/attendance-process-exec',
 ];

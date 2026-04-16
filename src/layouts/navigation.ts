@@ -12,6 +12,13 @@ import {
   CalendarCheck, BadgePercent, School, Landmark, Tag, MapPin, FileCheck,
   Layers, UploadCloud, BellRing, Image as ImageIcon, MessageSquare,
   Smartphone,
+  // Transaction & Reports additions
+  CalendarMinus, ClipboardCheck, Calculator, Banknote, FileMinus, FileInput,
+  Copy, Sandwich, FileBarChart, CircleDollarSign, CreditCard, ScrollText,
+  Scale, FileOutput, MonitorSmartphone, Bell,
+  // Setting additions
+  Search, FileType, Notebook, HandCoins, DollarSign, Factory,
+  SlidersHorizontal, ListChecks, ChevronsRight,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -159,9 +166,282 @@ export const navigationItems: NavItem[] = [
       },
     ],
   },
-  { titleKey: 'nav_transaction', href: '/transaction', icon: ArrowRightLeft, roles: ADMINS },
-  { titleKey: 'nav_reports', href: '/reports-hub', icon: BarChart3, roles: ADMINS },
-  { titleKey: 'nav_setting', href: '/setting', icon: Settings, roles: ADMINS },
+  {
+    titleKey: 'nav_transaction', icon: ArrowRightLeft, roles: ADMINS,
+    children: [
+      {
+        titleKey: 'nav_txn_leave', icon: Palmtree,
+        children: [
+          { titleKey: 'nav_monthly_allotment', href: '/transaction/leave/monthly-allotment', icon: CalendarDays },
+          { titleKey: 'nav_yearly_allotment', href: '/transaction/leave/yearly-allotment', icon: CalendarRange },
+          { titleKey: 'nav_leave_deduction', href: '/transaction/leave/deduction', icon: CalendarMinus },
+          { titleKey: 'nav_application_add', href: '/transaction/leave/application-add', icon: Plus },
+          { titleKey: 'nav_application_list', href: '/transaction/leave/application-list', icon: List },
+          { titleKey: 'nav_remove_pending', href: '/transaction/leave/remove-pending', icon: UserX },
+        ],
+      },
+      {
+        titleKey: 'nav_on_duty', icon: ClipboardCheck,
+        children: [
+          { titleKey: 'nav_add', href: '/transaction/on-duty/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/transaction/on-duty/list', icon: List },
+          { titleKey: 'nav_remove_pending', href: '/transaction/on-duty/remove-pending', icon: UserX },
+          { titleKey: 'nav_multiple_on_duty', href: '/transaction/on-duty/multiple', icon: Users },
+          { titleKey: 'nav_multiple_on_duty_list', href: '/transaction/on-duty/multiple-list', icon: ClipboardList },
+        ],
+      },
+      {
+        titleKey: 'nav_over_time', icon: Clock,
+        children: [
+          { titleKey: 'nav_add', href: '/transaction/overtime/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/transaction/overtime/list', icon: List },
+          { titleKey: 'nav_overtime_calculation', href: '/transaction/overtime/calculation', icon: Calculator },
+          { titleKey: 'nav_remove_pending', href: '/transaction/overtime/remove-pending', icon: UserX },
+          { titleKey: 'nav_multiple_over_time', href: '/transaction/overtime/multiple', icon: Users },
+          { titleKey: 'nav_multiple_over_time_list', href: '/transaction/overtime/multiple-list', icon: ClipboardList },
+        ],
+      },
+      {
+        titleKey: 'nav_attendance', icon: CalendarCheck,
+        children: [
+          { titleKey: 'nav_month_wise', href: '/transaction/attendance/month-wise', icon: CalendarDays },
+          { titleKey: 'nav_day_wise', href: '/transaction/attendance/day-wise', icon: CalendarCheck },
+          { titleKey: 'nav_employee_wise', href: '/transaction/attendance/employee-wise', icon: Users },
+          { titleKey: 'nav_summary', href: '/transaction/attendance/summary', icon: FileBarChart },
+          {
+            titleKey: 'nav_machine_punch', icon: MonitorSmartphone,
+            children: [
+              { titleKey: 'nav_employee_wise', href: '/transaction/attendance/machine-punch/employee-wise', icon: Users },
+              { titleKey: 'nav_day_wise', href: '/transaction/attendance/machine-punch/day-wise', icon: CalendarCheck },
+            ],
+          },
+          { titleKey: 'nav_multiple_punch', href: '/transaction/attendance/multiple-punch', icon: ClipboardList },
+          { titleKey: 'nav_attendance_import', href: '/transaction/attendance/import', icon: FileInput },
+          { titleKey: 'nav_week_off_attendance', href: '/transaction/attendance/week-off', icon: CalendarClock },
+          { titleKey: 'nav_copy_attendance', href: '/transaction/attendance/copy', icon: Copy },
+        ],
+      },
+      {
+        titleKey: 'nav_loan_advance', icon: Banknote,
+        children: [
+          { titleKey: 'nav_add', href: '/transaction/loan-advance/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/transaction/loan-advance/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_other_add_ded', icon: CircleDollarSign,
+        children: [
+          { titleKey: 'nav_addition', href: '/transaction/other-add-ded/addition', icon: Plus },
+          { titleKey: 'nav_deduction', href: '/transaction/other-add-ded/deduction', icon: FileMinus },
+          { titleKey: 'nav_add_ded_installment', href: '/transaction/other-add-ded/installment', icon: CreditCard },
+          { titleKey: 'nav_day_deduction', href: '/transaction/other-add-ded/day-deduction', icon: CalendarMinus },
+          { titleKey: 'nav_add_ded_import', href: '/transaction/other-add-ded/import', icon: FileInput },
+          { titleKey: 'nav_deduction_xml_import', href: '/transaction/other-add-ded/deduction-xml-import', icon: FileInput },
+        ],
+      },
+      {
+        titleKey: 'nav_pt_tds_deduction', icon: Percent,
+        children: [
+          { titleKey: 'nav_pt_deduction', href: '/transaction/pt-tds/pt-deduction', icon: BadgePercent },
+          { titleKey: 'nav_tds_deduction', href: '/transaction/pt-tds/tds-deduction', icon: Percent },
+          { titleKey: 'nav_tds_exemption', href: '/transaction/pt-tds/tds-exemption', icon: ShieldCheck },
+        ],
+      },
+      {
+        titleKey: 'nav_salary_pre_process', icon: FileSpreadsheet,
+        children: [
+          { titleKey: 'nav_sandwich_policy', href: '/transaction/salary-pre-process/sandwich-policy', icon: Sandwich },
+          { titleKey: 'nav_leave_process', href: '/transaction/salary-pre-process/leave-process', icon: Palmtree },
+          { titleKey: 'nav_half_day_leave_verify', href: '/transaction/salary-pre-process/half-day-leave-verify', icon: CalendarCheck },
+          { titleKey: 'nav_incentive_calculation', href: '/transaction/salary-pre-process/incentive-calculation', icon: Calculator },
+          { titleKey: 'nav_leave_transfer', href: '/transaction/salary-pre-process/leave-transfer', icon: ArrowRightLeft },
+          { titleKey: 'nav_leave_encashment', href: '/transaction/salary-pre-process/leave-encashment', icon: IndianRupee },
+          { titleKey: 'nav_leave_allot_through_att', href: '/transaction/salary-pre-process/leave-allot-through-att', icon: CalendarPlus },
+        ],
+      },
+      {
+        titleKey: 'nav_txn_salary', icon: IndianRupee,
+        children: [
+          { titleKey: 'nav_salary_calculation', href: '/transaction/salary/calculation', icon: Calculator },
+          { titleKey: 'nav_salary_list', href: '/transaction/salary/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_sim_allotment', icon: Smartphone,
+        children: [
+          { titleKey: 'nav_add', href: '/transaction/sim-allotment/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/transaction/sim-allotment/list', icon: List },
+          { titleKey: 'nav_mobile_bill_deduction', href: '/transaction/sim-allotment/mobile-bill-deduction', icon: Receipt },
+          { titleKey: 'nav_multiple_mob_bill_ded', href: '/transaction/sim-allotment/multiple-mob-bill-ded', icon: FileSpreadsheet },
+          { titleKey: 'nav_mob_bill_ded_list', href: '/transaction/sim-allotment/mob-bill-ded-list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_more_transaction', icon: Boxes,
+        children: [
+          {
+            titleKey: 'nav_notice_board', icon: Bell,
+            children: [
+              { titleKey: 'nav_add', href: '/transaction/notice-board/add', icon: Plus },
+              { titleKey: 'nav_list', href: '/transaction/notice-board/list', icon: List },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    titleKey: 'nav_reports', icon: BarChart3, roles: ADMINS,
+    children: [
+      {
+        titleKey: 'nav_rpt_leave', icon: Palmtree,
+        children: [
+          { titleKey: 'nav_rpt_leave_ledger', href: '/reports/leave/ledger', icon: ScrollText },
+          { titleKey: 'nav_rpt_leave_calendar', href: '/reports/leave/calendar', icon: CalendarDays },
+          { titleKey: 'nav_rpt_leave_encashment', href: '/reports/leave/encashment', icon: IndianRupee },
+        ],
+      },
+      {
+        titleKey: 'nav_rpt_attendance', icon: CalendarCheck,
+        children: [
+          { titleKey: 'nav_month_wise', href: '/reports/attendance/month-wise', icon: CalendarDays },
+          { titleKey: 'nav_day_wise', href: '/reports/attendance/day-wise', icon: CalendarCheck },
+          { titleKey: 'nav_employee_wise', href: '/reports/attendance/employee-wise', icon: Users },
+          { titleKey: 'nav_rpt_machine_punch', href: '/reports/attendance/machine-punch', icon: MonitorSmartphone },
+          { titleKey: 'nav_rpt_attendance_sitewise', href: '/reports/attendance/sitewise', icon: MapPin },
+          { titleKey: 'nav_rpt_daily_att_camera', href: '/reports/attendance/daily-att-camera', icon: MonitorSmartphone },
+          { titleKey: 'nav_rpt_emp_att_camera', href: '/reports/attendance/emp-att-camera', icon: Users },
+        ],
+      },
+      {
+        titleKey: 'nav_rpt_salary', icon: IndianRupee,
+        children: [
+          { titleKey: 'nav_rpt_month_payslip', href: '/reports/salary/month-payslip', icon: FileText },
+          { titleKey: 'nav_rpt_emp_payslip', href: '/reports/salary/emp-payslip', icon: Users },
+          { titleKey: 'nav_rpt_emp_salary_structure', href: '/reports/salary/emp-salary-structure', icon: Wallet },
+          { titleKey: 'nav_rpt_monthly_salary_graph', href: '/reports/salary/monthly-salary-graph', icon: BarChart3 },
+          { titleKey: 'nav_rpt_salary_summary', href: '/reports/salary/summary', icon: FileBarChart },
+          { titleKey: 'nav_rpt_salary_gross_summary', href: '/reports/salary/gross-summary', icon: FileSpreadsheet },
+          { titleKey: 'nav_rpt_short_hours_deduction', href: '/reports/salary/short-hours-deduction', icon: Clock },
+          { titleKey: 'nav_rpt_sal_payment_voucher', href: '/reports/salary/payment-voucher', icon: Receipt },
+        ],
+      },
+      {
+        titleKey: 'nav_rpt_taxation', icon: Percent,
+        children: [
+          { titleKey: 'nav_rpt_month_taxation_sheet', href: '/reports/taxation/month-sheet', icon: FileText },
+          { titleKey: 'nav_rpt_yearly_taxation_sheet', href: '/reports/taxation/yearly-sheet', icon: CalendarRange },
+          { titleKey: 'nav_rpt_emp_taxation_sheet', href: '/reports/taxation/emp-sheet', icon: Users },
+        ],
+      },
+      { titleKey: 'nav_customize_report', href: '/reports/customize', icon: FileBarChart },
+      {
+        titleKey: 'nav_rpt_employee', icon: Users,
+        children: [
+          { titleKey: 'nav_rpt_employee_report', href: '/reports/employee/report', icon: FileText },
+          { titleKey: 'nav_rpt_branch_wise_employee', href: '/reports/employee/branch-wise', icon: GitBranch },
+          { titleKey: 'nav_rpt_branch_transfer_report', href: '/reports/employee/branch-transfer', icon: ArrowRightLeft },
+          { titleKey: 'nav_rpt_employee_tree', href: '/reports/employee/tree', icon: Users },
+          { titleKey: 'nav_rpt_employee_id_card', href: '/reports/employee/id-card', icon: CreditCard },
+          { titleKey: 'nav_rpt_appraisal_due_report', href: '/reports/employee/appraisal-due', icon: CalendarClock },
+          { titleKey: 'nav_rpt_appraisal_report', href: '/reports/employee/appraisal', icon: Star },
+          { titleKey: 'nav_rpt_promotion_report', href: '/reports/employee/promotion', icon: TrendingUp },
+          { titleKey: 'nav_rpt_employee_relative', href: '/reports/employee/relative', icon: Users },
+          { titleKey: 'nav_rpt_employee_education', href: '/reports/employee/education', icon: GraduationCap },
+          { titleKey: 'nav_rpt_employee_document_det', href: '/reports/employee/document-det', icon: FileText },
+          { titleKey: 'nav_rpt_employee_prev_org_det', href: '/reports/employee/prev-org-det', icon: Briefcase },
+          { titleKey: 'nav_rpt_employee_tds_regime', href: '/reports/employee/tds-regime', icon: Percent },
+        ],
+      },
+      { titleKey: 'nav_employee_ledger', href: '/reports/employee-ledger', icon: ScrollText },
+      { titleKey: 'nav_compliance_register', href: '/reports/compliance-register', icon: Scale },
+      { titleKey: 'nav_loan_advance_detail', href: '/reports/loan-advance-detail', icon: Banknote },
+      { titleKey: 'nav_rpt_other_add_ded', href: '/reports/other-add-ded', icon: CircleDollarSign },
+      { titleKey: 'nav_mobile_bill', href: '/reports/mobile-bill', icon: Smartphone },
+      { titleKey: 'nav_rpt_full_final', href: '/reports/full-and-final', icon: FileOutput },
+      { titleKey: 'nav_employee_gratuity', href: '/reports/employee-gratuity', icon: Wallet },
+      {
+        titleKey: 'nav_rpt_statement', icon: FileText,
+        children: [
+          { titleKey: 'nav_rpt_stmt_leave', href: '/reports/statement/leave', icon: Palmtree },
+          { titleKey: 'nav_rpt_stmt_on_duty', href: '/reports/statement/on-duty', icon: ClipboardCheck },
+          { titleKey: 'nav_rpt_stmt_over_time', href: '/reports/statement/over-time', icon: Clock },
+          { titleKey: 'nav_rpt_stmt_exp_reimbursement', href: '/reports/statement/exp-reimbursement', icon: Receipt },
+        ],
+      },
+      {
+        titleKey: 'nav_rpt_tds_deduction', icon: Percent,
+        children: [
+          { titleKey: 'nav_rpt_tds_exemption', href: '/reports/tds-deduction/exemption', icon: ShieldCheck },
+          { titleKey: 'nav_rpt_tds_deduction_planning', href: '/reports/tds-deduction/planning', icon: Calculator },
+        ],
+      },
+    ],
+  },
+  {
+    titleKey: 'nav_setting', icon: Settings, roles: ADMINS,
+    children: [
+      {
+        titleKey: 'nav_pf_esic_rate_editor', icon: BadgePercent,
+        children: [
+          { titleKey: 'nav_add', href: '/setting/pf-esic-rate/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/setting/pf-esic-rate/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_pt_rate_setting', icon: Percent,
+        children: [
+          { titleKey: 'nav_add', href: '/setting/pt-rate/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/setting/pt-rate/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_tds_rate_editor', icon: Percent,
+        children: [
+          { titleKey: 'nav_add', href: '/setting/tds-rate/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/setting/tds-rate/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_national_pension_scheme', icon: Landmark,
+        children: [
+          { titleKey: 'nav_add', href: '/setting/national-pension/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/setting/national-pension/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_letter_format', icon: FileType,
+        children: [
+          { titleKey: 'nav_add', href: '/setting/letter-format/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/setting/letter-format/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_report_editor', icon: Notebook,
+        children: [
+          { titleKey: 'nav_relieving_letter', href: '/setting/report-editor/relieving-letter', icon: FileText },
+          { titleKey: 'nav_resignation_letter', href: '/setting/report-editor/resignation-letter', icon: FileText },
+          { titleKey: 'nav_terms_and_condition', href: '/setting/report-editor/terms-and-condition', icon: FileCheck },
+        ],
+      },
+      { titleKey: 'nav_leave_od_ot_setting', href: '/setting/leave-od-ot', icon: SlidersHorizontal },
+      { titleKey: 'nav_bonus_cal_formula', href: '/setting/bonus-cal-formula', icon: Calculator },
+      { titleKey: 'nav_deduction_cal_formula', href: '/setting/deduction-cal-formula', icon: Calculator },
+      { titleKey: 'nav_labour_welfare_fund', href: '/setting/labour-welfare-fund', icon: Factory },
+      { titleKey: 'nav_emp_section_setting', href: '/setting/emp-section-setting', icon: ListChecks },
+      {
+        titleKey: 'nav_mandatory_field', icon: ShieldCheck,
+        children: [
+          { titleKey: 'nav_employee_master', href: '/setting/mandatory-field/employee-master', icon: Users },
+        ],
+      },
+      { titleKey: 'nav_leave_allotment_policy', href: '/setting/leave-allotment-policy', icon: Palmtree },
+      { titleKey: 'nav_loan_advance_setting', href: '/setting/loan-advance-setting', icon: Banknote },
+      { titleKey: 'nav_attendance_process_exec', href: '/setting/attendance-process-exec', icon: ChevronsRight },
+    ],
+  },
+  // ─── Employee Search (global) ──────────────────────────────────────────────
+  { titleKey: 'nav_employee_search', href: '/employee-search', icon: Search, roles: ADMINS },
 
   // ─── Admin ─────────────────────────────────────────────────────────────────
   { titleKey: 'company_management', href: '/admin/companies', icon: Building2, roles: ['super_admin'] },

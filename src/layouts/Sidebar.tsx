@@ -9,6 +9,7 @@ import { Settings, User, LogOut, Building2, Search as SearchIcon } from 'lucide-
 import type { MenuProps } from 'antd';
 import { navigationItems, type NavItem } from './navigation';
 import { useAppSelector } from '@/store';
+import EmployeeSearchDialog from '@/components/EmployeeSearchDialog';
 
 const { Sider } = Layout;
 
@@ -136,6 +137,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   };
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [empSearchOpen, setEmpSearchOpen] = useState(false);
 
   const roleFilteredNav = useMemo(
     () => filterNavByRole(navigationItems, user?.role),
@@ -160,6 +162,11 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   );
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === '/employee-search') {
+      setEmpSearchOpen(true);
+      onMobileOpenChange?.(false);
+      return;
+    }
     if (key.startsWith('/')) {
       navigate(key);
       onMobileOpenChange?.(false);
@@ -326,6 +333,9 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
       >
         {siderContent}
       </Drawer>
+
+      {/* Employee Search Dialog */}
+      <EmployeeSearchDialog open={empSearchOpen} onClose={() => setEmpSearchOpen(false)} />
     </>
   );
 }
