@@ -1,0 +1,275 @@
+import React, { useState } from 'react';
+import {
+  Card, Form, Input, Tabs, Button, Select, DatePicker, Checkbox, InputNumber,
+  Table, Typography, Space, Radio, App,
+} from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { List as ListIcon } from 'lucide-react';
+import dayjs from 'dayjs';
+import api from '@/services/api';
+import { useAppSelector } from '@/store';
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
+
+const SITE_TYPE_OPTIONS = [
+  { value: 'site', label: 'SITE' },
+  { value: 'plant', label: 'PLANT' },
+  { value: 'toll', label: 'TOLL' },
+  { value: 'project', label: 'PROJECT' },
+];
+
+function FRow({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">{children}</div>;
+}
+
+function FItem({ label, name, children, required }: { label: string; name: string; children?: React.ReactNode; required?: boolean }) {
+  return (
+    <Form.Item label={label} name={name} labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}
+      rules={required ? [{ required: true, message: `${label} is required` }] : undefined}>
+      {children || <Input />}
+    </Form.Item>
+  );
+}
+
+export default function SiteAdd() {
+  const navigate = useNavigate();
+  const { message } = App.useApp();
+  const [form] = Form.useForm();
+  const [saving, setSaving] = useState(false);
+  const user = useAppSelector((s) => s.auth.user);
+  const companyName = typeof user?.company === 'object' ? user.company.name : '';
+
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      setSaving(true);
+      const payload = {
+        ...values,
+        startDate: values.startDate?.toISOString(),
+        loiLoaDate: values.loiLoaDate?.toISOString(),
+        agreementDate: values.agreementDate?.toISOString(),
+      };
+      await api.post('/branches', payload);
+      message.success('Site/Plant/Project created');
+      navigate('/admin-module/master/site/list');
+    } catch (err: any) {
+      if (err?.errorFields) return;
+      message.error(err?.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ─── Header Section ────────────────────────────────────────────────────────
+  const headerSection = (
+    <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+      <Text type="danger" className="block text-center font-medium mb-4">New Mode</Text>
+      <FRow>
+        <FItem label="Site Name" name="name" required><Input /></FItem>
+        <FItem label="Short Name" name="code" required><Input /></FItem>
+      </FRow>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
+        <Form.Item label="Is HO" name="isHO" valuePropName="checked" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
+          <Checkbox />
+        </Form.Item>
+        <Form.Item label="Site Type" name="siteType" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}
+          rules={[{ required: true, message: 'Required' }]} initialValue="site">
+          <Select options={SITE_TYPE_OPTIONS} />
+        </Form.Item>
+        <div />
+      </div>
+      <FRow>
+        <Form.Item label="Company" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
+          <Input value={companyName} disabled />
+        </Form.Item>
+        <FItem label="Division" name="division"><Input /></FItem>
+      </FRow>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-1">
+        <Form.Item label="Dept. Type" name="departmentType" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
+          <Select placeholder="Please Select" options={[
+            { value: 'civil', label: 'Civil' }, { value: 'electrical', label: 'Electrical' },
+            { value: 'mechanical', label: 'Mechanical' }, { value: 'it', label: 'IT' },
+          ]} allowClear />
+        </Form.Item>
+        <Form.Item label="Project Type" name="projectType" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
+          <Select placeholder="Please Select" options={[
+            { value: 'road', label: 'Road' }, { value: 'bridge', label: 'Bridge' },
+            { value: 'building', label: 'Building' }, { value: 'canal', label: 'Canal' },
+          ]} allowClear />
+        </Form.Item>
+        <Form.Item label="Start Date" name="startDate" labelCol={{ span: 14 }} wrapperCol={{ span: 10 }}>
+          <DatePicker className="w-full" defaultValue={dayjs()} />
+        </Form.Item>
+        <Form.Item label="Purchase Limit" name="purchaseLimit" labelCol={{ span: 14 }} wrapperCol={{ span: 10 }}>
+          <InputNumber className="w-full" defaultValue={0} />
+        </Form.Item>
+      </div>
+      <FRow>
+        <Form.Item label="Is Locked" name="isLocked" valuePropName="checked" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
+          <Checkbox><Text type="danger" className="text-xs">After Locking entry can not be made.</Text></Checkbox>
+        </Form.Item>
+        <Form.Item label="Order No." name="orderNo" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
+          <InputNumber className="w-full" defaultValue={0} />
+        </Form.Item>
+      </FRow>
+      <FRow>
+        <div />
+        <Form.Item name="cgstApplicable" valuePropName="checked" wrapperCol={{ offset: 9, span: 15 }}>
+          <Checkbox>
+            <Text className="text-xs">As per rules 38,42 & 43 of CGST Rules and section 17(5) — Yes</Text>
+          </Checkbox>
+        </Form.Item>
+      </FRow>
+    </div>
+  );
+
+  // ─── Tab 1: Address Details ──────────────────────────────────────────────
+  const addressTab = (
+    <div className="py-4">
+      <FRow>
+        <FItem label="Address 01" name="address01"><Input /></FItem>
+        <FItem label="Address 02" name="address02"><Input /></FItem>
+      </FRow>
+      <FRow>
+        <FItem label="Address 03" name="address03"><Input /></FItem>
+        <FItem label="City" name="city" required><Input placeholder="Type here atleast 3 character to search data" /></FItem>
+      </FRow>
+      <FRow>
+        <FItem label="Pincode" name="pincode"><Input /></FItem>
+        <FItem label="Email" name="email"><Input /></FItem>
+      </FRow>
+      <FRow>
+        <FItem label="Email Id For PO From" name="emailForPO"><Input /></FItem>
+        <FItem label="Phone No.1" name="phone1"><Input /></FItem>
+      </FRow>
+      <FRow>
+        <FItem label="Phone No.2" name="phone2"><Input /></FItem>
+        <FItem label="Fax No.1" name="faxNo1"><Input /></FItem>
+      </FRow>
+      <FRow>
+        <FItem label="Fax No.2" name="faxNo2"><Input /></FItem>
+        <FItem label="Principal Employer" name="principalEmployer"><Input /></FItem>
+      </FRow>
+    </div>
+  );
+
+  // ─── Tab 2: Tax Details ──────────────────────────────────────────────────
+  const taxTab = (
+    <div className="py-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
+        <Form.Item label="TIN No." name="tinNo" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
+        <Form.Item label="STC No." name="stcNo" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
+        <Form.Item label="ECC No." name="eccNo" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
+        <Form.Item label="Excise Range" name="exciseRange" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
+        <Form.Item label="Excise Division" name="exciseDivision" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
+        <Form.Item label="Commissionerate" name="commissionerate" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
+      </div>
+    </div>
+  );
+
+  // ─── Tab 3: Other Details ────────────────────────────────────────────────
+  const otherTab = (
+    <div className="py-4">
+      <FRow>
+        <FItem label="Desc. Exciseable Commodity" name="descExciseableCommodity"><Input disabled className="!bg-red-50" /></FItem>
+        <FItem label="Contact Person" name="contactPerson"><Input /></FItem>
+      </FRow>
+      <FRow>
+        <FItem label="Remark" name="remark"><TextArea rows={2} /></FItem>
+        <FItem label="Rera Reg. No." name="reraRegNo"><Input /></FItem>
+      </FRow>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+        <div />
+        <Form.Item label="Completion Certificate" name="completionCertificate" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
+          <Input />
+        </Form.Item>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-1">
+        <Form.Item label="LOI/LOA No." name="loiLoaNo" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><Input /></Form.Item>
+        <Form.Item label="LOI/LOA Date" name="loiLoaDate" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><DatePicker className="w-full" /></Form.Item>
+        <Form.Item label="Agreement No." name="agreementNo" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><Input /></Form.Item>
+        <Form.Item label="Agreement Date" name="agreementDate" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><DatePicker className="w-full" /></Form.Item>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
+        <Form.Item label="Work Capital" name="workCapital" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><InputNumber className="w-full" defaultValue={0} /></Form.Item>
+        <Form.Item label="Mandi Licence No." name="mandiLicenceNo" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><Input /></Form.Item>
+        <div />
+      </div>
+    </div>
+  );
+
+  // ─── Tab 4: GST ──────────────────────────────────────────────────────────
+  const gstTab = (
+    <div className="py-4">
+      <Text strong className="block text-center mb-3">State Wise Tin Number (For Billing Purpose)</Text>
+      <Form.List name="gstEntries">
+        {(fields, { add, remove }) => (
+          <>
+            <div className="flex justify-end mb-2">
+              <Button type="primary" size="small" danger onClick={() => add()}>Add</Button>
+            </div>
+            <Table dataSource={fields} pagination={false} size="small" rowKey="key" columns={[
+              { title: 'State', key: 's', width: 200, render: (_, f) => <Form.Item name={[f.name, 'state']} noStyle><Input /></Form.Item> },
+              { title: 'Tin Number', key: 't', width: 200, render: (_, f) => <Form.Item name={[f.name, 'tinNumber']} noStyle><Input /></Form.Item> },
+              { title: 'GST Number', key: 'g', width: 200, render: (_, f) => <Form.Item name={[f.name, 'gstNumber']} noStyle><Input /></Form.Item> },
+              { title: 'State Code', key: 'c', width: 100, render: (_, f) => <Form.Item name={[f.name, 'stateCode']} noStyle><Input /></Form.Item> },
+              { title: 'Is UT', key: 'u', width: 60, render: (_, f) => <Form.Item name={[f.name, 'isUT']} valuePropName="checked" noStyle><Checkbox /></Form.Item> },
+              { title: 'ISD', key: 'i', width: 60, render: (_, f) => <Form.Item name={[f.name, 'isISD']} valuePropName="checked" noStyle><Checkbox /></Form.Item> },
+              { title: '', key: 'd', width: 50, render: (_, f) => <Button danger size="small" onClick={() => remove(f.name)}>Del</Button> },
+            ]} />
+          </>
+        )}
+      </Form.List>
+    </div>
+  );
+
+  // ─── Tab 5: Document ─────────────────────────────────────────────────────
+  const documentTab = (
+    <div className="py-4">
+      <Form.List name="documents">
+        {(fields, { add, remove }) => (
+          <>
+            <div className="flex justify-end mb-2">
+              <Button type="primary" size="small" danger onClick={() => add()}>Add</Button>
+            </div>
+            <Table dataSource={fields} pagination={false} size="small" rowKey="key" columns={[
+              { title: 'Document Name', key: 'n', width: 200, render: (_, f) => <Form.Item name={[f.name, 'documentName']} noStyle><Input /></Form.Item> },
+              { title: 'File', key: 'f', width: 200, render: (_, f) => <Form.Item name={[f.name, 'file']} noStyle><Input placeholder="File path" /></Form.Item> },
+              { title: 'File Path', key: 'p', width: 150, render: (_, f) => <Form.Item name={[f.name, 'filePath']} noStyle><Input /></Form.Item> },
+              { title: 'Remark', key: 'r', width: 200, render: (_, f) => <Form.Item name={[f.name, 'remark']} noStyle><Input /></Form.Item> },
+              { title: '', key: 'd', width: 50, render: (_, f) => <Button danger size="small" onClick={() => remove(f.name)}>Del</Button> },
+            ]} />
+          </>
+        )}
+      </Form.List>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Title level={4} className="!mb-0">Site/Plant/Project</Title>
+        <Button icon={<ListIcon size={14} />} onClick={() => navigate('/admin-module/master/site/list')}>List</Button>
+      </div>
+      <Card bordered={false} className="!rounded-lg !shadow-sm">
+        <Form form={form} layout="horizontal" size="small">
+          {headerSection}
+          <Tabs items={[
+            { key: 'address', label: 'Address Details', children: addressTab },
+            { key: 'tax', label: 'Tax Details', children: taxTab },
+            { key: 'other', label: 'Other Details', children: otherTab },
+            { key: 'gst', label: 'GST', children: gstTab },
+            { key: 'document', label: 'Document', children: documentTab },
+          ]} type="card" />
+          <div className="flex justify-center gap-3 mt-4">
+            <Button type="primary" danger loading={saving} onClick={handleSave}>Save</Button>
+            <Button danger onClick={() => navigate('/admin-module/master/site/list')}>Close</Button>
+          </div>
+        </Form>
+      </Card>
+    </div>
+  );
+}

@@ -147,6 +147,11 @@ const MasterShift = lazy(() => import('../pages/master/other/Shift'));
 
 // Admin Module
 const AdminModuleDashboard = lazy(() => import('../pages/admin-module/Dashboard'));
+const AdminModuleCompanyList = lazy(() => import('../pages/admin-module/company/List'));
+const AdminModuleCompanyEdit = lazy(() => import('../pages/admin-module/company/Edit'));
+const AdminModuleSiteAdd = lazy(() => import('../pages/admin-module/site/Add'));
+const AdminModuleSiteList = lazy(() => import('../pages/admin-module/site/List'));
+const AdminModuleSiteDocument = lazy(() => import('../pages/admin-module/site/Document'));
 
 function PageSkeleton() {
   return (
@@ -385,6 +390,12 @@ export default function AppRoutes() {
           Admin Module (ERP module = "admin") — dashboard + sub-routes
          ══════════════════════════════════════════════════════════════════════ */}
       <Route path="/admin-module" element={<R roles={ADMINS}><AdminModuleDashboard /></R>} />
+      <Route path="/admin-module/master/company/list" element={<R roles={ADMINS}><AdminModuleCompanyList /></R>} />
+      <Route path="/admin-module/master/company/edit/:id" element={<R roles={ADMINS}><AdminModuleCompanyEdit /></R>} />
+      <Route path="/admin-module/master/site/add" element={<R roles={ADMINS}><AdminModuleSiteAdd /></R>} />
+      <Route path="/admin-module/master/site/list" element={<R roles={ADMINS}><AdminModuleSiteList /></R>} />
+      <Route path="/admin-module/master/site/edit/:id" element={<R roles={ADMINS}><AdminModuleSiteAdd /></R>} />
+      <Route path="/admin-module/master/site/document" element={<R roles={ADMINS}><AdminModuleSiteDocument /></R>} />
       {ADMIN_MODULE_ROUTES.map((path) => (
         <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
       ))}
@@ -396,12 +407,8 @@ export default function AppRoutes() {
 
 // ─── Admin Module routes (InProgress) ─────────────────────────────────────────
 const ADMIN_MODULE_ROUTES: string[] = [
-  // Master → Company
-  '/admin-module/master/company/list',
-  // Master → Site / Plant / Project
-  '/admin-module/master/site/add',
-  '/admin-module/master/site/list',
-  '/admin-module/master/site/document',
+  // Master → Company — LIVE (see routes above)
+  // Master → Site / Plant / Project — LIVE (see routes above)
   // Master → Site Location
   '/admin-module/master/site-location/add',
   '/admin-module/master/site-location/list',
