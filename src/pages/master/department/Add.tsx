@@ -117,7 +117,7 @@ const DepartmentAdd: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
               <Form.Item
                 name="name"
-                label={<><Text type="danger">*</Text> Department Name</>}
+                label={<> Department Name</>}
                 rules={[{ required: true, message: 'Department Name is required' }]}
               >
                 <Input placeholder="e.g. Engineering" maxLength={100} autoFocus />
@@ -125,7 +125,7 @@ const DepartmentAdd: React.FC = () => {
 
               <Form.Item
                 name="shortName"
-                label={<><Text type="danger">*</Text> Short Name</>}
+                label={<> Short Name</>}
                 rules={[{ required: true, message: 'Short Name is required' }]}
               >
                 <Input placeholder="e.g. ENG" maxLength={20} />
