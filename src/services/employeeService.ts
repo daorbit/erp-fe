@@ -27,9 +27,6 @@ const employeeService = {
   getPayslips: (id: string) =>
     api.get<any>(`${EMPLOYEES_URL}/${id}/payslips`),
 
-  getAssets: (id: string) =>
-    api.get<any>(`${EMPLOYEES_URL}/${id}/assets`),
-
   getTimeline: (id: string) =>
     api.get<any>(`${EMPLOYEES_URL}/${id}/timeline`),
 

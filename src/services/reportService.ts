@@ -18,9 +18,6 @@ const reportService = {
   getRecruitmentReport: (params?: Record<string, string>) =>
     api.get<any>(`${REPORTS_URL}/recruitment`, params),
 
-  getExpenseReport: (params?: Record<string, string>) =>
-    api.get<any>(`${REPORTS_URL}/expenses`, params),
-
   getHeadcountReport: (params?: Record<string, string>) =>
     api.get<any>(`${REPORTS_URL}/headcount`, params),
 

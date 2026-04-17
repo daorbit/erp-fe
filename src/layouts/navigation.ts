@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Settings, Building2, Award,
   UserPlus, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
   IndianRupee, Wallet, Briefcase, FileSearch, Star, GraduationCap,
-  BookOpen, FolderOpen, PartyPopper, Megaphone, Receipt, Package, LifeBuoy, BarChart3,
+  BookOpen, FolderOpen, PartyPopper, Receipt, BarChart3,
   Activity, Timer, GitBranch,
   // Master group additions (verified lucide-react exports)
   Database, Building, Coins, UserCog, Percent, Boxes, ArrowRightLeft,
@@ -501,10 +501,6 @@ export const navigationItems: NavItem[] = [
   },
   { titleKey: 'documents', href: '/documents', icon: FolderOpen, roles: ALL_COMPANY },
   { titleKey: 'holidays', href: '/holidays', icon: PartyPopper, roles: ALL_COMPANY },
-  { titleKey: 'announcements', href: '/announcements', icon: Megaphone, roles: ALL_COMPANY },
-  { titleKey: 'expenses', href: '/expenses', icon: Receipt, roles: ['admin', 'hr_manager', 'manager', 'viewer'] },
-  { titleKey: 'assets', href: '/assets', icon: Package, roles: ALL_COMPANY },
-  { titleKey: 'helpdesk', href: '/helpdesk', icon: LifeBuoy, roles: ALL_COMPANY },
 
   // ─── Settings (everyone) ───────────────────────────────────────────────────
   // ─── Audit & Settings ───────────────────────────────────────────────────────

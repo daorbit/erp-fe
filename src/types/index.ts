@@ -12,8 +12,5 @@ export * from './performance';
 export * from './training';
 export * from './document';
 export * from './holiday';
-export * from './announcement';
-export * from './expense';
-export * from './asset';
-export * from './helpdesk';
+
 export * from './dashboard';
