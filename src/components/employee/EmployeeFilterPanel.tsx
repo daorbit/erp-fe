@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, Form, Input, Select, Radio, DatePicker, Button, Space, Typography, Table, Checkbox } from 'antd';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
@@ -82,7 +82,18 @@ const EmployeeFilterPanel: React.FC<Props> = ({
   const includes = (f: FilterField) => fields.includes(f);
 
   // Master data
-  const { data: companies } = useCompanyList();
+  const { data: myCompanyData } = useMyCompany();
+  const companyOptions = myCompanyData?.data
+    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
+    : [];
+
+  // Auto-select the user's company
+  useEffect(() => {
+    if (myCompanyData?.data && !filters.company) {
+      setF('company', myCompanyData.data._id || myCompanyData.data.id);
+    }
+  }, [myCompanyData]);
+
   const { data: branches } = useBranchList();
   const { data: depts } = useDepartmentList();
   const { data: desigs } = useDesignationList();
@@ -162,7 +173,7 @@ const EmployeeFilterPanel: React.FC<Props> = ({
           {includes('company') && (
             <Form.Item label="Company Name" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }} required>
               <Select placeholder="Please Select" allowClear value={filters.company}
-                onChange={(v) => setF('company', v)} options={opts(companies?.data ?? [])} />
+                onChange={(v) => setF('company', v)} options={companyOptions} />
             </Form.Item>
           )}
           {includes('branch') && (

@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Card, Select, Button, Space, Typography, App, Table, Input, Empty,
+  Card, Select, Button, Space, Typography, App, Table, Input, Empty, Spin,
 } from 'antd';
 import { Edit2, Trash2 } from 'lucide-react';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 import { useBranchList } from '@/hooks/queries/useBranches';
-import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import employeeService from '@/services/employeeService';
 import { documentMasterHooks } from '@/hooks/queries/useMasterOther';
 
@@ -24,16 +23,57 @@ const DocumentUpdate: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const { data: companies } = useCompanyList();
+  // Debounced employee search
+  const [empOptions, setEmpOptions] = useState<{ value: string; label: string }[]>([]);
+  const [empSearching, setEmpSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleEmpSearch = useCallback((searchText: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!searchText || searchText.length < 1) {
+      setEmpOptions([]);
+      return;
+    }
+    setEmpSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await employeeService.getAll({ search: searchText, limit: '20' });
+        const list = res?.data ?? [];
+        setEmpOptions(
+          list.map((e: any) => {
+            const user = e.userId ?? e;
+            const first = user.firstName ?? e.firstName ?? '';
+            const last = user.lastName ?? e.lastName ?? '';
+            return {
+              value: e._id || e.id,
+              label: `${first} ${last} (${e.employeeId ?? ''})`.trim(),
+            };
+          }),
+        );
+      } catch {
+        setEmpOptions([]);
+      } finally {
+        setEmpSearching(false);
+      }
+    }, 400);
+  }, []);
+
+  const { data: myCompanyData } = useMyCompany();
+  const companyOptions = myCompanyData?.data
+    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
+    : [];
+
+  // Auto-select the user's company
+  useEffect(() => {
+    if (myCompanyData?.data && !company) {
+      setCompany(myCompanyData.data._id || myCompanyData.data.id);
+    }
+  }, [myCompanyData, company]);
+
   const { data: branches } = useBranchList();
-  const { data: emps } = useEmployeeList();
   const { data: docTypes } = documentMasterHooks.useList();
 
   const opts = (list: any[]) => (list ?? []).map((x: any) => ({ value: x._id || x.id, label: x.name }));
-  const empOpts = (emps?.data ?? []).map((e: any) => ({
-    value: e._id || e.id,
-    label: `${e.firstName ?? ''} ${e.lastName ?? ''} (${e.employeeId ?? ''})`,
-  }));
 
   const handleShow = async () => {
     if (!employee) { message.error('Pick an employee'); return; }
@@ -74,7 +114,7 @@ const DocumentUpdate: React.FC = () => {
           <div>
             <div className="text-xs mb-1">Company Name</div>
             <Select allowClear placeholder="ALL" value={company} onChange={setCompany}
-              options={opts(companies?.data ?? [])} className="w-full" />
+              options={companyOptions} className="w-full" />
           </div>
           <div>
             <div className="text-xs mb-1">Branch Name</div>
@@ -83,8 +123,15 @@ const DocumentUpdate: React.FC = () => {
           </div>
           <div>
             <div className="text-xs mb-1">Employee Name *</div>
-            <Select placeholder="Type atleast 1 character" showSearch optionFilterProp="label"
-              value={employee} onChange={setEmployee} options={empOpts} className="w-full" />
+            <Select
+              placeholder="Type atleast 1 character"
+              showSearch={{ onSearch: handleEmpSearch, filterOption: false }}
+              value={employee}
+              onChange={setEmployee}
+              options={empOptions}
+              notFoundContent={empSearching ? <Spin size="small" /> : null}
+              className="w-full"
+            />
           </div>
         </div>
         <div className="flex justify-center gap-2 mt-4">

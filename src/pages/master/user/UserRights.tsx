@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Select, Button, Space, Typography, App, Transfer } from 'antd';
 import api from '@/services/api';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useUserRight, useSaveUserRight, useCopyUserRight } from '@/hooks/queries/usePhase2';
 
@@ -25,7 +25,10 @@ const UserRightsPage: React.FC = () => {
   const [branchId, setBranchId] = useState<string | undefined>();
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
 
-  const { data: companies } = useCompanyList();
+  const { data: myCompanyData } = useMyCompany();
+  const companyOptions = myCompanyData?.data
+    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
+    : [];
   const { data: branches } = useBranchList();
   const { data: currentRights, refetch } = useUserRight(userId, branchId);
   const save = useSaveUserRight();
@@ -92,7 +95,7 @@ const UserRightsPage: React.FC = () => {
               options={users.map((u) => ({ value: u._id || u.id, label: u.username || u.firstName }))} />
           </Form.Item>
           <Form.Item label="Company Name" labelCol={{ span: 8 }} wrapperCol={{ span: 14 }}>
-            <Select placeholder="Please Select" options={opts(companies?.data ?? [])} />
+            <Select placeholder="Please Select" options={companyOptions} />
           </Form.Item>
           <Form.Item label="Branch Name" labelCol={{ span: 8 }} wrapperCol={{ span: 14 }} rules={[{ required: true }]}>
             <Select placeholder="Please Select" value={branchId} onChange={setBranchId} options={opts(branches?.data ?? [])} />

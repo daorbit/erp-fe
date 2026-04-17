@@ -11,7 +11,7 @@ import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useEmployeeGroupList } from '@/hooks/queries/useEmployeeGroups';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 import {
   levelHooks, gradeHooks, tagHooks, cityHooks, bankHooks,
 } from '@/hooks/queries/useMasterOther';
@@ -42,12 +42,25 @@ const EmployeeAdd: React.FC = () => {
   const { data: desigs } = useDesignationList();
   const { data: branches } = useBranchList();
   const { data: empGroups } = useEmployeeGroupList();
-  const { data: companies } = useCompanyList();
+  const { data: myCompany } = useMyCompany();
   const { data: levels } = levelHooks.useList();
   const { data: grades } = gradeHooks.useList();
   const { data: tags } = tagHooks.useList();
   const { data: cities } = cityHooks.useList();
   const { data: banks } = bankHooks.useList();
+
+  // Auto-set company from current user's company
+  const companyOptions = useMemo(() => {
+    const c = myCompany?.data;
+    return c ? [{ value: c._id || c.id, label: c.name }] : [];
+  }, [myCompany]);
+
+  useEffect(() => {
+    if (!isEdit && myCompany?.data) {
+      const c = myCompany.data;
+      form.setFieldValue('company', c._id || c.id);
+    }
+  }, [myCompany, isEdit, form]);
 
   // Load existing if editing
   useEffect(() => {
@@ -145,7 +158,7 @@ const EmployeeAdd: React.FC = () => {
             </Form.Item>
 
             <Form.Item name="company" label="Company Name" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} rules={[{ required: true }]}>
-              <Select placeholder="Please Select" options={opts(companies?.data ?? [])} showSearch optionFilterProp="label" />
+              <Select placeholder="Please Select" options={companyOptions} showSearch optionFilterProp="label" />
             </Form.Item>
             <Form.Item name="branch" label="Branch Name" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} rules={[{ required: true }]}>
               <Select placeholder="Please Select" options={opts(branches?.data ?? [])} showSearch optionFilterProp="label" />

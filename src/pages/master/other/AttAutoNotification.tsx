@@ -3,7 +3,7 @@ import { Card, Form, Select, Button, Space, Typography, Table, App, Popconfirm }
 import { Trash2 } from 'lucide-react';
 import { attAutoNotificationHooks } from '@/hooks/queries/useMasterOther';
 import { useBranchList } from '@/hooks/queries/useBranches';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 
 const { Title } = Typography;
 
@@ -12,7 +12,10 @@ const AttAutoNotificationPage: React.FC = () => {
   const { message } = App.useApp();
   const { data, isLoading } = attAutoNotificationHooks.useList();
   const { data: branches } = useBranchList();
-  const { data: companies } = useCompanyList();
+  const { data: myCompanyData } = useMyCompany();
+  const companyOptions = myCompanyData?.data
+    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
+    : [];
   const create = attAutoNotificationHooks.useCreate();
   const del = attAutoNotificationHooks.useDelete();
 
@@ -28,7 +31,6 @@ const AttAutoNotificationPage: React.FC = () => {
 
   const rows = data?.data ?? [];
   const branchOptions = (branches?.data ?? []).map((b: any) => ({ value: b._id || b.id, label: b.name }));
-  const companyOptions = (companies?.data ?? []).map((c: any) => ({ value: c._id || c.id, label: c.name }));
 
   return (
     <div className="space-y-4">

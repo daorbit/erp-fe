@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Form, Select, Button, Space, Typography, Table, Empty, App } from 'antd';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import designationService from '@/services/designationService';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 import { useAppSelector } from '@/store';
 
 const { Title } = Typography;
@@ -20,12 +20,20 @@ const DesignationEmployeeCount: React.FC = () => {
   const { data: branchListData } = useBranchList();
   const branches = branchListData?.data ?? [];
 
-  // Company list — only super_admin can pick across companies; others get their own.
-  const { data: companyListData } = useCompanyList();
-  const companies = companyListData?.data ?? [];
+  const { data: myCompanyData } = useMyCompany();
+  const companyOptions = myCompanyData?.data
+    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
+    : [];
 
   const userCompanyId =
     typeof user?.company === 'object' ? user?.company?._id || user?.company?.id : user?.company;
+
+  // Auto-select the user's company when data loads
+  useEffect(() => {
+    if (myCompanyData?.data) {
+      form.setFieldValue('companyId', myCompanyData.data._id || myCompanyData.data.id);
+    }
+  }, [myCompanyData, form]);
 
   const [rows, setRows] = useState<Array<{ designationId: string; designationName: string; shortName: string; count: number }>>([]);
   const [loading, setLoading] = useState(false);
@@ -67,15 +75,7 @@ const DesignationEmployeeCount: React.FC = () => {
             rules={[{ required: true, message: 'Company is required' }]}>
             <Select
               placeholder="Please Select"
-              // Regular admins belong to exactly one company and can't switch.
-              disabled={user?.role !== 'super_admin'}
-              options={
-                user?.role === 'super_admin'
-                  ? companies.map((c: any) => ({ value: c._id || c.id, label: c.name }))
-                  : companies
-                      .filter((c: any) => (c._id || c.id) === userCompanyId)
-                      .map((c: any) => ({ value: c._id || c.id, label: c.name }))
-              }
+              options={companyOptions}
             />
           </Form.Item>
           <Form.Item name="branchId" label="Branch Name" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>

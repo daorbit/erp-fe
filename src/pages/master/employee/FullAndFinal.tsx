@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Card, Select, Button, Space, Typography, App, Descriptions, Statistic, Row, Col,
 } from 'antd';
 import { List as ListIcon } from 'lucide-react';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
@@ -25,7 +25,18 @@ const FullAndFinal: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const { data: companies } = useCompanyList();
+  const { data: myCompanyData } = useMyCompany();
+  const companyOptions = myCompanyData?.data
+    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
+    : [];
+
+  // Auto-select the user's company
+  useEffect(() => {
+    if (myCompanyData?.data && !company) {
+      setCompany(myCompanyData.data._id || myCompanyData.data.id);
+    }
+  }, [myCompanyData, company]);
+
   const { data: branches } = useBranchList();
   const { data: depts } = useDepartmentList();
   const { data: desigs } = useDesignationList();
@@ -71,7 +82,7 @@ const FullAndFinal: React.FC = () => {
           <div>
             <div className="text-xs mb-1">Company Name</div>
             <Select placeholder="ALL" allowClear value={company} onChange={setCompany}
-              options={opts(companies?.data ?? [])} className="w-full" />
+              options={companyOptions} className="w-full" />
           </div>
           <div>
             <div className="text-xs mb-1">Branch Name</div>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Form, Select, Button, Space, Typography, Table, App, Popconfirm } from 'antd';
 import { Trash2 } from 'lucide-react';
 import { attUploadSiteHooks } from '@/hooks/queries/useMasterOther';
 import { useBranchList } from '@/hooks/queries/useBranches';
-import { useCompanyList } from '@/hooks/queries/useCompanies';
+import { useMyCompany } from '@/hooks/queries/useCompanies';
 
 const { Title } = Typography;
 
@@ -12,11 +12,21 @@ const AttUploadSitePage: React.FC = () => {
   const { message } = App.useApp();
   const { data, isLoading } = attUploadSiteHooks.useList();
   const { data: branches } = useBranchList();
-  const { data: companies } = useCompanyList();
+  const { data: myCompanyData } = useMyCompany();
+  const companyOptions = myCompanyData?.data
+    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
+    : [];
   const create = attUploadSiteHooks.useCreate();
   const del = attUploadSiteHooks.useDelete();
 
   const [companyId, setCompanyId] = useState<string | undefined>();
+
+  // Auto-select the user's company
+  useEffect(() => {
+    if (myCompanyData?.data && !companyId) {
+      setCompanyId(myCompanyData.data._id || myCompanyData.data.id);
+    }
+  }, [myCompanyData, companyId]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -30,7 +40,6 @@ const AttUploadSitePage: React.FC = () => {
 
   const rows = data?.data ?? [];
   const branchOptions = (branches?.data ?? []).map((b: any) => ({ value: b._id || b.id, label: b.name }));
-  const companyOptions = (companies?.data ?? []).map((c: any) => ({ value: c._id || c.id, label: c.name }));
 
   return (
     <div className="space-y-4">

@@ -16,6 +16,13 @@ export function useCompanyList(params?: any) {
   });
 }
 
+export function useMyCompany() {
+  return useQuery({
+    queryKey: [...companyKeys.all, 'me'] as const,
+    queryFn: () => companyService.getMyCompany(),
+  });
+}
+
 export function useCompany(id: string) {
   return useQuery({
     queryKey: companyKeys.detail(id),
