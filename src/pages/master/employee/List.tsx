@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Card, Table, Button, Input, Typography, Radio, Select, DatePicker, Space, App, Popconfirm,
 } from 'antd';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye } from 'lucide-react';
 import employeeService from '@/services/employeeService';
 import { useEmployeeList, useDeleteEmployee } from '@/hooks/queries/useEmployees';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
@@ -58,7 +58,7 @@ const EmployeeList: React.FC = () => {
     const list = data?.data ?? [];
     return list.filter((e: any) => {
       if (filters.employeeName) {
-        const name = `${e.firstName ?? ''} ${e.lastName ?? ''}`.toLowerCase();
+        const name = `${e.userId?.firstName ?? e.firstName ?? ''} ${e.userId?.lastName ?? e.lastName ?? ''}`.toLowerCase();
         if (!name.includes(filters.employeeName.toLowerCase())) return false;
       }
       if (filters.employeeCode && !(e.employeeId ?? '').includes(filters.employeeCode)) return false;
@@ -72,44 +72,77 @@ const EmployeeList: React.FC = () => {
   const opts = (list: any[]) => (list ?? []).map((x: any) => ({ value: x._id || x.id, label: x.name }));
 
   const columns = [
-    { title: 'Sr.No.', render: (_: any, __: any, i: number) => i + 1, width: 70 },
-    { title: 'Code', dataIndex: 'employeeId', width: 120 },
+    { title: 'Sr.No.', render: (_: any, __: any, i: number) => i + 1, width: 70, fixed: 'left' as const },
+    { title: 'Code', dataIndex: 'employeeId', width: 120, fixed: 'left' as const },
     {
-      title: 'Employee Name',
-      render: (_: any, r: any) => `${r.firstName ?? ''} ${r.lastName ?? ''}`.trim(),
+      title: 'Employee Name', width: 180, fixed: 'left' as const,
+      render: (_: any, r: any) => `${r.userId?.firstName ?? r.firstName ?? ''} ${r.userId?.lastName ?? r.lastName ?? ''}`.trim(),
     },
     {
-      title: 'Company / Site / Group',
-      render: (_: any, r: any) => [
-        typeof r.company === 'object' ? r.company?.name : null,
-        typeof r.branch === 'object' ? r.branch?.name : null,
-        typeof r.employeeGroup === 'object' ? r.employeeGroup?.name : null,
-      ].filter(Boolean).join(' / ') || '—',
+      title: 'Joining Date', width: 120,
+      render: (_: any, r: any) => r.joinDate ? dayjs(r.joinDate).format('DD/MM/YYYY') : '—',
     },
     {
-      title: 'Dept / Des / Level / Grade',
-      render: (_: any, r: any) => [
-        typeof r.department === 'object' ? r.department?.name : null,
-        typeof r.designation === 'object' ? r.designation?.name : null,
-        typeof r.level === 'object' ? r.level?.name : null,
-        typeof r.grade === 'object' ? r.grade?.name : null,
-      ].filter(Boolean).join(' / ') || '—',
-    },
-    { title: 'Shift', dataIndex: 'workShift', width: 100 },
-    {
-      title: 'Email / Mobile / Aadhar',
-      render: (_: any, r: any) => [
-        r.email ?? r.mobileNo, r.mobileNo, r.identityDocs?.aadhaarNumber,
-      ].filter(Boolean).join(' / ') || '—',
+      title: 'Company', width: 150,
+      render: (_: any, r: any) => (typeof r.company === 'object' ? r.company?.name : null) || '—',
     },
     {
-      title: 'Edit', width: 70, align: 'center' as const,
+      title: 'Branch', width: 150,
+      render: (_: any, r: any) => (typeof r.branch === 'object' ? r.branch?.name : null) || '—',
+    },
+    {
+      title: 'Department', width: 150,
+      render: (_: any, r: any) => (typeof r.department === 'object' ? r.department?.name : null) || '—',
+    },
+    {
+      title: 'Designation', width: 150,
+      render: (_: any, r: any) => (typeof r.designation === 'object' ? r.designation?.name : null) || '—',
+    },
+    {
+      title: 'Level', width: 120,
+      render: (_: any, r: any) => (typeof r.level === 'object' ? r.level?.name : null) || '—',
+    },
+    {
+      title: 'Grade', width: 120,
+      render: (_: any, r: any) => (typeof r.grade === 'object' ? r.grade?.name : null) || '—',
+    },
+    {
+      title: 'Employee Group', width: 150,
+      render: (_: any, r: any) => (typeof r.employeeGroup === 'object' ? r.employeeGroup?.name : null) || '—',
+    },
+    { title: 'Shift', width: 100, render: (_: any, r: any) => (typeof r.shift === 'object' ? r.shift?.name : r.workShift) || '—' },
+    { title: 'Father/Husband', dataIndex: 'fatherName', width: 150, render: (v: any) => v || '—' },
+    {
+      title: 'Date of Birth', width: 120,
+      render: (_: any, r: any) => r.dateOfBirth ? dayjs(r.dateOfBirth).format('DD/MM/YYYY') : '—',
+    },
+    { title: 'Mobile No.', dataIndex: 'mobileNo', width: 130, render: (v: any) => v || '—' },
+    { title: 'Email', width: 180, render: (_: any, r: any) => r.userId?.email || r.email || '—' },
+    {
+      title: 'Aadhaar No.', width: 140,
+      render: (_: any, r: any) => r.identityDocs?.aadhaarNumber || '—',
+    },
+    {
+      title: 'Present Address', width: 200, ellipsis: true,
+      render: (_: any, r: any) => r.currentAddress?.street || '—',
+    },
+    { title: 'Bank Name', dataIndex: 'employeeBankName', width: 150, render: (v: any) => v || '—' },
+    { title: 'Bank Acc No.', dataIndex: 'employeeBankAccNo', width: 150, render: (v: any) => v || '—' },
+    { title: 'IFSC Code', dataIndex: 'ifscCode', width: 120, render: (v: any) => v || '—' },
+    {
+      title: 'View', width: 60, align: 'center' as const, fixed: 'right' as const,
+      render: (_: any, r: any) => (
+        <Button type="text" icon={<Eye size={16} />} onClick={() => navigate(`/master/employee/view/${r._id || r.id}`)} />
+      ),
+    },
+    {
+      title: 'Edit', width: 60, align: 'center' as const, fixed: 'right' as const,
       render: (_: any, r: any) => (
         <Button type="text" icon={<Edit2 size={16} />} onClick={() => navigate(`/master/employee/edit/${r._id || r.id}`)} />
       ),
     },
     {
-      title: 'Del', width: 70, align: 'center' as const,
+      title: 'Del', width: 60, align: 'center' as const, fixed: 'right' as const,
       render: (_: any, r: any) => (
         <Popconfirm title="Delete this employee?" okText="Delete" okButtonProps={{ danger: true }}
           onConfirm={async () => {
@@ -210,7 +243,7 @@ const EmployeeList: React.FC = () => {
           size="small"
           bordered
           pagination={{ pageSize: 25, showSizeChanger: true }}
-          scroll={{ x: 1400 }}
+          scroll={{ x: 3200 }}
         />
       </Card>
     </div>

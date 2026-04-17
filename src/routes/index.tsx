@@ -80,6 +80,7 @@ const MasterOtherIncome = lazy(() => import('../pages/master/tds/OtherIncome'));
 // Phase 2: Employee + Resignation + User + TDS + Other
 const MasterEmployeeAdd = lazy(() => import('../pages/master/employee/Add'));
 const MasterEmployeeList = lazy(() => import('../pages/master/employee/List'));
+const MasterEmployeeView = lazy(() => import('../pages/master/employee/View'));
 const MasterEmployeeResignation = lazy(() => import('../pages/master/employee/Resignation'));
 const MasterUserAdd = lazy(() => import('../pages/master/user/UserAdd'));
 const MasterUserList = lazy(() => import('../pages/master/user/UserList'));
@@ -254,6 +255,7 @@ export default function AppRoutes() {
       {/* Master → Employee (Phase 2) */}
       <Route path="/master/employee/add" element={<R roles={ADMINS}><MasterEmployeeAdd /></R>} />
       <Route path="/master/employee/edit/:id" element={<R roles={ADMINS}><MasterEmployeeAdd /></R>} />
+      <Route path="/master/employee/view/:id" element={<R roles={ADMINS}><MasterEmployeeView /></R>} />
       <Route path="/master/employee/list" element={<R roles={ADMINS}><MasterEmployeeList /></R>} />
       <Route path="/master/employee/resignation" element={<R roles={ADMINS}><MasterEmployeeResignation /></R>} />
 
