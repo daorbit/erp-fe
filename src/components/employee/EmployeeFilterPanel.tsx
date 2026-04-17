@@ -121,7 +121,7 @@ const EmployeeFilterPanel: React.FC<Props> = ({
       if (filters.tagName && (typeof e.tagName === 'object' ? e.tagName?._id : e.tagName) !== filters.tagName) return false;
       if (filters.employeeGroup && (typeof e.employeeGroup === 'object' ? e.employeeGroup?._id : e.employeeGroup) !== filters.employeeGroup) return false;
       if (filters.employeeName) {
-        const nm = `${e.firstName ?? ''} ${e.lastName ?? ''}`.toLowerCase();
+        const nm = `${e.userId?.firstName ?? e.firstName ?? ''} ${e.userId?.lastName ?? e.lastName ?? ''}`.toLowerCase();
         if (!nm.includes(filters.employeeName.toLowerCase())) return false;
       }
       if (filters.employeeCode && !(e.employeeId ?? '').includes(filters.employeeCode)) return false;
@@ -141,7 +141,7 @@ const EmployeeFilterPanel: React.FC<Props> = ({
   const tableColumns = [
     { title: 'Sr.No.', render: (_: any, __: any, i: number) => i + 1, width: 70 },
     { title: 'Code', dataIndex: 'employeeId', width: 110 },
-    { title: 'Employee Name', render: (_: any, r: any) => `${r.firstName ?? ''} ${r.lastName ?? ''}`.trim() },
+    { title: 'Employee Name', render: (_: any, r: any) => `${r.userId?.firstName ?? r.firstName ?? ''} ${r.userId?.lastName ?? r.lastName ?? ''}`.trim() },
     { title: 'Department', render: (_: any, r: any) => r.department?.name ?? '' },
     { title: 'Designation', render: (_: any, r: any) => r.designation?.name ?? '' },
     { title: 'Shift', render: (_: any, r: any) => r.shift?.name ?? '' },
@@ -225,7 +225,7 @@ const EmployeeFilterPanel: React.FC<Props> = ({
                 value={filters.reportingEmp} onChange={(v) => setF('reportingEmp', v)}
                 options={allEmployees.map((e: any) => ({
                   value: e._id || e.id,
-                  label: `${e.firstName ?? ''} ${e.lastName ?? ''}`.trim(),
+                  label: `${e.userId?.firstName ?? e.firstName ?? ''} ${e.userId?.lastName ?? e.lastName ?? ''}`.trim(),
                 }))} />
             </Form.Item>
           )}

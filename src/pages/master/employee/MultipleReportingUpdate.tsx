@@ -13,7 +13,7 @@ const MultipleReportingUpdate: React.FC = () => {
 
   const empOpts = (emps?.data ?? []).map((e: any) => ({
     value: e._id || e.id,
-    label: `${e.firstName ?? ''} ${e.lastName ?? ''} (${e.employeeId ?? ''})`,
+    label: `${e.userId?.firstName ?? e.firstName ?? ''} ${e.userId?.lastName ?? e.lastName ?? ''} (${e.employeeId ?? ''})`,
   }));
 
   const apply = async () => {

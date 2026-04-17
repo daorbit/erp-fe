@@ -24,7 +24,7 @@ const ResignationPage: React.FC = () => {
 
   const employeeOptions = (empList?.data ?? []).map((e: any) => ({
     value: e._id || e.id,
-    label: `${e.firstName ?? ''} ${e.lastName ?? ''} (${e.employeeId ?? ''})`,
+    label: `${e.userId?.firstName ?? e.firstName ?? ''} ${e.userId?.lastName ?? e.lastName ?? ''} (${e.employeeId ?? ''})`,
   }));
 
   const handleSubmit = async (values: any) => {
@@ -94,7 +94,7 @@ const ResignationPage: React.FC = () => {
           <Table
             columns={[
               { title: 'SNo.', render: (_: any, __: any, i: number) => i + 1, width: 60 },
-              { title: 'Employee', render: (_: any, r: any) => r.employee && typeof r.employee === 'object' ? `${r.employee.firstName} ${r.employee.lastName}` : '' },
+              { title: 'Employee', render: (_: any, r: any) => r.employee && typeof r.employee === 'object' ? `${r.employee.userId?.firstName ?? r.employee.firstName ?? ''} ${r.employee.userId?.lastName ?? r.employee.lastName ?? ''}`.trim() : '' },
               { title: 'Resign Date', dataIndex: 'resignationDate', render: (v: string) => v ? dayjs(v).format('DD/MM/YYYY') : '—' },
               { title: 'Mode', dataIndex: 'resignMode', render: (v: ResignMode) => <Tag color="red">{v?.toUpperCase()}</Tag> },
               { title: 'Notice Day', dataIndex: 'noticeDay', width: 100 },

@@ -53,7 +53,7 @@ const FullAndFinal: React.FC = () => {
     })
     .map((e: any) => ({
       value: e._id || e.id,
-      label: `${e.firstName ?? ''} ${e.lastName ?? ''} - (${e.employeeId ?? ''})`,
+      label: `${e.userId?.firstName ?? e.firstName ?? ''} ${e.userId?.lastName ?? e.lastName ?? ''} - (${e.employeeId ?? ''})`,
     }));
 
   const handleShow = async () => {
