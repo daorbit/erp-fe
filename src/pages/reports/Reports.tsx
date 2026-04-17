@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Card, Table, Button, Select, Row, Col, Typography, Space, DatePicker, Empty, Spin } from 'antd';
 import {
-  Users, Clock, CalendarDays, IndianRupee, UserPlus, Receipt, TrendingUp, TrendingDown,
+  Users, Clock, IndianRupee, UserPlus, TrendingUp, TrendingDown,
   FileBarChart, BarChart3,
 } from 'lucide-react';
 import {
-  useEmployeeReport, useAttendanceReport, useLeaveReport, usePayrollReport,
-  useRecruitmentReport, useExpenseReport, useHeadcountReport, useTurnoverReport,
+  useEmployeeReport, useAttendanceReport, usePayrollReport,
+  useRecruitmentReport, useHeadcountReport, useTurnoverReport,
 } from '@/hooks/queries/useReports';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,10 +31,8 @@ interface ReportDef {
 const reportDefs: ReportDef[] = [
   { key: 'employee', title: 'Employee Report', description: 'Employee demographics and details', icon: <Users size={24} />, color: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-950', chartType: 'bar' },
   { key: 'attendance', title: 'Attendance Report', description: 'Attendance patterns and trends', icon: <Clock size={24} />, color: '#10b981', bg: 'bg-green-50 dark:bg-green-950', chartType: 'bar' },
-  { key: 'leave', title: 'Leave Report', description: 'Leave utilization and balances', icon: <CalendarDays size={24} />, color: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-950', chartType: 'bar' },
   { key: 'payroll', title: 'Payroll Report', description: 'Salary and compensation analysis', icon: <IndianRupee size={24} />, color: '#8b5cf6', bg: 'bg-purple-50 dark:bg-purple-950', chartType: 'line' },
   { key: 'recruitment', title: 'Recruitment Report', description: 'Hiring funnel and metrics', icon: <UserPlus size={24} />, color: '#ec4899', bg: 'bg-pink-50 dark:bg-pink-950', chartType: 'bar' },
-  { key: 'expense', title: 'Expense Report', description: 'Expense claims and reimbursements', icon: <Receipt size={24} />, color: '#ef4444', bg: 'bg-red-50 dark:bg-red-950', chartType: 'pie' },
   { key: 'headcount', title: 'Headcount Report', description: 'Department-wise headcount trends', icon: <TrendingUp size={24} />, color: '#06b6d4', bg: 'bg-cyan-50 dark:bg-cyan-950', chartType: 'bar' },
   { key: 'turnover', title: 'Turnover Report', description: 'Attrition and retention analysis', icon: <TrendingDown size={24} />, color: '#84cc16', bg: 'bg-lime-50 dark:bg-lime-950', chartType: 'line' },
 ];
@@ -42,10 +40,8 @@ const reportDefs: ReportDef[] = [
 const hookMap: Record<string, (params?: any) => any> = {
   employee: useEmployeeReport,
   attendance: useAttendanceReport,
-  leave: useLeaveReport,
   payroll: usePayrollReport,
   recruitment: useRecruitmentReport,
-  expense: useExpenseReport,
   headcount: useHeadcountReport,
   turnover: useTurnoverReport,
 };

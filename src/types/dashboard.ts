@@ -4,9 +4,7 @@ export interface IDashboardStats {
   totalDepartments: number;
   presentToday: number;
   onLeaveToday: number;
-  pendingLeaveRequests: number;
   openTickets: number;
-  upcomingHolidays: number;
 }
 
 export interface IAttendanceOverview {

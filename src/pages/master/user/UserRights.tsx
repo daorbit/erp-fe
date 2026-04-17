@@ -12,7 +12,6 @@ const ALL_PAGES = [
   'employees.add', 'employees.list', 'employees.edit',
   'departments.add', 'departments.list',
   'designations.add', 'designations.list',
-  'leave.apply', 'leave.approve',
   'salary.view', 'salary.edit',
   'attendance.view', 'attendance.edit',
 ];

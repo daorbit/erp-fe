@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Input, Table, Calendar, Select, Empty, Tooltip } from 'antd';
 import {
-  Users, ClipboardList, Clock, Palmtree, CalendarCheck, Banknote,
+  Users, ClipboardList, Clock, CalendarCheck, Banknote,
   CircleDollarSign, IndianRupee, Search,
   Cake, PartyPopper, RefreshCw, Minus, Plus,
   ChevronLeft, ChevronRight, UserPlus, CarFront, Award,
@@ -149,7 +149,6 @@ const Dashboard: React.FC = () => {
       <AnimateIn variant="fadeUp">
         <div className="flex items-start justify-between gap-4 flex-wrap py-2 mt-5">
           <QuickAction icon={<Users size={22} />} label="Employees" color="bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400" onClick={() => navigate('/master/employee/list')} />
-          <QuickAction icon={<Palmtree size={22} />} label="Leaves" color="bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400" onClick={() => navigate('/transaction/leave/application-list')} />
           <QuickAction icon={<ClipboardList size={22} />} label="On Duty" color="bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400" onClick={() => navigate('/transaction/on-duty/list')} />
           <QuickAction icon={<Clock size={22} />} label="Overtime" color="bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400" onClick={() => navigate('/transaction/overtime/list')} />
           <QuickAction icon={<CalendarCheck size={22} />} label="Attendance" color="bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400" onClick={() => navigate('/transaction/attendance/month-wise')} />
@@ -277,24 +276,10 @@ const Dashboard: React.FC = () => {
           </WidgetCard>
         </AnimateIn>
 
-        {/* Public Holidays */}
-        <AnimateIn variant="fadeUp" delay={0.22}>
-          <WidgetCard title="Public / Optional Holidays" accentColor="from-yellow-500 to-amber-500" icon={<Palmtree size={16} />}>
-            <WidgetEmpty text="No Record Found!" />
-          </WidgetCard>
-        </AnimateIn>
-
         {/* Confirmation Due */}
         <AnimateIn variant="fadeUp" delay={0.24}>
           <WidgetCard title="Confirmation Due" accentColor="from-purple-500 to-violet-500" icon={<ShieldCheck size={16} />}>
             <WidgetEmpty text="No confirmations due" />
-          </WidgetCard>
-        </AnimateIn>
-
-        {/* Employee's Leave */}
-        <AnimateIn variant="fadeUp" delay={0.26}>
-          <WidgetCard title="Employee's Leave" accentColor="from-green-400 to-teal-500" icon={<Palmtree size={16} />}>
-            <WidgetEmpty text="No employees on leave" />
           </WidgetCard>
         </AnimateIn>
 

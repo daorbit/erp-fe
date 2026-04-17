@@ -5,7 +5,6 @@ export const reportKeys = {
   all: ['reports'] as const,
   employees: (params?: any) => [...reportKeys.all, 'employees', params] as const,
   attendance: (params?: any) => [...reportKeys.all, 'attendance', params] as const,
-  leaves: (params?: any) => [...reportKeys.all, 'leaves', params] as const,
   payroll: (params?: any) => [...reportKeys.all, 'payroll', params] as const,
   recruitment: (params?: any) => [...reportKeys.all, 'recruitment', params] as const,
   headcount: (params?: any) => [...reportKeys.all, 'headcount', params] as const,
@@ -23,13 +22,6 @@ export function useAttendanceReport(params?: any) {
   return useQuery({
     queryKey: reportKeys.attendance(params),
     queryFn: () => reportService.getAttendanceReport(params),
-  });
-}
-
-export function useLeaveReport(params?: any) {
-  return useQuery({
-    queryKey: reportKeys.leaves(params),
-    queryFn: () => reportService.getLeaveReport(params),
   });
 }
 

@@ -18,7 +18,6 @@ export const tdsGroupService = simpleCrud('/tds-groups');
 export const smsEmailAlertService = simpleCrud('/sms-email-alerts');
 export const imageGalleryService = simpleCrud('/image-galleries');
 export const manageMessageService = simpleCrud('/manage-messages');
-export const optionalHolidayService = simpleCrud('/optional-holidays');
 
 // Day Authorization — filtered by user, upsert all rows at once.
 export const dayAuthorizationService = {
@@ -32,16 +31,4 @@ export const userRightService = {
   save: (data: any) => api.post<any>('/user-rights', data),
   copy: (fromUser: string, toUser: string, branch: string) =>
     api.post<any>('/user-rights/copy', { fromUser, toUser, branch }),
-};
-
-// Emp Leave Opening — bulk upsert
-export const empLeaveOpeningService = {
-  get: (params?: Record<string, string>) => api.get<any>('/emp-leave-openings', params),
-  save: (rows: any[]) => api.post<any>('/emp-leave-openings', { rows }),
-};
-
-// Closing Leave Transfer
-export const closingLeaveTransferService = {
-  get: (params?: Record<string, string>) => api.get<any>('/closing-leave-transfers', params),
-  transfer: (rows: any[]) => api.post<any>('/closing-leave-transfers', { rows }),
 };

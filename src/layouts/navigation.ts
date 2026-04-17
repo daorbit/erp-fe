@@ -1,9 +1,9 @@
 import {
   type LucideIcon,
   LayoutDashboard, Users, Settings, Building2, Award,
-  UserPlus, Clock, ClipboardList, CalendarDays, Palmtree, FileText,
+  UserPlus, Clock, ClipboardList, CalendarDays, FileText,
   IndianRupee, Wallet, Briefcase, FileSearch, Star, GraduationCap,
-  BookOpen, FolderOpen, PartyPopper, Receipt, BarChart3,
+  FolderOpen, Receipt, BarChart3,
   Activity, Timer, GitBranch,
   // Master group additions (verified lucide-react exports)
   Database, Building, Coins, UserCog, Percent, Boxes, ArrowRightLeft,
@@ -114,16 +114,7 @@ export const navigationItems: NavItem[] = [
           { titleKey: 'nav_document_update', href: '/master/employee/document-update', icon: FileText },
         ],
       },
-      {
-        titleKey: 'nav_leave', icon: Palmtree,
-        children: [
-          { titleKey: 'nav_leave_leaf', href: '/master/leave/leave', icon: CalendarDays },
-          { titleKey: 'nav_emp_leave_opening', href: '/master/leave/opening', icon: CalendarPlus },
-          { titleKey: 'nav_closing_leave_transfer', href: '/master/leave/closing-transfer', icon: CalendarClock },
-          { titleKey: 'nav_branch_wise_holiday', href: '/master/leave/branch-holiday', icon: PartyPopper },
-          { titleKey: 'nav_leave_finyear', href: '/master/leave/finyear', icon: CalendarRange },
-        ],
-      },
+
       {
         titleKey: 'nav_user', icon: UserCog,
         children: [
@@ -172,17 +163,7 @@ export const navigationItems: NavItem[] = [
   {
     titleKey: 'nav_transaction', icon: ArrowRightLeft, roles: ADMINS,
     children: [
-      {
-        titleKey: 'nav_txn_leave', icon: Palmtree,
-        children: [
-          { titleKey: 'nav_monthly_allotment', href: '/transaction/leave/monthly-allotment', icon: CalendarDays },
-          { titleKey: 'nav_yearly_allotment', href: '/transaction/leave/yearly-allotment', icon: CalendarRange },
-          { titleKey: 'nav_leave_deduction', href: '/transaction/leave/deduction', icon: CalendarMinus },
-          { titleKey: 'nav_application_add', href: '/transaction/leave/application-add', icon: Plus },
-          { titleKey: 'nav_application_list', href: '/transaction/leave/application-list', icon: List },
-          { titleKey: 'nav_remove_pending', href: '/transaction/leave/remove-pending', icon: UserX },
-        ],
-      },
+
       {
         titleKey: 'nav_on_duty', icon: ClipboardCheck,
         children: [
@@ -254,12 +235,7 @@ export const navigationItems: NavItem[] = [
         titleKey: 'nav_salary_pre_process', icon: FileSpreadsheet,
         children: [
           { titleKey: 'nav_sandwich_policy', href: '/transaction/salary-pre-process/sandwich-policy', icon: Sandwich },
-          { titleKey: 'nav_leave_process', href: '/transaction/salary-pre-process/leave-process', icon: Palmtree },
-          { titleKey: 'nav_half_day_leave_verify', href: '/transaction/salary-pre-process/half-day-leave-verify', icon: CalendarCheck },
           { titleKey: 'nav_incentive_calculation', href: '/transaction/salary-pre-process/incentive-calculation', icon: Calculator },
-          { titleKey: 'nav_leave_transfer', href: '/transaction/salary-pre-process/leave-transfer', icon: ArrowRightLeft },
-          { titleKey: 'nav_leave_encashment', href: '/transaction/salary-pre-process/leave-encashment', icon: IndianRupee },
-          { titleKey: 'nav_leave_allot_through_att', href: '/transaction/salary-pre-process/leave-allot-through-att', icon: CalendarPlus },
         ],
       },
       {
@@ -296,14 +272,6 @@ export const navigationItems: NavItem[] = [
   {
     titleKey: 'nav_reports', icon: BarChart3, roles: ADMINS,
     children: [
-      {
-        titleKey: 'nav_rpt_leave', icon: Palmtree,
-        children: [
-          { titleKey: 'nav_rpt_leave_ledger', href: '/reports/leave/ledger', icon: ScrollText },
-          { titleKey: 'nav_rpt_leave_calendar', href: '/reports/leave/calendar', icon: CalendarDays },
-          { titleKey: 'nav_rpt_leave_encashment', href: '/reports/leave/encashment', icon: IndianRupee },
-        ],
-      },
       {
         titleKey: 'nav_rpt_attendance', icon: CalendarCheck,
         children: [
@@ -366,7 +334,6 @@ export const navigationItems: NavItem[] = [
       {
         titleKey: 'nav_rpt_statement', icon: FileText,
         children: [
-          { titleKey: 'nav_rpt_stmt_leave', href: '/reports/statement/leave', icon: Palmtree },
           { titleKey: 'nav_rpt_stmt_on_duty', href: '/reports/statement/on-duty', icon: ClipboardCheck },
           { titleKey: 'nav_rpt_stmt_over_time', href: '/reports/statement/over-time', icon: Clock },
           { titleKey: 'nav_rpt_stmt_exp_reimbursement', href: '/reports/statement/exp-reimbursement', icon: Receipt },
@@ -427,7 +394,6 @@ export const navigationItems: NavItem[] = [
           { titleKey: 'nav_terms_and_condition', href: '/setting/report-editor/terms-and-condition', icon: FileCheck },
         ],
       },
-      { titleKey: 'nav_leave_od_ot_setting', href: '/setting/leave-od-ot', icon: SlidersHorizontal },
       { titleKey: 'nav_bonus_cal_formula', href: '/setting/bonus-cal-formula', icon: Calculator },
       { titleKey: 'nav_deduction_cal_formula', href: '/setting/deduction-cal-formula', icon: Calculator },
       { titleKey: 'nav_labour_welfare_fund', href: '/setting/labour-welfare-fund', icon: Factory },
@@ -438,7 +404,6 @@ export const navigationItems: NavItem[] = [
           { titleKey: 'nav_employee_master', href: '/setting/mandatory-field/employee-master', icon: Users },
         ],
       },
-      { titleKey: 'nav_leave_allotment_policy', href: '/setting/leave-allotment-policy', icon: Palmtree },
       { titleKey: 'nav_loan_advance_setting', href: '/setting/loan-advance-setting', icon: Banknote },
       { titleKey: 'nav_attendance_process_exec', href: '/setting/attendance-process-exec', icon: ChevronsRight },
     ],
@@ -473,7 +438,6 @@ export const navigationItems: NavItem[] = [
   // ─── Management (admin + HR + manager) ─────────────────────────────────────
   // Admin/HR see only management views (list), not self-service
   { titleKey: 'attendance_list', href: '/attendance', icon: Clock, roles: ADMINS },
-  { titleKey: 'leave_requests', href: '/leaves', icon: Palmtree, roles: ADMINS },
 
   // Manager sees both management + self-service
   {
@@ -483,24 +447,6 @@ export const navigationItems: NavItem[] = [
       { titleKey: 'my_attendance', href: '/attendance/my', icon: CalendarDays },
     ],
   },
-  {
-    titleKey: 'leave_management', icon: Palmtree, roles: SELF_SERVICE,
-    children: [
-      { titleKey: 'leave_requests', href: '/leaves', icon: FileText, roles: ['manager'] },
-      { titleKey: 'apply_leave', href: '/leaves/apply', icon: CalendarDays },
-    ],
-  },
-  { titleKey: 'performance', href: '/performance', icon: Star, roles: ALL_COMPANY },
-
-  // ─── All company roles ─────────────────────────────────────────────────────
-  {
-    titleKey: 'training', icon: GraduationCap, roles: ALL_COMPANY,
-    children: [
-      { titleKey: 'programs', href: '/training', icon: BookOpen },
-    ],
-  },
-  { titleKey: 'documents', href: '/documents', icon: FolderOpen, roles: ALL_COMPANY },
-  { titleKey: 'holidays', href: '/holidays', icon: PartyPopper, roles: ALL_COMPANY },
 
   // ─── Settings (everyone) ───────────────────────────────────────────────────
   // ─── Audit & Settings ───────────────────────────────────────────────────────

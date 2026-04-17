@@ -13,8 +13,8 @@ const actionColor: Record<string, string> = {
 };
 
 const moduleOptions = [
-  'auth', 'employees', 'departments', 'designations', 'attendance', 'leaves',
-  'payroll', 'recruitment', 'performance', 'training', 'documents', 'holidays',
+  'auth', 'employees', 'departments', 'designations', 'attendance',
+  'payroll', 'recruitment',
   'onboarding', 'invitations', 'companies',
 ].map((m) => ({ value: m, label: m.charAt(0).toUpperCase() + m.slice(1) }));
 

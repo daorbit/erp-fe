@@ -9,9 +9,6 @@ const reportService = {
   getAttendanceReport: (params?: Record<string, string>) =>
     api.get<any>(`${REPORTS_URL}/attendance`, params),
 
-  getLeaveReport: (params?: Record<string, string>) =>
-    api.get<any>(`${REPORTS_URL}/leaves`, params),
-
   getPayrollReport: (params?: Record<string, string>) =>
     api.get<any>(`${REPORTS_URL}/payroll`, params),
 

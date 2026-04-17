@@ -395,24 +395,6 @@ const EmployeeAdd: React.FC = () => {
               children: <Text type="secondary">Reserved for certificates issued to the employee.</Text>,
             },
             {
-              key: 'leaveTemplate',
-              label: 'Leave Template',
-              children: (
-                <Form.List name="leaveTemplate">
-                  {(fields, { add, remove }) => (
-                    <div>
-                      <Table size="small" bordered pagination={false} dataSource={fields as any} rowKey="key" columns={[
-                        { title: 'Leave Type (ID)', render: (_: any, f: any) => <Form.Item name={[f.name, 'leaveType']} noStyle><Input placeholder="LeaveType id" /></Form.Item> },
-                        { title: 'Value', render: (_: any, f: any) => <Form.Item name={[f.name, 'value']} noStyle><InputNumber min={0} /></Form.Item> },
-                        { title: '', width: 60, render: (_: any, f: any) => <Button type="text" danger icon={<Trash2 size={14} />} onClick={() => remove(f.name)} /> },
-                      ]} />
-                      <Button className="mt-2" icon={<PlusIcon size={14} />} onClick={() => add({ value: 0 })}>Add</Button>
-                    </div>
-                  )}
-                </Form.List>
-              ),
-            },
-            {
               key: 'education',
               label: 'Education Detail',
               children: (

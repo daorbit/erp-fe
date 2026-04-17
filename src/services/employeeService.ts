@@ -21,9 +21,6 @@ const employeeService = {
   getAttendance: (id: string, month?: string) =>
     api.get<any>(`${EMPLOYEES_URL}/${id}/attendance`, month ? { month } : undefined),
 
-  getLeaves: (id: string) =>
-    api.get<any>(`${EMPLOYEES_URL}/${id}/leaves`),
-
   getPayslips: (id: string) =>
     api.get<any>(`${EMPLOYEES_URL}/${id}/payslips`),
 

@@ -8,7 +8,6 @@ export const employeeKeys = {
   details: () => [...employeeKeys.all, 'detail'] as const,
   detail: (id: string) => [...employeeKeys.details(), id] as const,
   attendance: (id: string, month?: string) => [...employeeKeys.detail(id), 'attendance', month] as const,
-  leaves: (id: string) => [...employeeKeys.detail(id), 'leaves'] as const,
   payslips: (id: string) => [...employeeKeys.detail(id), 'payslips'] as const,
   timeline: (id: string) => [...employeeKeys.detail(id), 'timeline'] as const,
 };
@@ -62,14 +61,6 @@ export function useEmployeeAttendance(id: string, month?: string) {
   return useQuery({
     queryKey: employeeKeys.attendance(id, month),
     queryFn: () => employeeService.getAttendance(id, month),
-    enabled: !!id,
-  });
-}
-
-export function useEmployeeLeaves(id: string) {
-  return useQuery({
-    queryKey: employeeKeys.leaves(id),
-    queryFn: () => employeeService.getLeaves(id),
     enabled: !!id,
   });
 }

@@ -5,9 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   resignationService, tdsExemptionService, tdsGroupService,
   smsEmailAlertService, imageGalleryService, manageMessageService,
-  optionalHolidayService,
   dayAuthorizationService, userRightService,
-  empLeaveOpeningService, closingLeaveTransferService,
 } from '../../services/phase2Services';
 
 interface CrudSvc {
@@ -63,7 +61,6 @@ export const tdsGroupHooks = makeHooks('tds-groups', tdsGroupService);
 export const smsEmailAlertHooks = makeHooks('sms-email-alerts', smsEmailAlertService);
 export const imageGalleryHooks = makeHooks('image-galleries', imageGalleryService);
 export const manageMessageHooks = makeHooks('manage-messages', manageMessageService);
-export const optionalHolidayHooks = makeHooks('optional-holidays', optionalHolidayService);
 
 // Specialized hooks (non-CRUD shape)
 
@@ -102,33 +99,5 @@ export function useCopyUserRight() {
     mutationFn: ({ fromUser, toUser, branch }: { fromUser: string; toUser: string; branch: string }) =>
       userRightService.copy(fromUser, toUser, branch),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['user-rights'] }),
-  });
-}
-
-export function useEmpLeaveOpenings(params?: Record<string, string>) {
-  return useQuery({
-    queryKey: ['emp-leave-openings', params],
-    queryFn: () => empLeaveOpeningService.get(params),
-  });
-}
-export function useSaveEmpLeaveOpenings() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (rows: any[]) => empLeaveOpeningService.save(rows),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['emp-leave-openings'] }),
-  });
-}
-
-export function useClosingLeaveTransfers(params?: Record<string, string>) {
-  return useQuery({
-    queryKey: ['closing-leave-transfers', params],
-    queryFn: () => closingLeaveTransferService.get(params),
-  });
-}
-export function useRunClosingLeaveTransfer() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (rows: any[]) => closingLeaveTransferService.transfer(rows),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['closing-leave-transfers'] }),
   });
 }

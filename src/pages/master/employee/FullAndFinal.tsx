@@ -121,16 +121,14 @@ const FullAndFinal: React.FC = () => {
             <Col xs={24} md={8}><Statistic title="Net Salary" value={fmtINR(result.netSalary)} /></Col>
             <Col xs={24} md={8}><Statistic title="Notice Period (days)" value={result.noticePeriodDays ?? 0} /></Col>
             <Col xs={24} md={8}><Statistic title="Notice-Period Recovery" value={fmtINR(result.noticePeriodRecovery)} valueStyle={{ color: '#cf1322' }} /></Col>
-            <Col xs={24} md={8}><Statistic title="Leave Encashment" value={fmtINR(result.leaveEncashment)} valueStyle={{ color: '#3f8600' }} /></Col>
           </Row>
           <Descriptions className="mt-4" bordered column={2} size="small">
             <Descriptions.Item label="Employee ID">{result.employeeId ?? '—'}</Descriptions.Item>
-            <Descriptions.Item label="Pending Leave Balance">{result.pendingLeaveBalance ?? 0}</Descriptions.Item>
             <Descriptions.Item label="Resignation Date">{result.resignationDate ? dayjs(result.resignationDate).format('DD/MM/YYYY') : '—'}</Descriptions.Item>
             <Descriptions.Item label="Last Working Date">{result.lastWorkingDate ? dayjs(result.lastWorkingDate).format('DD/MM/YYYY') : '—'}</Descriptions.Item>
             <Descriptions.Item label="Deductions">{fmtINR(result.deductions)}</Descriptions.Item>
             <Descriptions.Item label="Final Payable">
-              <Text strong>{fmtINR((result.netSalary ?? 0) + (result.leaveEncashment ?? 0) - (result.noticePeriodRecovery ?? 0))}</Text>
+              <Text strong>{fmtINR((result.netSalary ?? 0) - (result.noticePeriodRecovery ?? 0))}</Text>
             </Descriptions.Item>
           </Descriptions>
         </Card>

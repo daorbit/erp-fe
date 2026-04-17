@@ -11,9 +11,6 @@ const COMING_SOON_MODULES: string[] = [
   'Recruitment',
   'Reports',
   'Shifts',
-  'Performance',
-  'Training',
-  'Documents',
 
 ];
 
@@ -29,18 +26,11 @@ const OnboardingList = lazy(() => import('../pages/onboarding/OnboardingList'));
 const AdminFillOnboarding = lazy(() => import('../pages/onboarding/AdminFillOnboarding'));
 const AttendanceList = lazy(() => import('../pages/attendance/AttendanceList'));
 const MyAttendance = lazy(() => import('../pages/attendance/MyAttendance'));
-const LeaveList = lazy(() => import('../pages/leaves/LeaveList'));
-const LeaveApply = lazy(() => import('../pages/leaves/LeaveApply'));
 const PayrollList = lazy(() => import('../pages/payroll/PayrollList'));
 const PayslipView = lazy(() => import('../pages/payroll/PayslipView'));
 const JobPostings = lazy(() => import('../pages/recruitment/JobPostings'));
 const Applications = lazy(() => import('../pages/recruitment/Applications'));
-const PerformanceList = lazy(() => import('../pages/performance/PerformanceList'));
-const ReviewForm = lazy(() => import('../pages/performance/ReviewForm'));
-const TrainingList = lazy(() => import('../pages/training/TrainingList'));
-const TrainingDetail = lazy(() => import('../pages/training/TrainingDetail'));
-const DocumentList = lazy(() => import('../pages/documents/DocumentList'));
-const HolidayCalendar = lazy(() => import('../pages/holidays/HolidayCalendar'));
+
 
 const Reports = lazy(() => import('../pages/reports/Reports'));
 const ShiftList = lazy(() => import('../pages/shifts/ShiftList'));
@@ -50,12 +40,7 @@ const BranchForm = lazy(() => import('../pages/branches/BranchForm'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 const AttendanceForm = lazy(() => import('../pages/attendance/AttendanceForm'));
-const DocumentForm = lazy(() => import('../pages/documents/DocumentForm'));
 
-const HolidayForm = lazy(() => import('../pages/holidays/HolidayForm'));
-const LeaveTypeForm = lazy(() => import('../pages/leaves/LeaveTypeForm'));
-const TrainingForm = lazy(() => import('../pages/training/TrainingForm'));
-const TrainingEnrollForm = lazy(() => import('../pages/training/TrainingEnrollForm'));
 const JobForm = lazy(() => import('../pages/recruitment/JobForm'));
 const CompanyForm = lazy(() => import('../pages/admin/CompanyForm'));
 const UserForm = lazy(() => import('../pages/admin/UserForm'));
@@ -90,10 +75,9 @@ const MasterSimAdd = lazy(() => import('../pages/master/other/Sim'));
 const MasterSimList = lazy(() => import('../pages/master/other/SimList'));
 const MasterAttUploadSite = lazy(() => import('../pages/master/other/AttUploadSite'));
 const MasterAttAutoNotification = lazy(() => import('../pages/master/other/AttAutoNotification'));
-const MasterLeaveFinyear = lazy(() => import('../pages/master/leave/Finyear'));
 const MasterOtherIncome = lazy(() => import('../pages/master/tds/OtherIncome'));
 
-// Phase 2: Employee + Resignation + User + Leave + TDS + Other
+// Phase 2: Employee + Resignation + User + TDS + Other
 const MasterEmployeeAdd = lazy(() => import('../pages/master/employee/Add'));
 const MasterEmployeeList = lazy(() => import('../pages/master/employee/List'));
 const MasterEmployeeResignation = lazy(() => import('../pages/master/employee/Resignation'));
@@ -102,11 +86,7 @@ const MasterUserList = lazy(() => import('../pages/master/user/UserList'));
 const MasterUserRights = lazy(() => import('../pages/master/user/UserRights'));
 const MasterUserResetPassword = lazy(() => import('../pages/master/user/ResetPassword'));
 const MasterUserDayAuth = lazy(() => import('../pages/master/user/DayAuthorization'));
-const MasterLeaveType = lazy(() => import('../pages/master/leave/LeaveType'));
-const MasterEmpLeaveOpening = lazy(() => import('../pages/master/leave/EmpLeaveOpening'));
-const MasterClosingLeaveTransfer = lazy(() => import('../pages/master/leave/ClosingLeaveTransfer'));
-const MasterHoliday = lazy(() => import('../pages/master/leave/Holiday'));
-const MasterOptionalHoliday = lazy(() => import('../pages/master/leave/OptionalHoliday'));
+
 const MasterTdsExemption = lazy(() => import('../pages/master/tds/Exemption'));
 const MasterSmsEmailAlert = lazy(() => import('../pages/master/other/SmsEmailAlert'));
 const MasterImageGallery = lazy(() => import('../pages/master/other/ImageGallery'));
@@ -215,22 +195,9 @@ export default function AppRoutes() {
       {/* Management (admin + HR + manager) */}
       <Route path="/attendance" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceList /></CS></R>} />
       <Route path="/attendance/mark" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceForm /></CS></R>} />
-      <Route path="/leaves" element={<R roles={MANAGEMENT}><CS moduleName="Leave Management"><LeaveList /></CS></R>} />
-      <Route path="/leaves/types/create" element={<R roles={MANAGEMENT}><CS moduleName="Leave Management"><LeaveTypeForm /></CS></R>} />
 
       {/* All company roles */}
       <Route path="/attendance/my" element={<R roles={ALL_COMPANY}><CS moduleName="Attendance"><MyAttendance /></CS></R>} />
-      <Route path="/leaves/apply" element={<R roles={ALL_COMPANY}><CS moduleName="Leave Management"><LeaveApply /></CS></R>} />
-      <Route path="/performance" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><PerformanceList /></CS></R>} />
-      <Route path="/performance/review/:id" element={<R roles={ALL_COMPANY}><CS moduleName="Performance"><ReviewForm /></CS></R>} />
-      <Route path="/training" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingList /></CS></R>} />
-      <Route path="/training/create" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingForm /></CS></R>} />
-      <Route path="/training/:id" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingDetail /></CS></R>} />
-      <Route path="/training/:id/enroll" element={<R roles={ALL_COMPANY}><CS moduleName="Training"><TrainingEnrollForm /></CS></R>} />
-      <Route path="/documents" element={<R roles={ALL_COMPANY}><CS moduleName="Documents"><DocumentList /></CS></R>} />
-      <Route path="/documents/upload" element={<R roles={ALL_COMPANY}><CS moduleName="Documents"><DocumentForm /></CS></R>} />
-      <Route path="/holidays" element={<R roles={ALL_COMPANY}><CS moduleName="Holidays"><HolidayCalendar /></CS></R>} />
-      <Route path="/holidays/create" element={<R roles={ALL_COMPANY}><CS moduleName="Holidays"><HolidayForm /></CS></R>} />
 
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -280,9 +247,6 @@ export default function AppRoutes() {
       <Route path="/master/other/sim/add" element={<R roles={ADMINS}><MasterSimAdd /></R>} />
       <Route path="/master/other/sim/list" element={<R roles={ADMINS}><MasterSimList /></R>} />
 
-      {/* Master → Leave */}
-      <Route path="/master/leave/finyear" element={<R roles={ADMINS}><MasterLeaveFinyear /></R>} />
-
       {/* Master → TDS */}
       <Route path="/master/tds/other-income" element={<R roles={ADMINS}><MasterOtherIncome /></R>} />
       <Route path="/master/tds/exemption" element={<R roles={ADMINS}><MasterTdsExemption /></R>} />
@@ -300,13 +264,6 @@ export default function AppRoutes() {
       <Route path="/master/user/rights" element={<R roles={ADMINS}><MasterUserRights /></R>} />
       <Route path="/master/user/reset-password" element={<R roles={ADMINS}><MasterUserResetPassword /></R>} />
       <Route path="/master/user/day-authorization" element={<R roles={ADMINS}><MasterUserDayAuth /></R>} />
-
-      {/* Master → Leave */}
-      <Route path="/master/leave/leave" element={<R roles={ADMINS}><MasterLeaveType /></R>} />
-      <Route path="/master/leave/opening" element={<R roles={ADMINS}><MasterEmpLeaveOpening /></R>} />
-      <Route path="/master/leave/closing-transfer" element={<R roles={ADMINS}><MasterClosingLeaveTransfer /></R>} />
-      <Route path="/master/leave/branch-holiday" element={<R roles={ADMINS}><MasterHoliday /></R>} />
-      <Route path="/master/leave/branch-holiday/optional" element={<R roles={ADMINS}><MasterOptionalHoliday /></R>} />
 
       {/* Master → Other (Phase 2 remaining) */}
       <Route path="/master/other/sms-email-alert" element={<R roles={ADMINS}><MasterSmsEmailAlert /></R>} />
@@ -418,13 +375,6 @@ const ADMIN_MODULE_ROUTES: string[] = [
 
 // ─── Transaction routes (InProgress) ──────────────────────────────────────────
 const TRANSACTION_ROUTES: string[] = [
-  // Leave
-  '/transaction/leave/monthly-allotment',
-  '/transaction/leave/yearly-allotment',
-  '/transaction/leave/deduction',
-  '/transaction/leave/application-add',
-  '/transaction/leave/application-list',
-  '/transaction/leave/remove-pending',
   // On Duty
   '/transaction/on-duty/add',
   '/transaction/on-duty/list',
@@ -465,12 +415,7 @@ const TRANSACTION_ROUTES: string[] = [
   '/transaction/pt-tds/tds-exemption',
   // Salary Pre-Process
   '/transaction/salary-pre-process/sandwich-policy',
-  '/transaction/salary-pre-process/leave-process',
-  '/transaction/salary-pre-process/half-day-leave-verify',
   '/transaction/salary-pre-process/incentive-calculation',
-  '/transaction/salary-pre-process/leave-transfer',
-  '/transaction/salary-pre-process/leave-encashment',
-  '/transaction/salary-pre-process/leave-allot-through-att',
   // Salary
   '/transaction/salary/calculation',
   '/transaction/salary/list',
@@ -487,10 +432,6 @@ const TRANSACTION_ROUTES: string[] = [
 
 // ─── Reports routes (InProgress) ─────────────────────────────────────────────
 const REPORT_ROUTES: string[] = [
-  // Leave
-  '/reports/leave/ledger',
-  '/reports/leave/calendar',
-  '/reports/leave/encashment',
   // Attendance
   '/reports/attendance/month-wise',
   '/reports/attendance/day-wise',
@@ -537,7 +478,6 @@ const REPORT_ROUTES: string[] = [
   '/reports/full-and-final',
   '/reports/employee-gratuity',
   // Statement
-  '/reports/statement/leave',
   '/reports/statement/on-duty',
   '/reports/statement/over-time',
   '/reports/statement/exp-reimbursement',
@@ -568,7 +508,6 @@ const SETTING_ROUTES: string[] = [
   '/setting/report-editor/resignation-letter',
   '/setting/report-editor/terms-and-condition',
   // Standalone settings
-  '/setting/leave-od-ot',
   '/setting/bonus-cal-formula',
   '/setting/deduction-cal-formula',
   '/setting/labour-welfare-fund',
@@ -576,7 +515,6 @@ const SETTING_ROUTES: string[] = [
   // Mandatory Field
   '/setting/mandatory-field/employee-master',
   // More standalone
-  '/setting/leave-allotment-policy',
   '/setting/loan-advance-setting',
   '/setting/attendance-process-exec',
 ];

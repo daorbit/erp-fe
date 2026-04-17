@@ -23,9 +23,6 @@ const dashboardService = {
   getAttendanceOverview: (params?: Record<string, string>) =>
     api.get<any>(`${DASHBOARD_URL}/attendance-overview`, params),
 
-  getLeaveOverview: (params?: Record<string, string>) =>
-    api.get<any>(`${DASHBOARD_URL}/leave-overview`, params),
-
   getDepartmentDistribution: (params?: Record<string, string>) =>
     api.get<any>(`${DASHBOARD_URL}/department-distribution`, params),
 

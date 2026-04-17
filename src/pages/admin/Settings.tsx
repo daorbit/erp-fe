@@ -49,7 +49,7 @@ const Settings: React.FC = () => {
     Object.fromEntries(notificationItems.map((n) => [n.id, n.defaultOn])),
   );
 
-  const previewKeys = ['dashboard', 'employees', 'departments', 'attendance', 'leaves', 'payroll', 'settings'];
+  const previewKeys = ['dashboard', 'employees', 'departments', 'attendance', 'payroll', 'settings'];
 
   const tabItems = [
     {

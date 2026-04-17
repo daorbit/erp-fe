@@ -12,7 +12,6 @@ import cityService from '../../services/cityService';
 import importantFormService from '../../services/importantFormService';
 import simService from '../../services/simService';
 import otherIncomeService from '../../services/otherIncomeService';
-import leaveFinyearService from '../../services/leaveFinyearService';
 import attUploadSiteService from '../../services/attUploadSiteService';
 import attAutoNotificationService from '../../services/attAutoNotificationService';
 
@@ -75,6 +74,5 @@ export const cityHooks = makeHooks('cities', cityService);
 export const importantFormHooks = makeHooks('important-forms', importantFormService);
 export const simHooks = makeHooks('sims', simService);
 export const otherIncomeHooks = makeHooks('other-incomes', otherIncomeService);
-export const leaveFinyearHooks = makeHooks('leave-finyears', leaveFinyearService);
 export const attUploadSiteHooks = makeHooks('att-upload-sites', attUploadSiteService);
 export const attAutoNotificationHooks = makeHooks('att-auto-notifications', attAutoNotificationService);
