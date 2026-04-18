@@ -143,8 +143,6 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   const [empSearchOpen, setEmpSearchOpen] = useState(false);
 
   // Module switcher — only for company-level users (not platform super_admin).
-  // Company admin sees all modules (WIP ones disabled).
-  // Other users see only their allowedModules (WIP ones still disabled).
   const userModuleOptions = useMemo(() => {
     if (user?.role === 'super_admin') return []; // platform admin — no module switcher
     const base = user?.role === 'admin'
@@ -153,7 +151,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
     if (base.length === 0) return [];
     return base.map((m) => ({
       value: m.value,
-      label: m.enabled ? m.label : `${m.label} (WIP)`,
+      label: m.label,
       disabled: !m.enabled,
     }));
   }, [user?.role, user?.allowedModules]);

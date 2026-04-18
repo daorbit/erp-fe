@@ -40,7 +40,6 @@ export interface NavItem {
 
 const ADMINS = ['admin', 'hr_manager'];
 const SELF_SERVICE = ['manager', 'employee', 'viewer'];
-const ALL_COMPANY = ['admin', 'hr_manager', 'manager', 'employee', 'viewer'];
 
 export const navigationItems: NavItem[] = [
   // ─── Everyone ──────────────────────────────────────────────────────────────
@@ -54,6 +53,7 @@ export const navigationItems: NavItem[] = [
   {
     titleKey: 'nav_master', icon: Database, roles: ADMINS,
     children: [
+      { titleKey: 'branches', href: '/branches', icon: GitBranch },
       {
         titleKey: 'nav_parent_department', icon: Building,
         children: [
@@ -415,16 +415,7 @@ export const navigationItems: NavItem[] = [
   { titleKey: 'company_management', href: '/admin/companies', icon: Building2, roles: ['super_admin'] },
   { titleKey: 'user_management', href: '/admin/users', icon: Users, roles: ['super_admin', 'admin', 'hr_manager'] },
 
-  // ─── Branches ──────────────────────────────────────────────────────────────
-  { titleKey: 'branches', href: '/branches', icon: GitBranch, roles: ADMINS },
-
   { titleKey: 'onboarding', href: '/onboarding/list', icon: UserPlus, roles: ADMINS },
-  {
-    titleKey: 'payroll', icon: IndianRupee, roles: ADMINS,
-    children: [
-      { titleKey: 'payroll_management', href: '/payroll', icon: Wallet },
-    ],
-  },
   {
     titleKey: 'recruitment', icon: Briefcase, roles: ADMINS,
     children: [
@@ -432,18 +423,13 @@ export const navigationItems: NavItem[] = [
       { titleKey: 'applications', href: '/recruitment/applications', icon: Users },
     ],
   },
-  { titleKey: 'shifts', href: '/shifts', icon: Timer, roles: ADMINS },
-  { titleKey: 'reports', href: '/reports', icon: BarChart3, roles: ADMINS },
+  { titleKey: 'shifts', href: '/shifts', icon: Timer, roles: ['employee'] },
+  { titleKey: 'reports', href: '/reports', icon: BarChart3, roles: ['employee'] },
 
-  // ─── Management (admin + HR + manager) ─────────────────────────────────────
-  // Admin/HR see only management views (list), not self-service
-  { titleKey: 'attendance_list', href: '/attendance', icon: Clock, roles: ADMINS },
-
-  // Manager sees both management + self-service
+  // Manager + self-service — only "My Attendance" is exposed in the sidebar.
   {
     titleKey: 'attendance', icon: Clock, roles: SELF_SERVICE,
     children: [
-      { titleKey: 'attendance_list', href: '/attendance', icon: ClipboardList, roles: ['manager'] },
       { titleKey: 'my_attendance', href: '/attendance/my', icon: CalendarDays },
     ],
   },

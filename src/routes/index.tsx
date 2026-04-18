@@ -8,7 +8,6 @@ import ComingSoon from '../components/ComingSoon';
 // Add module names here to show "Coming Soon" for them
 const COMING_SOON_MODULES: string[] = [
   'Payroll',
-  'Recruitment',
   'Reports',
   'Shifts',
 
@@ -188,10 +187,10 @@ export default function AppRoutes() {
       <Route path="/recruitment/create" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobForm /></CS></R>} />
       <Route path="/recruitment/:id/edit" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobForm /></CS></R>} />
       <Route path="/recruitment/applications" element={<R roles={ADMINS}><CS moduleName="Recruitment"><Applications /></CS></R>} />
-      <Route path="/reports" element={<R roles={ADMINS}><CS moduleName="Reports"><Reports /></CS></R>} />
-      <Route path="/shifts" element={<R roles={ADMINS}><CS moduleName="Shifts"><ShiftList /></CS></R>} />
-      <Route path="/shifts/create" element={<R roles={ADMINS}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
-      <Route path="/shifts/:id/edit" element={<R roles={ADMINS}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
+      <Route path="/reports" element={<R roles={['employee']}><CS moduleName="Reports"><Reports /></CS></R>} />
+      <Route path="/shifts" element={<R roles={['employee']}><CS moduleName="Shifts"><ShiftList /></CS></R>} />
+      <Route path="/shifts/create" element={<R roles={['employee']}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
+      <Route path="/shifts/:id/edit" element={<R roles={['employee']}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
 
       {/* Management (admin + HR + manager) */}
       <Route path="/attendance" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceList /></CS></R>} />

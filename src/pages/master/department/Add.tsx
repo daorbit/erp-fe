@@ -87,7 +87,13 @@ const DepartmentAdd: React.FC = () => {
       }
       navigate('/master/department/list');
     } catch (err: any) {
-      message.error(err?.message || `Failed to ${isEdit ? 'update' : 'save'} department`);
+      const detailed = Array.isArray(err?.errors) && err.errors.length > 0
+        ? err.errors
+            .map((e: any) => (typeof e === 'string' ? e : e?.message || e?.msg))
+            .filter(Boolean)
+            .join(', ')
+        : '';
+      message.error(detailed || err?.message || `Failed to ${isEdit ? 'update' : 'save'} department`);
     }
   };
 

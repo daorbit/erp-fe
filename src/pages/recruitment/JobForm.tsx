@@ -29,7 +29,10 @@ const JobForm: React.FC = () => {
     if (editData) {
       form.setFieldsValue({
         title: editData.title,
-        department: editData.department,
+        department:
+          editData.department && typeof editData.department === 'object'
+            ? editData.department._id || editData.department.id
+            : editData.department,
         vacancies: editData.vacancies,
         status: editData.status,
         location: editData.location,

@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
-import { Card, Table, Tag, Button, Typography, Row, Col, Space, Avatar } from 'antd';
-import { App } from 'antd';
+import React from 'react';
+import { Card, Table, Tag, Button, Typography, Row, Col } from 'antd';
 import { Briefcase, Users, Calendar, CheckCircle2, Plus, Edit2 } from 'lucide-react';
 import { useJobList } from '@/hooks/queries/useRecruitment';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 const statusColor: Record<string, string> = {
   open: 'green',
@@ -18,7 +16,6 @@ const statusColor: Record<string, string> = {
 
 const JobPostings: React.FC = () => {
   const { t } = useTranslation();
-  const { message } = App.useApp();
   const navigate = useNavigate();
 
   const { data: jobData, isLoading } = useJobList();
@@ -41,7 +38,10 @@ const JobPostings: React.FC = () => {
     { title: t('name'), dataIndex: 'title', key: 'title', render: (v: string) => <span className="font-medium">{v}</span> },
     {
       title: t('department'), dataIndex: 'department', key: 'department',
-      render: (v: string) => <Tag color="blue">{v}</Tag>,
+      render: (v: any) => {
+        const label = v && typeof v === 'object' ? v.name : v;
+        return label ? <Tag color="blue">{label}</Tag> : '-';
+      },
     },
     { title: 'Vacancies', dataIndex: 'vacancies', key: 'vacancies' },
     { title: 'Applications', dataIndex: 'applicationCount', key: 'applicationCount', render: (v: number) => v || 0 },

@@ -27,9 +27,9 @@ function QuickAction({ icon, label, color, onClick }: QuickActionProps) {
     <Tooltip title={label}>
       <button
         onClick={onClick}
-        className="group flex flex-col items-center gap-2 cursor-pointer flex-1 min-w-0"
+        className="group flex flex-col items-center gap-2 cursor-pointer shrink-0 w-[72px] md:w-auto md:flex-1 md:min-w-0"
       >
-        <div className={`w-16 h-16 rounded-full flex items-center justify-center
+        <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center
           ${color}
           shadow-sm group-hover:shadow-md
           group-hover:scale-110 transition-all duration-200`}>
@@ -37,7 +37,7 @@ function QuickAction({ icon, label, color, onClick }: QuickActionProps) {
         </div>
         <span className="text-[11px] font-medium text-[var(--text-secondary)]
           group-hover:text-[var(--text-primary)] transition-colors
-          text-center leading-tight truncate w-full">
+          text-center leading-tight w-full whitespace-normal break-words">
           {label}
         </span>
       </button>
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
     <div className="space-y-6 max-w-[1600px] mx-auto">
  
       <AnimateIn variant="fadeUp">
-        <div className="flex items-start justify-between gap-4 flex-wrap py-2 mt-5">
+        <div className="flex items-start gap-4 py-2 mt-5 overflow-x-auto md:flex-wrap md:justify-between -mx-4 px-4 md:mx-0 md:px-0 [-webkit-overflow-scrolling:touch]">
           <QuickAction icon={<Users size={22} />} label="Employees" color="bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400" onClick={() => navigate('/master/employee/list')} />
           <QuickAction icon={<ClipboardList size={22} />} label="On Duty" color="bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400" onClick={() => navigate('/transaction/on-duty/list')} />
           <QuickAction icon={<Clock size={22} />} label="Overtime" color="bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400" onClick={() => navigate('/transaction/overtime/list')} />
