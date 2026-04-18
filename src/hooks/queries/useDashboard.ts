@@ -5,7 +5,6 @@ export const dashboardKeys = {
   all: ['dashboard'] as const,
   stats: (params?: any) => [...dashboardKeys.all, 'stats', params] as const,
   attendanceOverview: (params?: any) => [...dashboardKeys.all, 'attendance-overview', params] as const,
-  leaveOverview: (params?: any) => [...dashboardKeys.all, 'leave-overview', params] as const,
   departmentDistribution: (params?: any) => [...dashboardKeys.all, 'department-distribution', params] as const,
   recentActivities: (params?: any) => [...dashboardKeys.all, 'recent-activities', params] as const,
   birthdays: (params?: any) => [...dashboardKeys.all, 'birthdays', params] as const,
@@ -23,13 +22,6 @@ export function useAttendanceOverview(params?: any) {
   return useQuery({
     queryKey: dashboardKeys.attendanceOverview(params),
     queryFn: () => dashboardService.getAttendanceOverview(params),
-  });
-}
-
-export function useLeaveOverview(params?: any) {
-  return useQuery({
-    queryKey: dashboardKeys.leaveOverview(params),
-    queryFn: () => dashboardService.getLeaveOverview(params),
   });
 }
 

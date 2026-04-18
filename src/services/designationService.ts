@@ -17,6 +17,12 @@ const designationService = {
 
   delete: (id: string) =>
     api.delete<void>(`${DESIGNATIONS_URL}/${id}`),
+
+  merge: (data: { fromDesignation: string; toDesignation: string }) =>
+    api.post<any>(`${DESIGNATIONS_URL}/merge`, data),
+
+  employeeCount: (params?: Record<string, string>) =>
+    api.get<any>(`${DESIGNATIONS_URL}/employee-count`, params),
 };
 
 export default designationService;

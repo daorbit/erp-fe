@@ -20,6 +20,9 @@ const departmentService = {
 
   getEmployees: (id: string) =>
     api.get<any>(`${DEPARTMENTS_URL}/${id}/employees`),
+
+  merge: (data: { fromDepartment: string; toDepartment: string }) =>
+    api.post<any>(`${DEPARTMENTS_URL}/merge`, data),
 };
 
 export default departmentService;

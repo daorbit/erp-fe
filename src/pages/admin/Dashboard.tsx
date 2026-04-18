@@ -1,343 +1,364 @@
-import React from 'react';
-import { Card, Table, Avatar, Tag, Typography, Row, Col, List, Spin, Progress } from 'antd';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Input, Table, Calendar, Select, Empty, Tooltip } from 'antd';
 import {
-  Users, CheckCircle2, Clock, UserPlus,
-  ArrowUpRight, Briefcase, CalendarCheck,
+  Users, ClipboardList, Clock, CalendarCheck, Banknote,
+  CircleDollarSign, IndianRupee, Search,
+  Cake, PartyPopper, RefreshCw, Minus, Plus,
+  ChevronLeft, ChevronRight, UserPlus, CarFront, Award,
+  AlertTriangle, Megaphone, FileText, ShieldCheck, BriefcaseBusiness,
+  TrendingUp,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
-} from 'recharts';
-import { useDashboardStats, useRecentActivities, useDepartmentDistribution } from '@/hooks/queries/useDashboard';
-import { useEmployeeList } from '@/hooks/queries/useEmployees';
-import AnimateIn, { StaggerContainer, StaggerItem } from '@/components/AnimateIn';
+import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
+import { useDashboardStats, useBirthdays, useAnniversaries } from '@/hooks/queries/useDashboard';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useAppSelector } from '@/store';
-import { colorPalettes, type ThemeColor } from '@/config/theme';
+import AnimateIn from '@/components/AnimateIn';
 
-const { Title, Text } = Typography;
+// ─── Quick Action Button ─────────────────────────────────────────────────────
+interface QuickActionProps {
+  icon: React.ReactNode;
+  label: string;
+  color: string;
+  onClick: () => void;
+}
 
-const fallbackMonthlyData = [
-  { month: 'Jan', joined: 0, left: 0 },
-  { month: 'Feb', joined: 0, left: 0 },
-  { month: 'Mar', joined: 0, left: 0 },
-  { month: 'Apr', joined: 0, left: 0 },
-  { month: 'May', joined: 0, left: 0 },
-  { month: 'Jun', joined: 0, left: 0 },
-  { month: 'Jul', joined: 0, left: 0 },
-  { month: 'Aug', joined: 0, left: 0 },
-  { month: 'Sep', joined: 0, left: 0 },
-  { month: 'Oct', joined: 0, left: 0 },
-  { month: 'Nov', joined: 0, left: 0 },
-  { month: 'Dec', joined: 0, left: 0 },
-];
-
-const statusColorMap: Record<string, string> = {
-  completed: 'green', in_progress: 'orange', pending: 'gold', active: 'green', inactive: 'red',
-};
-
-const columns = [
-  {
-    title: 'Employee',
-    key: 'name',
-    render: (_: any, record: any) => {
-      const u = record.userId || record;
-      const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'N/A';
-      const email = u.email || record.email || '';
-      return (
-        <div className="flex items-center gap-3">
-          <Avatar size={36} src={u.avatar} className="!bg-gradient-to-br !from-blue-500 !to-indigo-600 !text-white !text-xs !font-semibold">
-            {name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-          </Avatar>
-          <div>
-            <div className="font-medium text-sm">{name}</div>
-            <div className="text-xs text-gray-400">{email}</div>
-          </div>
+function QuickAction({ icon, label, color, onClick }: QuickActionProps) {
+  return (
+    <Tooltip title={label}>
+      <button
+        onClick={onClick}
+        className="group flex flex-col items-center gap-2 cursor-pointer shrink-0 w-[72px] md:w-auto md:flex-1 md:min-w-0"
+      >
+        <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center
+          ${color}
+          shadow-sm group-hover:shadow-md
+          group-hover:scale-110 transition-all duration-200`}>
+          {icon}
         </div>
-      );
-    },
-  },
-  {
-    title: 'Employee ID',
-    dataIndex: 'employeeId',
-    key: 'employeeId',
-    render: (id: string) => <span className="text-xs font-mono text-gray-500">{id || '-'}</span>,
-  },
-  {
-    title: 'Type',
-    dataIndex: 'employmentType',
-    key: 'employmentType',
-    render: (type: string) => <Tag color="cyan">{type?.replace('_', ' ') || '-'}</Tag>,
-  },
-  {
-    title: 'Status',
-    dataIndex: 'isActive',
-    key: 'status',
-    render: (active: boolean) => <Tag color={active ? 'green' : 'red'}>{active ? 'Active' : 'Inactive'}</Tag>,
-  },
-  {
-    title: 'Role',
-    key: 'role',
-    render: (_: any, record: any) => {
-      const role = record.userId?.role || record.role || '';
-      return <Tag>{role}</Tag>;
-    },
-  },
-];
+        <span className="text-[11px] font-medium text-[var(--text-secondary)]
+          group-hover:text-[var(--text-primary)] transition-colors
+          text-center leading-tight w-full whitespace-normal break-words">
+          {label}
+        </span>
+      </button>
+    </Tooltip>
+  );
+}
 
-const Dashboard: React.FC = () => {
-  const { t } = useTranslation();
-  const themeColor = useAppSelector((s) => s.ui.themeColor) as ThemeColor;
-  const palette = colorPalettes[themeColor] || colorPalettes.blue;
-  const primaryColor = palette.primary;
+// ─── Dashboard Widget Card ───────────────────────────────────────────────────
+interface WidgetCardProps {
+  title: string;
+  children: React.ReactNode;
+  accentColor?: string;
+  icon?: React.ReactNode;
+  onRefresh?: () => void;
+  className?: string;
+}
 
-  const { data: statsData, isLoading: statsLoading } = useDashboardStats();
-  const { data: activitiesData, isLoading: activitiesLoading } = useRecentActivities();
-  const { data: employeeData, isLoading: employeesLoading } = useEmployeeList({ limit: '5' });
-  const { data: deptData } = useDepartmentDistribution();
+function WidgetCard({ title, children, accentColor = 'from-cyan-500 to-blue-500', icon, onRefresh, className = '' }: WidgetCardProps) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [spinning, setSpinning] = useState(false);
 
-  const apiStats = statsData?.data;
-  const employees = employeeData?.data ?? [];
-  const activities = activitiesData?.data ?? [];
-  const rawDeptData = deptData?.data;
-  const departmentData = rawDeptData?.length
-    ? rawDeptData.map((d: any) => ({ name: d.department || d.name, value: d.count ?? d.value ?? 0 }))
-    : [];
-  const hasDeptData = departmentData.some((d: any) => d.value > 0);
-  const monthlyData = fallbackMonthlyData;
-
-  const PIE_COLORS = [primaryColor, palette.colors[1], palette.colors[2], '#f59e0b', '#8b5cf6'];
-
-  const presentToday = apiStats?.todayAttendance?.present ?? 0;
-  const totalEmp = apiStats?.totalEmployees ?? 0;
-  const attendanceRate = totalEmp > 0 ? Math.round((presentToday / totalEmp) * 100) : 0;
-
-  const stats = [
-    {
-      title: t('total_employees'),
-      value: apiStats?.totalEmployees ?? 0,
-      icon: <Users size={22} />,
-      subtitle: `${apiStats?.totalDepartments ?? 0} ${t('departments')}`,
-      lightBg: 'bg-blue-50 dark:bg-blue-900/20',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-    },
-    {
-      title: t('present_today'),
-      value: presentToday,
-      icon: <CheckCircle2 size={22} />,
-      subtitle: `${attendanceRate}% ${t('attendance')}`,
-      lightBg: 'bg-emerald-50 dark:bg-emerald-900/20',
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
-    },
-    {
-      title: t('pending_leaves'),
-      value: apiStats?.pendingLeaves ?? 0,
-      icon: <Clock size={22} />,
-      subtitle: `${apiStats?.upcomingHolidays ?? 0} ${t('upcoming_holidays')}`,
-      lightBg: 'bg-amber-50 dark:bg-amber-900/20',
-      iconColor: 'text-amber-600 dark:text-amber-400',
-    },
-    {
-      title: t('recent_hires'),
-      value: apiStats?.recentHires ?? 0,
-      icon: <UserPlus size={22} />,
-      subtitle: `${apiStats?.pendingPayroll ?? 0} ${t('pending_payroll')}`,
-      lightBg: 'bg-violet-50 dark:bg-violet-900/20',
-      iconColor: 'text-violet-600 dark:text-violet-400',
-    },
-  ];
-
-  const quickStats = [
-    { label: t('attendance_today'), value: `${attendanceRate}%`, icon: <CalendarCheck size={16} /> },
-    { label: t('announcements'), value: `${apiStats?.activeAnnouncements ?? 0}`, icon: <Briefcase size={16} /> },
-    { label: t('pending_leaves'), value: `${apiStats?.pendingLeaves ?? 0}`, icon: <Clock size={16} /> },
-  ];
+  const handleRefresh = useCallback(() => {
+    setSpinning(true);
+    onRefresh?.();
+    setTimeout(() => setSpinning(false), 600);
+  }, [onRefresh]);
 
   return (
-    <div className="space-y-6">
-      <AnimateIn variant="fadeIn">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <Title level={4} className="!mb-0">{t('dashboard')}</Title>
-            <Text type="secondary">{t('welcome_back')}. {t('heres_whats_happening')}</Text>
-          </div>
-          <div className="flex items-center gap-3">
-            {quickStats.map((qs, i) => (
-              <div key={i} className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                <span className="text-gray-400">{qs.icon}</span>
-                <span className="text-xs text-gray-500">{qs.label}</span>
-                <span className="text-sm font-bold">{qs.value}</span>
-              </div>
-            ))}
-          </div>
+    <div className={`bg-[var(--bg-card)] rounded-2xl shadow-sm
+      border border-[var(--border-color)] overflow-hidden
+      break-inside-avoid mb-5 ${className}`}>
+      <div className={`h-0.5 bg-gradient-to-r ${accentColor}`} />
+      <div className="flex items-center justify-between px-5 py-3">
+        <div className="flex items-center gap-2.5">
+          {icon && <span className="text-[var(--text-secondary)]">{icon}</span>}
+          <h3 className="font-semibold text-sm text-[var(--text-primary)] m-0">{title}</h3>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={handleRefresh}
+            className="w-7 h-7 flex items-center justify-center rounded-lg
+              hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]
+              transition"
+          >
+            <RefreshCw size={13} className={spinning ? 'animate-spin' : ''} />
+          </button>
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            className="w-7 h-7 flex items-center justify-center rounded-lg
+              hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)] hover:text-[var(--text-primary)]
+              transition"
+          >
+            {collapsed ? <Plus size={13} /> : <Minus size={13} />}
+          </button>
+        </div>
+      </div>
+      {!collapsed && (
+        <div className="px-5 pb-4">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Empty Widget ────────────────────────────────────────────────────────────
+function WidgetEmpty({ text = 'No records found' }: { text?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-[var(--text-secondary)]">
+      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={text} />
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Main Dashboard
+// ═════════════════════════════════════════════════════════════════════════════
+const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const { data: statsData } = useDashboardStats();
+  const { data: birthdayData } = useBirthdays();
+  const { data: anniversaryData } = useAnniversaries();
+
+  const birthdays: any[] = birthdayData?.data ?? [];
+  const anniversaries: any[] = anniversaryData?.data ?? [];
+
+  const [quickSearchQuery, setQuickSearchQuery] = useState('');
+  const [todoFilter, setTodoFilter] = useState('all');
+  const today = dayjs();
+
+  const fmtDate = (d: string | undefined) => {
+    if (!d) return '';
+    const dt = new Date(d);
+    return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const quickSearchCols = useMemo(() => [
+    { title: today.format('DD-MMM-YYYY'), dataIndex: 'name', key: 'name', width: 200 },
+    { title: 'CheckIn', dataIndex: 'checkIn', key: 'checkIn', width: 120 },
+    { title: 'CheckOut', dataIndex: 'checkOut', key: 'checkOut', width: 120 },
+    { title: 'O.D. / Leave/Over Time', dataIndex: 'odLeaveOt', key: 'odLeaveOt' },
+  ], [today]);
+
+  return (
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+ 
+      <AnimateIn variant="fadeUp">
+        <div className="flex items-start gap-4 py-2 mt-5 overflow-x-auto md:flex-wrap md:justify-between -mx-4 px-4 md:mx-0 md:px-0 [-webkit-overflow-scrolling:touch]">
+          <QuickAction icon={<Users size={22} />} label="Employees" color="bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400" onClick={() => navigate('/master/employee/list')} />
+          <QuickAction icon={<ClipboardList size={22} />} label="On Duty" color="bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400" onClick={() => navigate('/transaction/on-duty/list')} />
+          <QuickAction icon={<Clock size={22} />} label="Overtime" color="bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400" onClick={() => navigate('/transaction/overtime/list')} />
+          <QuickAction icon={<CalendarCheck size={22} />} label="Attendance" color="bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400" onClick={() => navigate('/transaction/attendance/month-wise')} />
+          <QuickAction icon={<Banknote size={22} />} label="Loans" color="bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400" onClick={() => navigate('/transaction/loan-advance/list')} />
+          <QuickAction icon={<CircleDollarSign size={22} />} label="Add/Deduct" color="bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400" onClick={() => navigate('/transaction/other-add-ded/addition')} />
+          <QuickAction icon={<IndianRupee size={22} />} label="Salary" color="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400" onClick={() => navigate('/transaction/salary/list')} />
         </div>
       </AnimateIn>
 
-      {/* Stat Cards */}
-      <Spin spinning={statsLoading}>
-        <StaggerContainer>
-          <Row gutter={[16, 16]}>
-            {stats.map((stat, index) => (
-              <Col key={index} xs={24} sm={12} lg={6}>
-                <StaggerItem>
-                  <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
-                    <Card bordered={false} className="!rounded-xl !shadow-sm hover:!shadow-md transition-shadow" styles={{ body: { padding: 20 } }}>
-                      <div className={`w-11 h-11 rounded-xl ${stat.lightBg} flex items-center justify-center`}>
-                        <span className={stat.iconColor}>{stat.icon}</span>
-                      </div>
-                      <div className="mt-3">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{stat.title}</div>
-                        <div className="text-2xl font-bold mt-1">
-                          {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">{stat.subtitle}</div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                </StaggerItem>
-              </Col>
-            ))}
-          </Row>
-        </StaggerContainer>
-      </Spin>
+      {/* ─── Dashboard heading ───────────────────────────────────────────── */}
+      <AnimateIn variant="fadeIn">
+        <h2 className="text-lg font-bold text-[var(--text-primary)] mt-10">
+          Dashboard
+        </h2>
+      </AnimateIn>
 
-      {/* Charts Section */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <AnimateIn variant="fadeUp" delay={0.2}>
-            <Card
-              title={<span className="font-semibold">Employee Trends</span>}
-              extra={<Tag color="blue">2024</Tag>}
-              bordered={false}
-              className="!rounded-xl !shadow-sm"
-            >
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={monthlyData}>
-                  <defs>
-                    <linearGradient id="joinedGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={primaryColor} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={primaryColor} stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="leftGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <RTooltip />
-                  <Area type="monotone" dataKey="joined" name="Joined" stroke={primaryColor} fill="url(#joinedGrad)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="left" name="Left" stroke="#f59e0b" fill="url(#leftGrad)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Card>
-          </AnimateIn>
-        </Col>
-        <Col xs={24} lg={8}>
-          <AnimateIn variant="fadeUp" delay={0.3}>
-            <Card
-              title={<span className="font-semibold">Department Distribution</span>}
-              bordered={false}
-              className="!rounded-xl !shadow-sm h-full"
-            >
-              {hasDeptData ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={departmentData}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={55}
-                      outerRadius={90}
-                      paddingAngle={4}
-                      dataKey="value"
-                      nameKey="name"
-                    >
-                      {departmentData.map((_: any, i: number) => (
-                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                    <RTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-[300px]">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
-                    <Users size={24} className="text-gray-400" />
+      {/* ─── Masonry Grid ────────────────────────────────────────────────── */}
+      <div className="columns-1 md:columns-2 xl:columns-3 gap-5">
+        {/* Employee Quick Search */}
+        <AnimateIn variant="fadeUp" delay={0.1}>
+          <WidgetCard title="Employee Quick Search" accentColor="from-cyan-500 to-blue-500" icon={<Search size={16} />}>
+            <Table
+              size="small"
+              columns={quickSearchCols}
+              dataSource={[]}
+              pagination={false}
+              locale={{ emptyText: (
+                <div className="py-6 flex flex-col items-center gap-3">
+                  <Input
+                    placeholder="Enter Employee Name OR Employee Code"
+                    prefix={<Search size={14} className="text-[var(--text-secondary)]" />}
+                    value={quickSearchQuery}
+                    onChange={(e) => setQuickSearchQuery(e.target.value)}
+                    className="!max-w-[340px]"
+                  />
+                </div>
+              )}}
+              scroll={{ x: 500 }}
+            />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Today's Birthday */}
+        <AnimateIn variant="fadeUp" delay={0.12}>
+          <WidgetCard title="Today's Birthday" accentColor="from-orange-400 to-pink-500" icon={<Cake size={16} />}>
+            {birthdays.length > 0 ? (
+              <div className="space-y-2.5">
+                {birthdays.map((b: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl bg-orange-50/50 dark:bg-orange-900/10">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                      {(b.firstName || b.name || 'E')[0]}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-[var(--text-primary)] truncate">
+                        {b.firstName || b.name || 'Employee'} {b.lastName || ''}
+                      </div>
+                      <div className="text-xs text-[var(--text-secondary)] truncate">{b.department || b.designation || ''}</div>
+                    </div>
                   </div>
-                  <Text type="secondary" className="text-sm">No employees assigned to departments yet</Text>
-                  <Text type="secondary" className="!text-xs mt-1">
-                    {departmentData.length} department{departmentData.length !== 1 ? 's' : ''} created
-                  </Text>
+                ))}
+              </div>
+            ) : (
+              <WidgetEmpty text="No birthdays today" />
+            )}
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Todo List */}
+        <AnimateIn variant="fadeUp" delay={0.14}>
+          <WidgetCard title="Todo List" accentColor="from-green-500 to-emerald-500" icon={<ClipboardList size={16} />}>
+            <div className="flex items-center gap-2 mb-3">
+              <Select
+                size="small"
+                value={todoFilter}
+                onChange={setTodoFilter}
+                options={[
+                  { value: 'all', label: 'All' },
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'completed', label: 'Completed' },
+                ]}
+                className="!w-36"
+              />
+              <button className="h-[24px] px-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600
+                hover:from-blue-600 hover:to-indigo-700 text-white text-xs font-medium transition shadow-sm">
+                <Search size={12} />
+              </button>
+            </div>
+            <WidgetEmpty text="No todo items" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Resignation Approval */}
+        <AnimateIn variant="fadeUp" delay={0.16}>
+          <WidgetCard title="Resignation Approval" accentColor="from-red-400 to-rose-500" icon={<BriefcaseBusiness size={16} />}>
+            <WidgetEmpty text="No pending resignations" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Calendar */}
+        <AnimateIn variant="fadeUp" delay={0.18}>
+          <WidgetCard title="Calendar" accentColor="from-slate-400 to-gray-500" icon={<CalendarCheck size={16} />}>
+            <Calendar
+              fullscreen={false}
+              defaultValue={today}
+              headerRender={({ value, onChange }) => (
+                <div className="flex items-center justify-between mb-2">
+                  <button
+                    onClick={() => onChange(value.subtract(1, 'month'))}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)]"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="font-semibold text-sm text-[var(--text-primary)]">
+                    {value.format('MMMM YYYY')}
+                  </span>
+                  <button
+                    onClick={() => onChange(value.add(1, 'month'))}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-[var(--text-secondary)]"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
                 </div>
               )}
-            </Card>
-          </AnimateIn>
-        </Col>
-      </Row>
+            />
+          </WidgetCard>
+        </AnimateIn>
 
-      {/* Bottom Section */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <AnimateIn variant="fadeUp" delay={0.35}>
-            <Card
-              title={<span className="font-semibold">Recent Employees</span>}
-              extra={<a className="text-xs flex items-center gap-1">View All <ArrowUpRight size={12} /></a>}
-              bordered={false}
-              className="!rounded-xl !shadow-sm"
-            >
-              <Table
-                columns={columns}
-                dataSource={employees}
-                rowKey={(r: any) => r._id || r.key || r.id}
-                pagination={false}
-                size="middle"
-                loading={employeesLoading}
-                locale={{ emptyText: 'No employees found. Add your first employee!' }}
-                scroll={{ x: 600 }}
-              />
-            </Card>
-          </AnimateIn>
-        </Col>
+        {/* Confirmation Due */}
+        <AnimateIn variant="fadeUp" delay={0.24}>
+          <WidgetCard title="Confirmation Due" accentColor="from-purple-500 to-violet-500" icon={<ShieldCheck size={16} />}>
+            <WidgetEmpty text="No confirmations due" />
+          </WidgetCard>
+        </AnimateIn>
 
-        <Col xs={24} lg={8}>
-          <AnimateIn variant="fadeUp" delay={0.4}>
-            <Card
-              title={<span className="font-semibold">Recent Activity</span>}
-              bordered={false}
-              className="!rounded-xl !shadow-sm h-full"
-            >
-              <Spin spinning={activitiesLoading}>
-                {activities.length > 0 ? (
-                  <List
-                    dataSource={activities}
-                    renderItem={(activity: any) => (
-                      <List.Item className="!px-0">
-                        <List.Item.Meta
-                          avatar={
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                              <CheckCircle2 className="text-blue-500" size={14} />
-                            </div>
-                          }
-                          title={<Text className="!text-sm">{activity.description || activity.title || activity.action || 'Activity'}</Text>}
-                          description={<Text type="secondary" className="!text-xs">{activity.timestamp ? new Date(activity.timestamp).toLocaleString() : activity.time || activity.createdAt || ''}</Text>}
-                        />
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <div className="text-center py-8">
-                    <Text type="secondary">No recent activity</Text>
+        {/* Top 10 Working Hours */}
+        <AnimateIn variant="fadeUp" delay={0.28}>
+          <WidgetCard title="Top 10 Employee (Working Hrs)" accentColor="from-teal-500 to-cyan-500" icon={<TrendingUp size={16} />}>
+            <WidgetEmpty text="No data available" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Notice Board */}
+        <AnimateIn variant="fadeUp" delay={0.3}>
+          <WidgetCard title="Notice Board" accentColor="from-red-400 to-pink-500" icon={<Megaphone size={16} />}>
+            <WidgetEmpty text="No notices" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Anniversary */}
+        <AnimateIn variant="fadeUp" delay={0.32}>
+          <WidgetCard title="Anniversary" accentColor="from-green-500 to-emerald-600" icon={<PartyPopper size={16} />}>
+            {anniversaries.length > 0 ? (
+              <div className="space-y-2.5">
+                {anniversaries.map((a: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl bg-green-50/50 dark:bg-green-900/10">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold">
+                      {(a.firstName || a.name || 'E')[0]}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-[var(--text-primary)] truncate">
+                        {a.firstName || a.name || 'Employee'} {a.lastName || ''}
+                      </div>
+                      <div className="text-xs text-[var(--text-secondary)] truncate">
+                        {a.years ? `${a.years} years` : a.joinDate ? fmtDate(a.joinDate) : ''}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </Spin>
-            </Card>
-          </AnimateIn>
-        </Col>
-      </Row>
+                ))}
+              </div>
+            ) : (
+              <WidgetEmpty text="No anniversaries today" />
+            )}
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Important Form */}
+        <AnimateIn variant="fadeUp" delay={0.34}>
+          <WidgetCard title="Important Forms" accentColor="from-amber-500 to-orange-500" icon={<FileText size={16} />}>
+            <WidgetEmpty text="No forms configured" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Newly Joined */}
+        <AnimateIn variant="fadeUp" delay={0.36}>
+          <WidgetCard title="Newly Joined Employee" accentColor="from-green-500 to-lime-500" icon={<UserPlus size={16} />}>
+            <WidgetEmpty text="No new joiners" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* DL Expired */}
+        <AnimateIn variant="fadeUp" delay={0.38}>
+          <WidgetCard title="Driving Licence Expired" accentColor="from-red-500 to-orange-500" icon={<CarFront size={16} />}>
+            <WidgetEmpty text="No expired licences" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Five Year Completed */}
+        <AnimateIn variant="fadeUp" delay={0.4}>
+          <WidgetCard title="Five Year Completed" accentColor="from-indigo-500 to-purple-500" icon={<Award size={16} />}>
+            <WidgetEmpty text="No records" />
+          </WidgetCard>
+        </AnimateIn>
+
+        {/* Age Over 60 */}
+        <AnimateIn variant="fadeUp" delay={0.42}>
+          <WidgetCard title="Employee Age Over 60" accentColor="from-yellow-500 to-red-500" icon={<AlertTriangle size={16} />}>
+            <WidgetEmpty text="No records" />
+          </WidgetCard>
+        </AnimateIn>
+      </div>
     </div>
   );
 };

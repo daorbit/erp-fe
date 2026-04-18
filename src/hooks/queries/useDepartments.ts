@@ -62,3 +62,14 @@ export function useDepartmentEmployees(id: string) {
     enabled: !!id,
   });
 }
+
+export function useMergeDepartments() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { fromDepartment: string; toDepartment: string }) =>
+      departmentService.merge(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: departmentKeys.all });
+    },
+  });
+}

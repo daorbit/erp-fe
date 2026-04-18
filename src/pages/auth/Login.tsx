@@ -6,17 +6,15 @@ import { useAppDispatch } from '@/store';
 import { setCredentials } from '@/store/authSlice';
 import { useLogin } from '@/hooks/queries/useAuth';
 import { App } from 'antd';
-import { ArrowRight, Shield, Users, CalendarCheck, IndianRupee, FileCheck, ClipboardList, GraduationCap } from 'lucide-react';
+import { ArrowRight, Shield, Users, CalendarCheck, IndianRupee, FileCheck } from 'lucide-react';
 
 const { Title, Text } = Typography;
 
 const modules = [
   { icon: <Users size={16} />, label: 'Employee Management' },
-  { icon: <CalendarCheck size={16} />, label: 'Attendance & Leaves' },
+  { icon: <CalendarCheck size={16} />, label: 'Attendance Tracking' },
   { icon: <IndianRupee size={16} />, label: 'Payroll & Expenses' },
   { icon: <FileCheck size={16} />, label: 'KYC & Onboarding' },
-  { icon: <ClipboardList size={16} />, label: 'Performance Reviews' },
-  { icon: <GraduationCap size={16} />, label: 'Training Programs' },
 ];
 
 export default function Login() {
@@ -84,7 +82,7 @@ export default function Login() {
               <span className="text-blue-400">managed.</span>
             </h1>
             <p className="text-[15px] text-white/40 leading-relaxed mb-10">
-              Onboarding, attendance, payroll, performance — everything your HR team needs, in one place.
+              Onboarding, attendance, payroll — everything your HR team needs, in one place.
             </p>
 
             {/* Module list */}
