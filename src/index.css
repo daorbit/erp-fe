@@ -360,10 +360,22 @@ body {
 
 /* Dark menu */
 .dark .ant-menu-dark,
-.dark .ant-menu-dark .ant-menu-sub,
 .dark .ant-menu-dark .ant-menu-sub.ant-menu-inline,
 .dark .ant-menu-dark .ant-menu-item-group-list {
   background: transparent !important;
+}
+
+/* Collapsed sidebar popup submenu needs a solid background */
+.dark .ant-menu-submenu-popup,
+.dark .ant-menu-submenu-popup .ant-menu,
+.dark .ant-menu-submenu-popup .ant-menu-sub,
+.dark .ant-menu-submenu-popup > .ant-menu {
+  background: #0a0a0c !important;
+  background-color: #0a0a0c !important;
+}
+.ant-menu-submenu-popup .ant-menu:not(.ant-menu-dark),
+.ant-menu-submenu-popup .ant-menu:not(.ant-menu-dark) .ant-menu-sub {
+  background: var(--bg-card) !important;
 }
 
 /* Dark tags */
