@@ -53,7 +53,6 @@ export const navigationItems: NavItem[] = [
   {
     titleKey: 'nav_master', icon: Database, roles: ADMINS,
     children: [
-      { titleKey: 'branches', href: '/branches', icon: GitBranch },
       {
         titleKey: 'nav_parent_department', icon: Building,
         children: [
