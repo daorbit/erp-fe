@@ -294,7 +294,7 @@ export enum ErpModule {
   TENDER = 'tender',
 }
 export const ERP_MODULE_OPTIONS: { value: ErpModule; label: string; enabled: boolean }[] = [
-  { value: ErpModule.ADMIN, label: 'ADMIN', enabled: false },
+  { value: ErpModule.ADMIN, label: 'ADMIN', enabled: true },
   { value: ErpModule.ADMIN_ACCOUNTS, label: 'ADMIN-ACCOUNTS', enabled: false },
   { value: ErpModule.CORRESPONDENCE, label: 'CORRESPONDENCE', enabled: false },
   { value: ErpModule.HUMAN_RESOURCE, label: 'HUMAN-RESOURCE', enabled: true },
