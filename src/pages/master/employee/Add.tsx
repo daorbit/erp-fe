@@ -101,10 +101,13 @@ const EmployeeAdd: React.FC = () => {
       }
       if (isEdit && id) {
         await employeeService.update(id, payload);
-        message.success('Employee updated');
+        message.success('Record Saved successfully');
       } else {
-        await employeeService.create(payload);
-        message.success('Employee created');
+        const res: any = await employeeService.create(payload);
+        const emp = res?.data ?? res;
+        const empCode = emp?.employeeId || emp?.customEmployeeCode || '-';
+        const workId = emp?.workId || emp?.employeeCode || '-';
+        message.success(`Record Saved successfully - Allotted Emp Code ${empCode} and Work ID ${workId}`, 6);
       }
       if (saveAndNext) navigate('/master/salary-structure/assign');
       else navigate('/master/employee/list');

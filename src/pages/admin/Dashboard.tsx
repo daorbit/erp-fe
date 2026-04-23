@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Input, Table, Calendar, Select, Empty, Tooltip } from 'antd';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { Input, Table, Calendar, Select, Empty, Tooltip, Spin } from 'antd';
 import {
   Users, ClipboardList, Clock, CalendarCheck, Banknote,
   CircleDollarSign, IndianRupee, Search,
@@ -8,6 +8,7 @@ import {
   AlertTriangle, Megaphone, FileText, ShieldCheck, BriefcaseBusiness,
   TrendingUp,
 } from 'lucide-react';
+import employeeService from '@/services/employeeService';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useDashboardStats, useBirthdays, useAnniversaries } from '@/hooks/queries/useDashboard';
@@ -127,7 +128,37 @@ const Dashboard: React.FC = () => {
   const anniversaries: any[] = anniversaryData?.data ?? [];
 
   const [quickSearchQuery, setQuickSearchQuery] = useState('');
-  const [todoFilter, setTodoFilter] = useState('all');
+  const [quickSearchResults, setQuickSearchResults] = useState<any[]>([]);
+  const [quickSearchLoading, setQuickSearchLoading] = useState(false);
+  const quickSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleQuickSearch = useCallback(async (value: string) => {
+    setQuickSearchQuery(value);
+    if (quickSearchTimer.current) clearTimeout(quickSearchTimer.current);
+    if (!value.trim()) { setQuickSearchResults([]); return; }
+    quickSearchTimer.current = setTimeout(async () => {
+      setQuickSearchLoading(true);
+      try {
+        // Detect if it looks like an employee code (contains letters+digits with dash)
+        const isCode = /^[A-Za-z]/.test(value.trim());
+        const params: Record<string, string> = isCode
+          ? { employeeId: value.trim(), limit: '20' }
+          : { search: value.trim(), limit: '20' };
+        const res = await employeeService.getAll(params);
+        const list = res?.data?.data ?? res?.data ?? [];
+        setQuickSearchResults(list.map((emp: any) => ({
+          _id: emp._id,
+          employeeId: emp.employeeId || '-',
+          name: `${emp.userId?.firstName || emp.firstName || ''} ${emp.userId?.lastName || emp.lastName || ''}`.trim() || '-',
+          branch: typeof emp.branch === 'object' ? emp.branch?.name : '',
+          checkIn: '-',
+          checkOut: '-',
+          odLeaveOt: '-',
+        })));
+      } catch { setQuickSearchResults([]); }
+      finally { setQuickSearchLoading(false); }
+    }, 400);
+  }, []);
   const today = dayjs();
 
   const fmtDate = (d: string | undefined) => {
@@ -137,11 +168,14 @@ const Dashboard: React.FC = () => {
   };
 
   const quickSearchCols = useMemo(() => [
-    { title: today.format('DD-MMM-YYYY'), dataIndex: 'name', key: 'name', width: 200 },
-    { title: 'CheckIn', dataIndex: 'checkIn', key: 'checkIn', width: 120 },
-    { title: 'CheckOut', dataIndex: 'checkOut', key: 'checkOut', width: 120 },
-    { title: 'O.D. / Leave/Over Time', dataIndex: 'odLeaveOt', key: 'odLeaveOt' },
+    { title: 'Code', dataIndex: 'employeeId', key: 'employeeId', width: 120 },
+    { title: today.format('DD-MMM-YYYY'), dataIndex: 'name', key: 'name', width: 180 },
+    { title: 'CheckIn', dataIndex: 'checkIn', key: 'checkIn', width: 90 },
+    { title: 'CheckOut', dataIndex: 'checkOut', key: 'checkOut', width: 90 },
+    { title: 'O.D./Leave/OT', dataIndex: 'odLeaveOt', key: 'odLeaveOt' },
   ], [today]);
+
+  const [todoFilter, setTodoFilter] = useState('all');
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -170,23 +204,27 @@ const Dashboard: React.FC = () => {
         {/* Employee Quick Search */}
         <AnimateIn variant="fadeUp" delay={0.1}>
           <WidgetCard title="Employee Quick Search" accentColor="from-cyan-500 to-blue-500" icon={<Search size={16} />}>
+            <Input
+              placeholder="Enter Employee Name OR Employee Code"
+              prefix={quickSearchLoading ? <Spin size="small" /> : <Search size={14} className="text-[var(--text-secondary)]" />}
+              value={quickSearchQuery}
+              onChange={(e) => handleQuickSearch(e.target.value)}
+              className="mb-3"
+              allowClear
+              onClear={() => { setQuickSearchQuery(''); setQuickSearchResults([]); }}
+            />
             <Table
               size="small"
               columns={quickSearchCols}
-              dataSource={[]}
+              dataSource={quickSearchResults}
+              rowKey="_id"
               pagination={false}
-              locale={{ emptyText: (
-                <div className="py-6 flex flex-col items-center gap-3">
-                  <Input
-                    placeholder="Enter Employee Name OR Employee Code"
-                    prefix={<Search size={14} className="text-[var(--text-secondary)]" />}
-                    value={quickSearchQuery}
-                    onChange={(e) => setQuickSearchQuery(e.target.value)}
-                    className="!max-w-[340px]"
-                  />
-                </div>
-              )}}
+              locale={{ emptyText: quickSearchQuery ? 'No employees found' : 'Enter name or employee code to search' }}
               scroll={{ x: 500 }}
+              onRow={(record) => ({
+                onClick: () => navigate(`/master/employee/view/${record._id}`),
+                style: { cursor: 'pointer' },
+              })}
             />
           </WidgetCard>
         </AnimateIn>
