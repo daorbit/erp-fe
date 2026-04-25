@@ -113,6 +113,12 @@ const AdminModuleCompanyEdit = lazy(() => import('../pages/admin-module/company/
 const AdminModuleSiteAdd = lazy(() => import('../pages/admin-module/site/Add'));
 const AdminModuleSiteList = lazy(() => import('../pages/admin-module/site/List'));
 const AdminModuleSiteDocument = lazy(() => import('../pages/admin-module/site/Document'));
+const AdminModuleLocationAdd = lazy(() => import('../pages/admin-module/location/Add'));
+const AdminModuleLocationList = lazy(() => import('../pages/admin-module/location/List'));
+const AdminModuleCityAdd = lazy(() => import('../pages/admin-module/city/Add'));
+const AdminModuleCityList = lazy(() => import('../pages/admin-module/city/List'));
+const AdminModuleStateAdd = lazy(() => import('../pages/admin-module/state/Add'));
+const AdminModuleStateList = lazy(() => import('../pages/admin-module/state/List'));
 
 function PageSkeleton() {
   return (
@@ -312,6 +318,15 @@ export default function AppRoutes() {
       <Route path="/admin-module/master/site/list" element={<R roles={ADMINS}><AdminModuleSiteList /></R>} />
       <Route path="/admin-module/master/site/edit/:id" element={<R roles={ADMINS}><AdminModuleSiteAdd /></R>} />
       <Route path="/admin-module/master/site/document" element={<R roles={ADMINS}><AdminModuleSiteDocument /></R>} />
+      <Route path="/admin-module/master/site-location/add" element={<R roles={ADMINS}><AdminModuleLocationAdd /></R>} />
+      <Route path="/admin-module/master/site-location/edit/:id" element={<R roles={ADMINS}><AdminModuleLocationAdd /></R>} />
+      <Route path="/admin-module/master/site-location/list" element={<R roles={ADMINS}><AdminModuleLocationList /></R>} />
+      <Route path="/admin-module/master/city/add" element={<R roles={ADMINS}><AdminModuleCityAdd /></R>} />
+      <Route path="/admin-module/master/city/edit/:id" element={<R roles={ADMINS}><AdminModuleCityAdd /></R>} />
+      <Route path="/admin-module/master/city/list" element={<R roles={ADMINS}><AdminModuleCityList /></R>} />
+      <Route path="/admin-module/master/state/add" element={<R roles={ADMINS}><AdminModuleStateAdd /></R>} />
+      <Route path="/admin-module/master/state/edit/:id" element={<R roles={ADMINS}><AdminModuleStateAdd /></R>} />
+      <Route path="/admin-module/master/state/list" element={<R roles={ADMINS}><AdminModuleStateList /></R>} />
       {ADMIN_MODULE_ROUTES.map((path) => (
         <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
       ))}
@@ -325,9 +340,9 @@ export default function AppRoutes() {
 const ADMIN_MODULE_ROUTES: string[] = [
   // Master → Company — LIVE (see routes above)
   // Master → Site / Plant / Project — LIVE (see routes above)
-  // Master → Site Location
-  '/admin-module/master/site-location/add',
-  '/admin-module/master/site-location/list',
+  // Master → Site Location — LIVE (see routes above)
+  // '/admin-module/master/site-location/add',
+  // '/admin-module/master/site-location/list',
   '/admin-module/master/site-location/location-route',
   '/admin-module/master/site-location/via-route',
   // Master → User
@@ -343,10 +358,12 @@ const ADMIN_MODULE_ROUTES: string[] = [
   // Master → Others
   '/admin-module/master/message-from-mng',
   '/admin-module/master/gst/master',
-  '/admin-module/master/state/add',
-  '/admin-module/master/state/list',
-  '/admin-module/master/city/add',
-  '/admin-module/master/city/list',
+  // Master → State — LIVE (see routes above)
+  // '/admin-module/master/state/add',
+  // '/admin-module/master/state/list',
+  // Master → Others — LIVE
+  // '/admin-module/master/city/add',  — LIVE
+  // '/admin-module/master/city/list', — LIVE
   '/admin-module/master/item-ledger-update',
   '/admin-module/master/sms-alert-voucher/add',
   '/admin-module/master/sms-alert-voucher/list',

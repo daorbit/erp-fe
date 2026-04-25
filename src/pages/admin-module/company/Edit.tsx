@@ -3,6 +3,7 @@ import {
   Card, Form, Input, Tabs, Button, Space, Typography, DatePicker, Select,
   Upload, Checkbox, Table, App,
 } from 'antd';
+import { cityHooks } from '@/hooks/queries/useMasterOther';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2, List as ListIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -48,6 +49,8 @@ export default function CompanyEdit() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const { data: citiesData } = cityHooks.useList();
+  const cityOptions = (citiesData?.data ?? []).map((c: any) => ({ value: c.name, label: c.name }));
 
   // Fetch company
   const { data, isLoading } = useQuery({
@@ -132,7 +135,7 @@ export default function CompanyEdit() {
       </FRow>
       <FRow>
         <FItem label="Address 03" name="address03"><TextArea rows={2} /></FItem>
-        <FItem label="City" name="city"><Input /></FItem>
+        <FItem label="City" name="city"><Select options={cityOptions} showSearch optionFilterProp="label" allowClear placeholder="Select city" /></FItem>
       </FRow>
       <FRow>
         <FItem label="Phone No.1" name="phone"><Input /></FItem>
@@ -215,7 +218,7 @@ export default function CompanyEdit() {
         <FItem label="Reg. Off. Phone No." name="regOffPhoneNo"><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Reg. Off. City" name="regOffCity"><Input /></FItem>
+        <FItem label="Reg. Off. City" name="regOffCity"><Select options={cityOptions} showSearch optionFilterProp="label" allowClear placeholder="Select city" /></FItem>
         <div />
       </FRow>
     </div>

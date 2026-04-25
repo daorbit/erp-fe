@@ -14,6 +14,7 @@ import simService from '../../services/simService';
 import otherIncomeService from '../../services/otherIncomeService';
 import attUploadSiteService from '../../services/attUploadSiteService';
 import attAutoNotificationService from '../../services/attAutoNotificationService';
+import stateService from '../../services/stateService';
 
 // Minimal shape every simple master service conforms to.
 interface CrudSvc {
@@ -76,3 +77,4 @@ export const simHooks = makeHooks('sims', simService);
 export const otherIncomeHooks = makeHooks('other-incomes', otherIncomeService);
 export const attUploadSiteHooks = makeHooks('att-upload-sites', attUploadSiteService);
 export const attAutoNotificationHooks = makeHooks('att-auto-notifications', attAutoNotificationService);
+export const stateHooks = makeHooks('states', stateService);
