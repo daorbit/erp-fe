@@ -20,6 +20,28 @@ const UserAdd: React.FC = () => {
   const { data: depts } = useDepartmentList();
   const { data: branches } = useBranchList();
 
+  React.useEffect(() => {
+    if (!isEdit || !id) return;
+    api.get<any>(`/auth/users`).then((res) => {
+      const u = (res?.data ?? []).find((x: any) => (x._id || x.id) === id);
+      if (!u) return;
+      form.setFieldsValue({
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        phone: u.phone,
+        username: u.username,
+        userCategory: u.userCategory,
+        userType: u.userType,
+        isActive: u.isActive,
+        remark: u.remark,
+        allowedDepartments: u.allowedDepartments ?? [],
+        allowedBranches: u.allowedBranches ?? [],
+        allowedModules: u.allowedModules ?? [],
+      });
+    }).catch(() => {});
+  }, [id, isEdit, form]);
+
   const handleSubmit = async (values: any) => {
     try {
       const payload = {
