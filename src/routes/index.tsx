@@ -34,8 +34,6 @@ const Applications = lazy(() => import('../pages/recruitment/Applications'));
 const Reports = lazy(() => import('../pages/reports/Reports'));
 const ShiftList = lazy(() => import('../pages/shifts/ShiftList'));
 const ShiftForm = lazy(() => import('../pages/shifts/ShiftForm'));
-const BranchList = lazy(() => import('../pages/branches/BranchList'));
-const BranchForm = lazy(() => import('../pages/branches/BranchForm'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 const AttendanceForm = lazy(() => import('../pages/attendance/AttendanceForm'));
@@ -178,9 +176,6 @@ export default function AppRoutes() {
       <Route path="/onboarding/new" element={<Protected><KYCOnboarding /></Protected>} />
       <Route path="/onboarding/list" element={<R roles={ADMINS}><OnboardingList /></R>} />
       <Route path="/onboarding/:userId/fill" element={<R roles={ADMINS}><AdminFillOnboarding /></R>} />
-      <Route path="/branches" element={<R roles={ADMINS}><BranchList /></R>} />
-      <Route path="/branches/create" element={<R roles={ADMINS}><BranchForm /></R>} />
-      <Route path="/branches/:id/edit" element={<R roles={ADMINS}><BranchForm /></R>} />
       <Route path="/payroll" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayrollList /></CS></R>} />
       <Route path="/payroll/payslip/:id" element={<R roles={ADMINS}><CS moduleName="Payroll"><PayslipView /></CS></R>} />
       <Route path="/recruitment" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobPostings /></CS></R>} />

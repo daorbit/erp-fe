@@ -372,7 +372,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
         className="!fixed inset-y-0 left-0 z-40 hidden md:!block"
         style={{
           background: isDark ? '#0a0a0c' : '#ffffff',
-          overflow: 'hidden',
+          overflow: 'visible',
           borderRight: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e5e7eb',
         }}
         trigger={null}

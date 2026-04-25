@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Modal, Input, Button, Table, Form, Tag } from 'antd';
 import { Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import employeeService from '@/services/employeeService';
 import type { ColumnsType } from 'antd/es/table';
@@ -28,6 +29,7 @@ interface EmployeeRow {
 
 export default function EmployeeSearchDialog({ open, onClose }: EmployeeSearchDialogProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<EmployeeRow[]>([]);
@@ -181,6 +183,13 @@ export default function EmployeeSearchDialog({ open, onClose }: EmployeeSearchDi
         scroll={{ x: 1000 }}
         pagination={{ pageSize: 10, showSizeChanger: false }}
         locale={{ emptyText: searched ? 'No employees found' : 'Search to view results' }}
+        onRow={(record) => ({
+          onClick: () => {
+            handleClose();
+            navigate(`/master/employee/view/${record._id}`);
+          },
+          style: { cursor: 'pointer' },
+        })}
       />
     </Modal>
   );
