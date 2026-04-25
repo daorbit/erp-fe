@@ -15,7 +15,7 @@ const DayAuthorizationPage: React.FC = () => {
   const save = useSaveDayAuthorization();
 
   useEffect(() => {
-    api.get<any>('/admin/users').then((res) => setUsers(res?.data ?? [])).catch(() => {});
+    api.get<any>('/auth/users').then((res) => setUsers(res?.data ?? [])).catch(() => {});
   }, []);
 
   useEffect(() => {

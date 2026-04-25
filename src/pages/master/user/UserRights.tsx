@@ -34,7 +34,7 @@ const UserRightsPage: React.FC = () => {
   const copy = useCopyUserRight();
 
   useEffect(() => {
-    api.get<any>('/admin/users').then((res) => setUsers(res?.data ?? [])).catch(() => {});
+    api.get<any>('/auth/users').then((res) => setUsers(res?.data ?? [])).catch(() => {});
   }, []);
 
   useEffect(() => {

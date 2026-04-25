@@ -16,7 +16,7 @@ const UserList: React.FC = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const res: any = await api.get('/admin/users');
+      const res: any = await api.get('/auth/users');
       setUsers(res?.data ?? []);
     } catch (err: any) { message.error(err?.message || 'Failed'); }
     finally { setLoading(false); }
@@ -48,7 +48,7 @@ const UserList: React.FC = () => {
       title: 'Del', width: 70,
       render: (_: any, r: any) => (
         <Popconfirm title="Delete user?" onConfirm={async () => {
-          try { await api.delete(`/admin/users/${r._id || r.id}`); message.success('Deleted'); load(); }
+          try { await api.delete(`/auth/users/${r._id || r.id}`); message.success('Deleted'); load(); }
           catch (e: any) { message.error(e?.message || 'Failed'); }
         }}>
           <Button type="text" danger icon={<Trash2 size={14} />} />

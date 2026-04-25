@@ -13,7 +13,7 @@ const ResetPasswordPage: React.FC = () => {
   const [updateUserName, setUpdateUserName] = useState(false);
 
   React.useEffect(() => {
-    api.get<any>('/admin/users').then((res) => setUsers(res?.data ?? [])).catch(() => {});
+    api.get<any>('/auth/users').then((res) => setUsers(res?.data ?? [])).catch(() => {});
   }, []);
 
   const handleSubmit = async (values: any) => {
@@ -21,7 +21,7 @@ const ResetPasswordPage: React.FC = () => {
       if (values.password !== values.retypePassword) {
         message.error('Passwords do not match'); return;
       }
-      await api.put(`/admin/users/${values.user}`, {
+      await api.put(`/auth/users/${values.user}`, {
         password: values.password,
         ...(updateUserName && values.username ? { username: values.username } : {}),
       });

@@ -38,10 +38,10 @@ const UserAdd: React.FC = () => {
         allowedModules: values.allowedModules ?? [],
       };
       if (isEdit && id) {
-        await api.put(`/admin/users/${id}`, payload);
+        await api.put(`/auth/users/${id}`, payload);
         message.success('User updated');
       } else {
-        await api.post('/admin/users', payload);
+        await api.post('/auth/register', payload);
         message.success('User created');
       }
       navigate('/master/user/list');
