@@ -327,6 +327,13 @@ export default function AppRoutes() {
       <Route path="/admin-module/master/state/add" element={<R roles={ADMINS}><AdminModuleStateAdd /></R>} />
       <Route path="/admin-module/master/state/edit/:id" element={<R roles={ADMINS}><AdminModuleStateAdd /></R>} />
       <Route path="/admin-module/master/state/list" element={<R roles={ADMINS}><AdminModuleStateList /></R>} />
+      <Route path="/admin-module/master/user/add" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
+      <Route path="/admin-module/master/user/edit/:id" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
+      <Route path="/admin-module/master/user/list" element={<R roles={ADMINS}><MasterUserList /></R>} />
+      <Route path="/admin-module/master/user/rights-summary" element={<R roles={ADMINS}><MasterUserRights /></R>} />
+      <Route path="/admin-module/master/user/reset-password" element={<R roles={ADMINS}><MasterUserResetPassword /></R>} />
+      <Route path="/admin-module/master/user/day-auth-by-user" element={<R roles={ADMINS}><MasterUserDayAuth /></R>} />
+      <Route path="/admin-module/master/user/day-auth-by-entity" element={<R roles={ADMINS}><MasterUserDayAuth /></R>} />
       {ADMIN_MODULE_ROUTES.map((path) => (
         <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
       ))}
@@ -345,16 +352,10 @@ const ADMIN_MODULE_ROUTES: string[] = [
   // '/admin-module/master/site-location/list',
   '/admin-module/master/site-location/location-route',
   '/admin-module/master/site-location/via-route',
-  // Master → User
-  '/admin-module/master/user/add',
+  // Master → User — LIVE (add, list, rights-summary, reset-password, day-auth-by-user, day-auth-by-entity)
   '/admin-module/master/user/add-by-mapping',
-  '/admin-module/master/user/list',
-  '/admin-module/master/user/rights-summary',
-  '/admin-module/master/user/day-auth-by-user',
-  '/admin-module/master/user/day-auth-by-entity',
   '/admin-module/master/user/copy-site-right',
   '/admin-module/master/user/copy-user-site-right',
-  '/admin-module/master/user/reset-password',
   // Master → Others
   '/admin-module/master/message-from-mng',
   '/admin-module/master/gst/master',
