@@ -22,6 +22,7 @@ import {
   // Admin module additions
   MapPinned, Route, Clipboard, FolderKey, Smartphone as SmartphoneIcon,
   LogIn, Send, UsersRound, Clock4, FileWarning,
+  BookOpen,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -549,9 +550,173 @@ export const adminModuleNav: NavItem[] = [
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
+// Admin-Accounts Module Navigation
+// ══════════════════════════════════════════════════════════════════════════════
+export const accountsModuleNav: NavItem[] = [
+  { titleKey: 'dashboard', href: '/accounts', icon: LayoutDashboard },
+  {
+    titleKey: 'nav_master', icon: Database,
+    children: [
+      {
+        titleKey: 'nav_acc_account_group', icon: Layers,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/account-group/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/account-group/list', icon: List },
+          { titleKey: 'nav_acc_ac_group_tree', href: '/accounts/master/account-group/tree', icon: GitBranch },
+          { titleKey: 'nav_acc_setting', href: '/accounts/master/account-group/setting', icon: Settings },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_account', icon: Landmark,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/account/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/account/list', icon: List },
+          { titleKey: 'nav_acc_kyc_list', href: '/accounts/master/account/kyc-list', icon: FileCheck },
+          { titleKey: 'nav_acc_bank_account_verify', href: '/accounts/master/account/bank-verify', icon: ShieldCheck },
+          { titleKey: 'nav_acc_update_ac_info', href: '/accounts/master/account/update-info', icon: Edit },
+          { titleKey: 'nav_acc_opening_balance', href: '/accounts/master/account/opening-balance', icon: Wallet },
+          { titleKey: 'nav_acc_unassigned_ac_list', href: '/accounts/master/account/unassigned', icon: UserX },
+          { titleKey: 'nav_acc_transfer_next_year', href: '/accounts/master/account/transfer-next-year', icon: ArrowRightLeft },
+          { titleKey: 'nav_acc_account_merge', href: '/accounts/master/account/merge', icon: Merge },
+          { titleKey: 'nav_acc_account_used_detail', href: '/accounts/master/account/used-detail', icon: FileSearch },
+          { titleKey: 'nav_acc_balance_update', href: '/accounts/master/account/balance-update', icon: TrendingUp },
+          { titleKey: 'nav_acc_multi_group_update', href: '/accounts/master/account/multi-group-update', icon: Users },
+          { titleKey: 'nav_acc_site_wise_account_list', href: '/accounts/master/account/site-wise', icon: Building },
+          { titleKey: 'nav_acc_delete_log_list', href: '/accounts/master/account/delete-log', icon: FileText },
+          { titleKey: 'nav_acc_unused_account_list', href: '/accounts/master/account/unused', icon: FileWarning },
+          { titleKey: 'nav_acc_delete_multiple_ac', href: '/accounts/master/account/delete-multiple', icon: UserX },
+          { titleKey: 'nav_acc_assign_tds', href: '/accounts/master/account/assign-tds', icon: Percent },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_tds_configuration', icon: Percent,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/tds-config/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/tds-config/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_budget', icon: Wallet,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/budget/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/budget/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_branch_division', icon: Building,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/branch-division/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/branch-division/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_tax_in', icon: Receipt,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/tax-in/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/tax-in/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_work_contract', icon: Briefcase,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/work-contract/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/work-contract/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_account_group_schedule', icon: CalendarDays,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/account-group-schedule/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/account-group-schedule/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_account_schedule', icon: CalendarDays,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/account-schedule/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/account-schedule/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_account_create', icon: Plus,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/account-create/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/account-create/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_cheque_configuration', icon: CreditCard,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/cheque-config/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/cheque-config/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_item_stock_manual', icon: Boxes,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/item-stock-manual/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/item-stock-manual/list', icon: List },
+        ],
+      },
+      { titleKey: 'nav_acc_gstin_account_opening', href: '/accounts/master/gstin-account-opening', icon: FileCheck },
+      { titleKey: 'nav_acc_financial_year', href: '/accounts/master/financial-year', icon: CalendarDays },
+      { titleKey: 'nav_acc_lock_month_financial', href: '/accounts/master/lock-month-financial', icon: ShieldCheck },
+      { titleKey: 'nav_acc_opening_balance_lock', href: '/accounts/master/opening-balance-lock', icon: ShieldCheck },
+      {
+        titleKey: 'nav_acc_item_group', icon: Boxes,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/item-group/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/item-group/list', icon: List },
+        ],
+      },
+      {
+        titleKey: 'nav_acc_narration', icon: MessageSquare,
+        children: [
+          { titleKey: 'nav_add', href: '/accounts/master/narration/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/accounts/master/narration/list', icon: List },
+        ],
+      },
+      { titleKey: 'nav_acc_setting', href: '/accounts/master/setting', icon: Settings },
+    ],
+  },
+  {
+    titleKey: 'nav_acc_transaction', icon: ArrowRightLeft,
+    children: [
+      { titleKey: 'nav_acc_voucher_entry', href: '/accounts/transaction/voucher-entry', icon: FileText },
+      { titleKey: 'nav_acc_journal_entry', href: '/accounts/transaction/journal-entry', icon: BookOpen },
+      { titleKey: 'nav_acc_payment_entry', href: '/accounts/transaction/payment-entry', icon: Wallet },
+      { titleKey: 'nav_acc_receipt_entry', href: '/accounts/transaction/receipt-entry', icon: Receipt },
+      { titleKey: 'nav_acc_contra_entry', href: '/accounts/transaction/contra-entry', icon: ArrowRightLeft },
+      { titleKey: 'nav_acc_bank_reconciliation', href: '/accounts/transaction/bank-reconciliation', icon: ShieldCheck },
+      { titleKey: 'nav_acc_cheque_printing', href: '/accounts/transaction/cheque-printing', icon: CreditCard },
+      { titleKey: 'nav_acc_tds_entry', href: '/accounts/transaction/tds-entry', icon: Percent },
+      { titleKey: 'nav_acc_gst_entry', href: '/accounts/transaction/gst-entry', icon: FileCheck },
+    ],
+  },
+  {
+    titleKey: 'nav_acc_reports', icon: BarChart3,
+    children: [
+      { titleKey: 'nav_acc_trial_balance', href: '/accounts/reports/trial-balance', icon: FileText },
+      { titleKey: 'nav_acc_balance_sheet', href: '/accounts/reports/balance-sheet', icon: Layers },
+      { titleKey: 'nav_acc_profit_loss', href: '/accounts/reports/profit-loss', icon: TrendingUp },
+      { titleKey: 'nav_acc_cash_flow', href: '/accounts/reports/cash-flow', icon: Wallet },
+      { titleKey: 'nav_acc_ledger', href: '/accounts/reports/ledger', icon: BookOpen },
+      { titleKey: 'nav_acc_day_book', href: '/accounts/reports/day-book', icon: CalendarDays },
+      { titleKey: 'nav_acc_bank_book', href: '/accounts/reports/bank-book', icon: Landmark },
+      { titleKey: 'nav_acc_cash_book', href: '/accounts/reports/cash-book', icon: Wallet },
+      { titleKey: 'nav_acc_outstanding_payable', href: '/accounts/reports/outstanding-payable', icon: FileWarning },
+      { titleKey: 'nav_acc_outstanding_receivable', href: '/accounts/reports/outstanding-receivable', icon: FileSearch },
+      { titleKey: 'nav_acc_tds_report', href: '/accounts/reports/tds-report', icon: Percent },
+      { titleKey: 'nav_acc_gst_report', href: '/accounts/reports/gst-report', icon: FileCheck },
+    ],
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
 // Module → Navigation map
 // ══════════════════════════════════════════════════════════════════════════════
 export const moduleNavigationMap: Record<string, NavItem[]> = {
   human_resource: navigationItems,
   admin: adminModuleNav,
+  admin_accounts: accountsModuleNav,
 };

@@ -160,6 +160,7 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
   const moduleDashboardRoute: Record<string, string> = {
     human_resource: '/admin',
     admin: '/admin-module',
+    admin_accounts: '/accounts',
   };
 
   // Active module from Redux (persisted in localStorage)

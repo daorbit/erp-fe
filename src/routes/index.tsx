@@ -378,6 +378,13 @@ export default function AppRoutes() {
       <Route path="/admin-module/reports/site-wise-users" element={<R roles={ADMINS}><AdminReportSiteWiseUsers /></R>} />
       <Route path="/admin-module/reports/user-right-summary" element={<R roles={ADMINS}><AdminReportUserRightSummary /></R>} />
       <Route path="/admin-module/reports/idle-user" element={<R roles={ADMINS}><AdminReportIdleUser /></R>} />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+           Admin-Accounts Module — all under construction → InProgress
+         ══════════════════════════════════════════════════════════════════════ */}
+      {ACCOUNTS_MODULE_ROUTES.map((path) => (
+        <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
+      ))}
       <Route path="/admin-module/master/city/add" element={<R roles={ADMINS}><AdminModuleCityAdd /></R>} />
       <Route path="/admin-module/master/city/edit/:id" element={<R roles={ADMINS}><AdminModuleCityAdd /></R>} />
       <Route path="/admin-module/master/city/list" element={<R roles={ADMINS}><AdminModuleCityList /></R>} />
@@ -400,6 +407,77 @@ export default function AppRoutes() {
     </Routes>
   );
 }
+
+// ─── Admin-Accounts Module routes (all Coming Soon / InProgress) ──────────────
+const ACCOUNTS_MODULE_ROUTES: string[] = [
+  '/accounts',
+  // Master → Account Group
+  '/accounts/master/account-group/add',
+  '/accounts/master/account-group/list',
+  '/accounts/master/account-group/tree',
+  '/accounts/master/account-group/setting',
+  // Master → Account
+  '/accounts/master/account/add',
+  '/accounts/master/account/list',
+  '/accounts/master/account/kyc-list',
+  '/accounts/master/account/bank-verify',
+  '/accounts/master/account/update-info',
+  '/accounts/master/account/opening-balance',
+  '/accounts/master/account/unassigned',
+  '/accounts/master/account/transfer-next-year',
+  '/accounts/master/account/merge',
+  '/accounts/master/account/used-detail',
+  '/accounts/master/account/balance-update',
+  '/accounts/master/account/multi-group-update',
+  '/accounts/master/account/site-wise',
+  '/accounts/master/account/delete-log',
+  '/accounts/master/account/unused',
+  '/accounts/master/account/delete-multiple',
+  '/accounts/master/account/assign-tds',
+  // Master → TDS Configuration
+  '/accounts/master/tds-config/add',
+  '/accounts/master/tds-config/list',
+  // Master → Budget
+  '/accounts/master/budget/add',
+  '/accounts/master/budget/list',
+  // Master → Branch / Division
+  '/accounts/master/branch-division/add',
+  '/accounts/master/branch-division/list',
+  // Master → Tax IN
+  '/accounts/master/tax-in/add',
+  '/accounts/master/tax-in/list',
+  // Master → Work Contract
+  '/accounts/master/work-contract/add',
+  '/accounts/master/work-contract/list',
+  // Master → Account Group Schedule
+  '/accounts/master/account-group-schedule/add',
+  '/accounts/master/account-group-schedule/list',
+  // Master → Account Schedule
+  '/accounts/master/account-schedule/add',
+  '/accounts/master/account-schedule/list',
+  // Master → Account Create
+  '/accounts/master/account-create/add',
+  '/accounts/master/account-create/list',
+  // Master → Cheque Configuration
+  '/accounts/master/cheque-config/add',
+  '/accounts/master/cheque-config/list',
+  // Master → Item Stock Manual
+  '/accounts/master/item-stock-manual/add',
+  '/accounts/master/item-stock-manual/list',
+  // Master → standalone pages
+  '/accounts/master/gstin-account-opening',
+  '/accounts/master/financial-year',
+  '/accounts/master/lock-month-financial',
+  '/accounts/master/opening-balance-lock',
+  // Master → Item Group
+  '/accounts/master/item-group/add',
+  '/accounts/master/item-group/list',
+  // Master → Narration
+  '/accounts/master/narration/add',
+  '/accounts/master/narration/list',
+  // Master → Setting
+  '/accounts/master/setting',
+];
 
 // ─── Admin Module routes still under construction ─────────────────────────────
 // Anything in this list resolves to <InProgress />. Routes that have a real
