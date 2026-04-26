@@ -96,6 +96,10 @@ const MasterManageMessages = lazy(() => import('../pages/master/other/ManageMess
 // InProgress page for Transaction & Reports modules
 const InProgress = lazy(() => import('../pages/InProgress'));
 
+// ── Admin-Accounts Module ────────────────────────────────────────────────────
+const AccountGroupAdd = lazy(() => import('../pages/accounts/master/account-group/Add'));
+const AccountGroupList = lazy(() => import('../pages/accounts/master/account-group/List'));
+
 // Phase 3: Employee auxiliary ops + Shift master
 const MasterEmployeeBranchShift = lazy(() => import('../pages/master/employee/BranchShift'));
 const MasterEmployeeMultipleShiftTransfer = lazy(() => import('../pages/master/employee/MultipleShiftTransfer'));
@@ -380,8 +384,14 @@ export default function AppRoutes() {
       <Route path="/admin-module/reports/idle-user" element={<R roles={ADMINS}><AdminReportIdleUser /></R>} />
 
       {/* ══════════════════════════════════════════════════════════════════════
-           Admin-Accounts Module — all under construction → InProgress
+           Admin-Accounts Module
          ══════════════════════════════════════════════════════════════════════ */}
+      {/* Account Group — fully implemented */}
+      <Route path="/accounts/master/account-group/add" element={<R roles={ADMINS}><AccountGroupAdd /></R>} />
+      <Route path="/accounts/master/account-group/edit/:id" element={<R roles={ADMINS}><AccountGroupAdd /></R>} />
+      <Route path="/accounts/master/account-group/list" element={<R roles={ADMINS}><AccountGroupList /></R>} />
+
+      {/* Everything else → InProgress */}
       {ACCOUNTS_MODULE_ROUTES.map((path) => (
         <Route key={path} path={path} element={<R roles={ADMINS}><InProgress /></R>} />
       ))}
@@ -411,9 +421,7 @@ export default function AppRoutes() {
 // ─── Admin-Accounts Module routes (all Coming Soon / InProgress) ──────────────
 const ACCOUNTS_MODULE_ROUTES: string[] = [
   '/accounts',
-  // Master → Account Group
-  '/accounts/master/account-group/add',
-  '/accounts/master/account-group/list',
+  // Master → Account Group (explicit routes handle add/edit/list)
   '/accounts/master/account-group/tree',
   '/accounts/master/account-group/setting',
   // Master → Account
