@@ -39,6 +39,11 @@ const EmployeeList: React.FC = () => {
   if (filters.department) query.department = filters.department;
   if (filters.designation) query.designation = filters.designation;
   if (filters.employeeGroup) query.employeeGroup = filters.employeeGroup;
+  // Send Level / Grade / Tag filters under the field names the EmployeeProfile
+  // model uses, so they actually apply server-side.
+  if (filters.levelName) query.level = filters.levelName;
+  if (filters.gradeName) query.grade = filters.gradeName;
+  if (filters.tagName) query.tagName = filters.tagName;
   if (filters.status === 'active') query.isActive = 'true';
   else if (filters.status === 'in_active') query.isActive = 'false';
 

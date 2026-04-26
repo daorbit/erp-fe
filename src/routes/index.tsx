@@ -393,48 +393,18 @@ export default function AppRoutes() {
   );
 }
 
-// ─── Admin Module routes (InProgress) ─────────────────────────────────────────
+// ─── Admin Module routes still under construction ─────────────────────────────
+// Anything in this list resolves to <InProgress />. Routes that have a real
+// component above (location-route, message-from-mng, gst/master, sms-alert-voucher,
+// mis-project-setting, front-image-gallery, site-document-master, mobile-app-count,
+// reports/*) are NOT listed here — duplicating them would race the explicit Route.
 const ADMIN_MODULE_ROUTES: string[] = [
-  // Master → Company — LIVE (see routes above)
-  // Master → Site / Plant / Project — LIVE (see routes above)
-  // Master → Site Location — LIVE (see routes above)
-  // '/admin-module/master/site-location/add',
-  // '/admin-module/master/site-location/list',
-  '/admin-module/master/site-location/location-route',
-  '/admin-module/master/site-location/via-route',
-  // Master → User — LIVE (add, list, rights-summary, reset-password, day-auth-by-user, day-auth-by-entity)
+  // User → still missing: bulk add by mapping + copy-rights flows.
   '/admin-module/master/user/add-by-mapping',
   '/admin-module/master/user/copy-site-right',
   '/admin-module/master/user/copy-user-site-right',
-  // Master → Others
-  '/admin-module/master/message-from-mng',
-  '/admin-module/master/gst/master',
-  // Master → State — LIVE (see routes above)
-  // '/admin-module/master/state/add',
-  // '/admin-module/master/state/list',
-  // Master → Others — LIVE
-  // '/admin-module/master/city/add',  — LIVE
-  // '/admin-module/master/city/list', — LIVE
+  // Master → Item Ledger Update — placeholder.
   '/admin-module/master/item-ledger-update',
-  '/admin-module/master/sms-alert-voucher-voucher/add',
-  '/admin-module/master/sms-alert-voucher-voucher/list',
-  '/admin-module/master/mis-project-setting',
-  '/admin-module/master/front-image-gallery',
-  '/admin-module/master/site-document-master',
-  '/admin-module/master/mobile-app-count/add',
-  '/admin-module/master/mobile-app-count/list',
-  // Reports
-  '/admin-module/reports/login-log',
-  '/admin-module/reports/company',
-  '/admin-module/reports/site',
-  '/admin-module/reports/location',
-  '/admin-module/reports/voucher-status',
-  '/admin-module/reports/user-work',
-  '/admin-module/reports/send-sms/stock-report',
-  '/admin-module/reports/send-sms/machine-insurance-alert',
-  '/admin-module/reports/site-wise-users',
-  '/admin-module/reports/user-right-summary',
-  '/admin-module/reports/idle-user',
 ];
 
 // ─── Transaction routes (InProgress) ──────────────────────────────────────────

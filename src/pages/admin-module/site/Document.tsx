@@ -43,7 +43,7 @@ export default function SiteDocument() {
     return p;
   }, [applied]);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['branches-documents', branchQueryParams],
     queryFn: () => api.get('/branches', branchQueryParams),
   });
@@ -232,7 +232,7 @@ export default function SiteDocument() {
         </div>
 
         <div className="flex justify-center gap-3 mt-4">
-          <Button type="primary" danger onClick={() => { setApplied(draft); refetch(); }}>
+          <Button type="primary" danger onClick={() => setApplied(draft)}>
             Search
           </Button>
           <Button danger onClick={() => navigate('/admin-module')}>Close</Button>

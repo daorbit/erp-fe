@@ -22,7 +22,7 @@ export default function MessageFromMngList() {
   const [applied, setApplied] = useState<FilterState>({ dateFrom: today, dateTo: today, title: '' });
   const [colFilters, setColFilters] = useState<Record<string, string>>({});
 
-  const { data, isLoading, refetch } = manageMessageHooks.useList({ limit: '500' });
+  const { data, isLoading } = manageMessageHooks.useList({ limit: '500' });
   const allMessages: any[] = ((data as any)?.data ?? []) as any[];
 
   const deleteMutation = manageMessageHooks.useDelete();
@@ -142,7 +142,7 @@ export default function MessageFromMngList() {
           </div>
         </div>
         <div className="flex justify-center gap-3 mt-3">
-          <Button type="primary" danger onClick={() => { setApplied(draft); refetch(); }}>Search</Button>
+          <Button type="primary" danger onClick={() => setApplied(draft)}>Search</Button>
           <Button danger onClick={() => navigate('/admin-module')}>Close</Button>
         </div>
       </Card>

@@ -37,7 +37,7 @@ export default function MobileAppCountList() {
     return p;
   }, [applied]);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['mobile-app-count-users', params],
     queryFn: () => api.get('/mobile-app-counts/activation-users', params),
   });
@@ -99,7 +99,7 @@ export default function MobileAppCountList() {
         </div>
 
         <div className="flex justify-center gap-3 mt-3">
-          <Button type="primary" danger onClick={() => { setApplied(draft); refetch(); }}>Search</Button>
+          <Button type="primary" danger onClick={() => setApplied(draft)}>Search</Button>
           <Button danger onClick={() => navigate('/admin-module')}>Close</Button>
         </div>
       </Card>

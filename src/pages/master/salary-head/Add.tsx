@@ -33,18 +33,22 @@ const SalaryHeadAdd: React.FC = () => {
         printName: editData.printName,
         headType: editData.headType,
         displayOrder: editData.displayOrder ?? 0,
-        status: editData.status ?? 'Active',
+        // Backend stores isActive boolean; show as Active/Inactive in the form.
+        status: editData.isActive === false ? 'Inactive' : 'Active',
       });
     }
   }, [editData, form]);
 
   const handleSubmit = async (values: any) => {
+    // Map the status enum to the boolean the backend validator expects.
+    const { status, ...rest } = values;
+    const payload = { ...rest, isActive: status !== 'Inactive' };
     try {
       if (isEdit && id) {
-        await updateMutation.mutateAsync({ id, data: values });
+        await updateMutation.mutateAsync({ id, data: payload });
         message.success('Salary Head updated');
       } else {
-        await createMutation.mutateAsync(values);
+        await createMutation.mutateAsync(payload);
         message.success('Salary Head created');
       }
       navigate('/master/salary-head/list');

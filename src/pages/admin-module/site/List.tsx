@@ -52,7 +52,7 @@ export default function SiteList() {
     return p;
   }, [applied]);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['branches-list', branchQueryParams],
     queryFn: () => api.get('/branches', branchQueryParams),
   });
@@ -345,7 +345,7 @@ export default function SiteList() {
         </div>
 
         <div className="flex justify-center gap-3 mt-4">
-          <Button type="primary" danger onClick={() => { setApplied(draft); refetch(); }}>
+          <Button type="primary" danger onClick={() => setApplied(draft)}>
             Search
           </Button>
           <Button danger onClick={() => navigate('/admin-module')}>

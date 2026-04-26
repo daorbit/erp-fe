@@ -87,7 +87,7 @@ export default function UserWorkReport() {
     return p;
   }, [applied]);
 
-  const { data, isLoading, refetch, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['user-work-report', queryParams],
     queryFn: () => api.get('/reports/user-work', queryParams),
     enabled: !!applied,
@@ -312,7 +312,7 @@ export default function UserWorkReport() {
         </div>
 
         <div className="flex justify-center gap-3 mt-3">
-          <Button type="primary" danger onClick={() => { setApplied(draft); refetch(); }}>Search</Button>
+          <Button type="primary" danger onClick={() => setApplied(draft)}>Search</Button>
           <Button danger onClick={() => navigate('/admin-module')}>Close</Button>
         </div>
       </Card>

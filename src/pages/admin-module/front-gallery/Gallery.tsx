@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Card, Typography, Button, Upload, App } from 'antd';
 import { Plus } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { imageGalleryHooks } from '@/hooks/queries/usePhase2';
 import api from '@/services/api';
 
 const { Title } = Typography;
@@ -37,10 +36,9 @@ export default function FrontImageGallery() {
   const saveMut = useMutation({
     mutationFn: async (slot: SlotImage) => {
       const existing = items.find((it: any) => it.title === slot.title);
-      if (existing) {
-        return imageGalleryHooks.keys.all && api.put(`/image-galleries/${existing._id}`, { title: slot.title, imageUrl: slot.url });
-      }
-      return api.post('/image-galleries', { title: slot.title, imageUrl: slot.url });
+      const payload = { title: slot.title, imageUrl: slot.url };
+      if (existing) return api.put(`/image-galleries/${existing._id}`, payload);
+      return api.post('/image-galleries', payload);
     },
   });
 

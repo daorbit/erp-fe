@@ -51,7 +51,8 @@ const DesignationAdd: React.FC = () => {
         name: editData.name,
         shortName: editData.shortName,
         displayOrder: editData.displayOrder ?? 0,
-        status: editData.status ?? 'Active',
+        // Backend stores isActive boolean — show as Active/Inactive in the form.
+        status: editData.isActive === false ? 'Inactive' : 'Active',
         employeeBand: editData.employeeBand,
         rolesAndResponsibility: editData.rolesAndResponsibility,
         departments: editDepts,
@@ -70,7 +71,13 @@ const DesignationAdd: React.FC = () => {
   };
 
   const handleSubmit = async (values: any) => {
-    const payload = { ...values, departments: selectedDepts };
+    // Map the status enum to the boolean the backend validator expects.
+    const { status, ...rest } = values;
+    const payload = {
+      ...rest,
+      isActive: status !== 'Inactive',
+      departments: selectedDepts,
+    };
     try {
       if (isEdit && id) {
         await updateMutation.mutateAsync({ id, data: payload });

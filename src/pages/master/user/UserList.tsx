@@ -16,12 +16,18 @@ const UserList: React.FC = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const res: any = await api.get('/auth/users');
+      const params: Record<string, string> = {};
+      if (filters.userName) params.userName = filters.userName;
+      if (filters.userType) params.userType = filters.userType;
+      if (filters.active) params.isActive = 'true';
+      const res: any = await api.get('/auth/users', params);
       setUsers(res?.data ?? []);
     } catch (err: any) { message.error(err?.message || 'Failed'); }
     finally { setLoading(false); }
   };
 
+  // Initial load runs once with the default filters.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {

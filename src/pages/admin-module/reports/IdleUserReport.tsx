@@ -64,7 +64,7 @@ export default function IdleUserReport() {
   const users: any[] = ((usersData as any)?.data ?? []) as any[];
 
   // Login events used to derive last-login per user.
-  const { data: loginsData, isLoading: loginsLoading, refetch } = useQuery({
+  const { data: loginsData, isLoading: loginsLoading } = useQuery({
     queryKey: ['idle-login-events'],
     queryFn: () => api.get('/audit-logs', { action: 'login', limit: '5000' }),
     enabled: !!applied,
@@ -78,10 +78,11 @@ export default function IdleUserReport() {
     for (const e of logins) {
       const uid = typeof e.user === 'object' ? e.user?._id : e.user;
       if (!uid) continue;
-      const t = e.createdAt || e.timestamp;
+      const t = e.createdAt;
       const tm = dayjs(t);
       if (!lastByUser[uid] || tm.isAfter(dayjs(lastByUser[uid].t))) {
-        lastByUser[uid] = { t, ip: e.ipAddress, source: e.source };
+        // Audit log model stores `ip` and `userAgent`, not `ipAddress` / `source`.
+        lastByUser[uid] = { t, ip: e.ip, userAgent: e.userAgent };
       }
     }
     const cutoff = applied.tillDate.subtract(applied.notLoggedDays || 0, 'day');
@@ -103,7 +104,11 @@ export default function IdleUserReport() {
           employeeName: [u.firstName, u.lastName].filter(Boolean).join(' ').toUpperCase()
             || u.employeeId || '',
           userType: (u.role || '').toUpperCase().replace(/_/g, '-'),
-          webAppType: (last?.source || 'WEB').toUpperCase(),
+          webAppType: (() => {
+            const ua = (last?.userAgent || '').toLowerCase();
+            if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) return 'APP';
+            return last ? 'WEB' : '';
+          })(),
           isActive: !!u.isActive,
         };
       })
@@ -152,7 +157,7 @@ export default function IdleUserReport() {
 
   // Deactivate user via /auth/users/:id/toggle-status — same endpoint the user-management page uses.
   const deactivateMut = useMutation({
-    mutationFn: (userId: string) => api.put(`/auth/users/${userId}/toggle-status`, { isActive: false }),
+    mutationFn: (userId: string) => api.patch(`/auth/users/${userId}/toggle-status`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users-all-min'] });
       message.success('User marked inactive');
@@ -230,7 +235,7 @@ export default function IdleUserReport() {
           </div>
         </div>
         <div className="flex justify-center gap-3 mt-3">
-          <Button type="primary" danger onClick={() => { setApplied(draft); refetch(); }}>Search</Button>
+          <Button type="primary" danger onClick={() => setApplied(draft)}>Search</Button>
           <Button danger onClick={() => { setDraft(initial); setApplied(null); setColFilters({}); }}>Close</Button>
         </div>
       </Card>

@@ -28,7 +28,8 @@ const AttendanceForm: React.FC = () => {
     try {
       const markDate = values.date?.format('YYYY-MM-DD') || dayjs().format('YYYY-MM-DD');
       await markMutation.mutateAsync({
-        employee: values.employee,
+        // BE validator expects `employeeId` (the user's _id), not `employee`.
+        employeeId: values.employee,
         date: markDate,
         status: values.status,
         checkIn: values.checkIn ? `${markDate}T${values.checkIn.format('HH:mm')}:00.000Z` : undefined,

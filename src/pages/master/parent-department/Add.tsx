@@ -31,19 +31,23 @@ const ParentDepartmentAdd: React.FC = () => {
         name: editData.name,
         shortName: editData.shortName,
         displayOrder: editData.displayOrder ?? 0,
-        status: editData.status ?? 'Active',
+        // Backend stores isActive boolean — show as Active/Inactive in the form.
+        status: editData.isActive === false ? 'Inactive' : 'Active',
         description: editData.description,
       });
     }
   }, [editData, form]);
 
   const handleSubmit = async (values: any) => {
+    // Map the status enum to the boolean the backend validator expects.
+    const { status, ...rest } = values;
+    const payload = { ...rest, isActive: status !== 'Inactive' };
     try {
       if (isEdit && id) {
-        await updateMutation.mutateAsync({ id, data: values });
+        await updateMutation.mutateAsync({ id, data: payload });
         message.success('Parent department updated');
       } else {
-        await createMutation.mutateAsync(values);
+        await createMutation.mutateAsync(payload);
         message.success('Parent department created');
       }
       navigate('/master/parent-department/list');
