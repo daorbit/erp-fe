@@ -83,6 +83,7 @@ const MasterUserAdd = lazy(() => import('../pages/master/user/UserAdd'));
 const MasterUserAddAdmin = lazy(() => import('../pages/master/user/UserAddAdmin'));
 const MasterUserAddByMapping = lazy(() => import('../pages/master/user/UserAddByMapping'));
 const MasterUserList = lazy(() => import('../pages/master/user/UserList'));
+const MasterUserView = lazy(() => import('../pages/master/user/UserView'));
 const MasterUserRights = lazy(() => import('../pages/master/user/UserRights'));
 const MasterUserResetPassword = lazy(() => import('../pages/master/user/ResetPassword'));
 const MasterUserDayAuth = lazy(() => import('../pages/master/user/DayAuthorization'));
@@ -287,6 +288,7 @@ export default function AppRoutes() {
       <Route path="/master/user/add" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
       <Route path="/master/user/edit/:id" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
       <Route path="/master/user/list" element={<R roles={ADMINS}><MasterUserList /></R>} />
+      <Route path="/master/user/view/:id" element={<R roles={ADMINS}><MasterUserView /></R>} />
       <Route path="/master/user/rights" element={<R roles={ADMINS}><MasterUserRights /></R>} />
       <Route path="/master/user/reset-password" element={<R roles={ADMINS}><MasterUserResetPassword /></R>} />
       <Route path="/master/user/day-authorization" element={<R roles={ADMINS}><MasterUserDayAuth /></R>} />

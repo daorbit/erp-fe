@@ -45,7 +45,7 @@ const UserList: React.FC = () => {
     { title: 'User Name', render: (_: any, r: any) => r.username || `${r.firstName ?? ''} ${r.lastName ?? ''}` },
     { title: 'User Type', dataIndex: 'userType' },
     { title: 'Is Active', dataIndex: 'isActive', render: (v: boolean) => (v ? 'YES' : 'NO') },
-    { title: 'HRM Rights', render: () => <Button type="link" size="small">View</Button> },
+    { title: 'HRM Rights', render: (_: any, r: any) => <Button type="link" size="small" onClick={() => navigate(`/master/user/view/${r._id || r.id}`)}>View</Button> },
     {
       title: 'Edit', width: 70,
       render: (_: any, r: any) => <Button type="text" icon={<Edit2 size={14} />} onClick={() => navigate(`/master/user/edit/${r._id || r.id}`)} />,
