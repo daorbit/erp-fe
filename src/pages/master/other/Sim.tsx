@@ -1,28 +1,45 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Form, Input, InputNumber, DatePicker, Radio, Space, Typography, Card, Button, App } from 'antd';
 import { List as ListIcon } from 'lucide-react';
 import { simHooks } from '@/hooks/queries/useMasterOther';
+import { toDayjs } from '@/lib/formValues';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
-// The Sim "Add" screen is a standalone page (not combined). A separate
-// "Sim Number List" screen handles listing with filters — deferred.
 const SimAddPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEdit = !!id;
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const create = simHooks.useCreate();
+  const update = simHooks.useUpdate();
+  const { data: detail } = simHooks.useDetail(id!);
+
+  useEffect(() => {
+    if (!isEdit) return;
+    const s = detail?.data;
+    if (!s) return;
+    form.setFieldsValue({ ...s, purchaseDate: toDayjs(s.purchaseDate) });
+  }, [isEdit, detail, form]);
 
   const handleSubmit = async (values: any) => {
     try {
-      await create.mutateAsync({
+      const payload = {
         ...values,
         purchaseDate: values.purchaseDate ? dayjs(values.purchaseDate).toISOString() : undefined,
-      });
-      message.success('Sim saved');
-      form.resetFields();
+      };
+      if (isEdit && id) {
+        await update.mutateAsync({ id, data: payload });
+        message.success('Sim updated');
+      } else {
+        await create.mutateAsync(payload);
+        message.success('Sim saved');
+        form.resetFields();
+      }
+      navigate('/master/other/sim/list');
     } catch (err: any) {
       message.error(err?.message || 'Failed to save Sim');
     }
@@ -31,7 +48,7 @@ const SimAddPage: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between pb-3">
-        <Title level={4} className="!mb-0">Sim</Title>
+        <Title level={4} className="!mb-0">{isEdit ? 'Edit Sim' : 'Sim'}</Title>
         <Button type="link" icon={<ListIcon size={14} />} onClick={() => navigate('/master/other/sim/list')}>
           List
         </Button>
@@ -83,7 +100,7 @@ const SimAddPage: React.FC = () => {
           </div>
           <div className="flex justify-center mt-2">
             <Space>
-              <Button type="primary" htmlType="submit" loading={create.isPending}>Save</Button>
+              <Button type="primary" htmlType="submit" loading={create.isPending || update.isPending}>Save</Button>
               <Button onClick={() => navigate('/master/other/sim/list')}>Close</Button>
             </Space>
           </div>

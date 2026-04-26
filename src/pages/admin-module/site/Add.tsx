@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card, Form, Input, Tabs, Button, Select, DatePicker, Checkbox, InputNumber,
   Table, Typography, Space, Radio, App, Popover,
 } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { List as ListIcon, Info } from 'lucide-react';
 import dayjs from 'dayjs';
-import api from '@/services/api';
+import branchService from '@/services/branchService';
 import { useAppSelector } from '@/store';
 
 const { Title, Text } = Typography;
@@ -65,11 +65,40 @@ function FItem({ label, name, children, required }: { label: string; name: strin
 
 export default function SiteAdd() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEdit = !!id;
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const user = useAppSelector((s) => s.auth.user);
   const companyName = typeof user?.company === 'object' ? user.company.name : '';
+
+  // ─── Load existing site on edit ──────────────────────────────────────────
+  useEffect(() => {
+    if (!isEdit || !id) return;
+    let cancelled = false;
+    setLoading(true);
+    branchService.getById(id).then((res: any) => {
+      if (cancelled) return;
+      const b = res?.data ?? res;
+      if (!b) return;
+      form.setFieldsValue({
+        ...b,
+        startDate: b.startDate ? dayjs(b.startDate) : undefined,
+        loiLoaDate: b.loiLoaDate ? dayjs(b.loiLoaDate) : undefined,
+        agreementDate: b.agreementDate ? dayjs(b.agreementDate) : undefined,
+        tenderDate: b.tenderDate ? dayjs(b.tenderDate) : undefined,
+        gstEntries: b.gstEntries ?? [],
+        documents: b.documents ?? [],
+      });
+    }).catch((err: any) => {
+      message.error(err?.message || 'Failed to load site');
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [id, isEdit, form, message]);
 
   const handleSave = async () => {
     try {
@@ -80,9 +109,15 @@ export default function SiteAdd() {
         startDate: values.startDate?.toISOString(),
         loiLoaDate: values.loiLoaDate?.toISOString(),
         agreementDate: values.agreementDate?.toISOString(),
+        tenderDate: values.tenderDate?.toISOString(),
       };
-      await api.post('/branches', payload);
-      message.success('Site/Plant/Project created');
+      if (isEdit && id) {
+        await branchService.update(id, payload);
+        message.success('Site/Plant/Project updated');
+      } else {
+        await branchService.create(payload);
+        message.success('Site/Plant/Project created');
+      }
       navigate('/admin-module/master/site/list');
     } catch (err: any) {
       if (err?.errorFields) return;
@@ -95,7 +130,7 @@ export default function SiteAdd() {
   // ─── Header Section ────────────────────────────────────────────────────────
   const headerSection = (
     <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-      <Text type="danger" className="block text-center font-medium mb-4">New Mode</Text>
+      <Text type="danger" className="block text-center font-medium mb-4">{isEdit ? 'Edit Mode' : 'New Mode'}</Text>
       <FRow>
         <FItem label="Site Name" name="name" required><Input /></FItem>
         <FItem label="Short Name" name="code" required><Input /></FItem>
@@ -288,10 +323,10 @@ export default function SiteAdd() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Title level={4} className="!mb-0">Site/Plant/Project</Title>
+        <Title level={4} className="!mb-0">Site/Plant/Project{isEdit ? ' — Edit' : ''}</Title>
         <Button icon={<ListIcon size={14} />} onClick={() => navigate('/admin-module/master/site/list')}>List</Button>
       </div>
-      <Card bordered={false} className="!rounded-lg !shadow-sm">
+      <Card bordered={false} className="!rounded-lg !shadow-sm" loading={loading}>
         <Form form={form} layout="horizontal" size="small">
           {headerSection}
           <Tabs items={[

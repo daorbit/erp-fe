@@ -4,6 +4,7 @@ import { Plus, Search, Edit2, Trash2, MoreVertical, Clock } from 'lucide-react';
 import { useShiftList, useDeleteShift } from '@/hooks/queries/useShifts';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
+import { confirmDelete } from '@/lib/confirm';
 
 const { Title, Text } = Typography;
 
@@ -76,7 +77,13 @@ const ShiftList: React.FC = () => {
       render: (_: any, r: any) => (
         <Dropdown menu={{ items: [
           { key: 'edit', icon: <Edit2 size={14} />, label: t('edit'), onClick: () => navigate(`/shifts/${r._id || r.id}/edit`) },
-          { key: 'delete', icon: <Trash2 size={14} />, label: t('delete'), danger: true, onClick: () => handleDelete(r._id || r.id) },
+          { key: 'delete', icon: <Trash2 size={14} />, label: t('delete'), danger: true,
+            onClick: () => confirmDelete({
+              title: 'Delete shift?',
+              content: `"${r.name}" will be permanently removed.`,
+              onOk: () => handleDelete(r._id || r.id),
+            }),
+          },
         ]}} trigger={['click']}>
           <Button type="text" icon={<MoreVertical size={16} />} />
         </Dropdown>

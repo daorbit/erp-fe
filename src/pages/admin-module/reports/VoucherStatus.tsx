@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Typography, Button, Radio, Input, Table } from 'antd';
-import dayjs from 'dayjs';
+import { Alert, Card, Typography, Button, Radio, Input, Table } from 'antd';
 import { SiteTreeFilter, useSiteTree } from './_shared';
 
 const { Title, Text } = Typography;
@@ -24,13 +23,12 @@ export default function VoucherStatusReport() {
 
   const { branches, resolveCompanyName } = useSiteTree();
 
-  // Build placeholder rows: one per selected site (or all if none selected).
+  // One row per selected site (or all sites if none selected). Voucher-status
+  // aggregation is not yet exposed by the backend, so each voucher cell stays
+  // blank — see the alert above the table.
   const rows = (siteIds.length > 0 ? branches.filter((b) => siteIds.includes(b._id)) : branches).map((b) => {
     const row: any = { _id: b._id, company: resolveCompanyName(b.company), siteName: b.name };
-    for (const c of VOUCHER_COLS) {
-      // Demo data uses today's date in a hashed pattern; real data would come from a server aggregation.
-      row[c] = dayjs().subtract(Math.abs(c.length * 3) % 30, 'day').format('DD/MM/YYYY');
-    }
+    for (const c of VOUCHER_COLS) row[c] = '—';
     return row;
   });
 
@@ -61,6 +59,13 @@ export default function VoucherStatusReport() {
 
       {showResults && (
         <Card bordered={false} className="!rounded-lg !shadow-sm">
+          <Alert
+            type="info"
+            showIcon
+            className="mb-3"
+            message="Voucher status aggregation is not yet available on the server."
+            description="The grid below lists the configured sites and voucher columns. Last-entry dates will appear here once the backend report endpoint is wired up."
+          />
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium">Total {rows.length} Record</div>
             <Text type="danger" className="text-xs font-medium">

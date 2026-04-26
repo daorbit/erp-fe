@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Table, Button, Input, Typography, Radio, DatePicker, App } from 'antd';
-import { Plus, Trash2 } from 'lucide-react';
+import { Card, Table, Button, Input, Typography, Radio, DatePicker, App, Popconfirm } from 'antd';
+import { Plus, Trash2, Edit2 } from 'lucide-react';
 import { simHooks } from '@/hooks/queries/useMasterOther';
 import { SIM_STATUS_LABELS } from '@/types/enums-sim';
 import dayjs from 'dayjs';
@@ -60,15 +60,29 @@ const SimListPage: React.FC = () => {
       render: (v: string) => SIM_STATUS_LABELS[v as keyof typeof SIM_STATUS_LABELS] || v,
     },
     {
-      title: 'Del',
+      title: 'Edit',
       width: 70,
       align: 'center' as const,
       render: (_: any, r: any) => (
         <Button
           type="text"
-          danger
-          icon={<Trash2 size={16} />}
-          onClick={async () => {
+          icon={<Edit2 size={16} />}
+          onClick={() => navigate(`/master/other/sim/edit/${r._id || r.id}`)}
+        />
+      ),
+    },
+    {
+      title: 'Del',
+      width: 70,
+      align: 'center' as const,
+      render: (_: any, r: any) => (
+        <Popconfirm
+          title="Delete SIM?"
+          description={`"${r.simMobileNo}" will be permanently removed.`}
+          okText="Delete"
+          okType="danger"
+          cancelText="Cancel"
+          onConfirm={async () => {
             try {
               await del.mutateAsync(r._id || r.id);
               message.success('Deleted');
@@ -77,7 +91,9 @@ const SimListPage: React.FC = () => {
               message.error(err?.message || 'Failed');
             }
           }}
-        />
+        >
+          <Button type="text" danger icon={<Trash2 size={16} />} />
+        </Popconfirm>
       ),
     },
   ];

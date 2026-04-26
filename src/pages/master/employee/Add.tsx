@@ -6,6 +6,7 @@ import {
 } from 'antd';
 import { List as ListIcon, Plus as PlusIcon, Trash2, Upload as UploadIcon } from 'lucide-react';
 import dayjs from 'dayjs';
+import { refId, toDayjs, mapList } from '@/lib/formValues';
 import employeeService from '@/services/employeeService';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
@@ -62,32 +63,39 @@ const EmployeeAdd: React.FC = () => {
     }
   }, [myCompany, isEdit, form]);
 
+  // Top-level scalar dates that need to be re-hydrated to dayjs for DatePicker.
+  const SCALAR_DATE_FIELDS = [
+    'dateOfBirth', 'anniversary', 'joinDate', 'joiningDateCompanyGrp', 'interviewDate',
+    'firstVaccinationDate', 'secondVaccinationDate', 'passportIssueDate',
+    'passportExpiryDate', 'visaExpiryDate', 'pfDate', 'pfExitDate', 'esicDate',
+    'bondExpiryDate', 'appointmentIssueDate', 'receiveDate', 'validTill',
+  ] as const;
+
+  // Ref fields the backend populates as {_id, name}. Selects bind to plain IDs,
+  // so flatten each one to a string before setFieldsValue.
+  const REF_FIELDS = [
+    'company', 'branch', 'department', 'designation', 'level', 'grade',
+    'employeeGroup', 'shift', 'city', 'permanentCity', 'tagName', 'employerBankName',
+    'reportingManager',
+  ] as const;
+
   // Load existing if editing
   useEffect(() => {
     if (!isEdit || !id) return;
     employeeService.getById(id).then((res: any) => {
       const e = res?.data;
       if (!e) return;
-      form.setFieldsValue({
-        ...e,
-        dateOfBirth: e.dateOfBirth ? dayjs(e.dateOfBirth) : undefined,
-        anniversary: e.anniversary ? dayjs(e.anniversary) : undefined,
-        joinDate: e.joinDate ? dayjs(e.joinDate) : undefined,
-        joiningDateCompanyGrp: e.joiningDateCompanyGrp ? dayjs(e.joiningDateCompanyGrp) : undefined,
-        interviewDate: e.interviewDate ? dayjs(e.interviewDate) : undefined,
-        firstVaccinationDate: e.firstVaccinationDate ? dayjs(e.firstVaccinationDate) : undefined,
-        secondVaccinationDate: e.secondVaccinationDate ? dayjs(e.secondVaccinationDate) : undefined,
-        passportIssueDate: e.passportIssueDate ? dayjs(e.passportIssueDate) : undefined,
-        passportExpiryDate: e.passportExpiryDate ? dayjs(e.passportExpiryDate) : undefined,
-        visaExpiryDate: e.visaExpiryDate ? dayjs(e.visaExpiryDate) : undefined,
-        pfDate: e.pfDate ? dayjs(e.pfDate) : undefined,
-        pfExitDate: e.pfExitDate ? dayjs(e.pfExitDate) : undefined,
-        esicDate: e.esicDate ? dayjs(e.esicDate) : undefined,
-        bondExpiryDate: e.bondExpiryDate ? dayjs(e.bondExpiryDate) : undefined,
-        appointmentIssueDate: e.appointmentIssueDate ? dayjs(e.appointmentIssueDate) : undefined,
-        receiveDate: e.receiveDate ? dayjs(e.receiveDate) : undefined,
-        validTill: e.validTill ? dayjs(e.validTill) : undefined,
-      });
+
+      const patch: Record<string, unknown> = { ...e };
+      for (const f of SCALAR_DATE_FIELDS) patch[f] = toDayjs(e[f]);
+      for (const f of REF_FIELDS) patch[f] = refId(e[f]);
+      // Form.List rows that contain DatePicker fields — re-hydrate per row.
+      patch.relatives = mapList(e.relatives, (r: any) => ({ ...r, dob: toDayjs(r.dob) }));
+      patch.previousOrgs = mapList(e.previousOrgs, (r: any) => ({
+        ...r, from: toDayjs(r.from), to: toDayjs(r.to),
+      }));
+
+      form.setFieldsValue(patch);
     }).catch(() => { /* ignore */ });
   }, [isEdit, id, form]);
 

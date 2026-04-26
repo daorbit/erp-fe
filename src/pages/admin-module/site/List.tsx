@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Card, Table, Button, Typography, Radio, Select, TreeSelect, Input, Space } from 'antd';
-import { Plus, Edit, FileText } from 'lucide-react';
+import { Card, Table, Button, Typography, Radio, Select, TreeSelect, Input, Space, App } from 'antd';
+import { Plus, Edit, FileText, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
 import stateService from '@/services/stateService';
+import { useDeleteBranch } from '@/hooks/queries/useBranches';
+import { confirmDelete } from '@/lib/confirm';
 import { CountedTreeSelect } from '@/components/master/CountedSelect';
 
 const { Title } = Typography;
@@ -27,6 +29,23 @@ const EMPTY_FILTERS: FilterState = {
 
 export default function SiteList() {
   const navigate = useNavigate();
+  const { message } = App.useApp();
+  const deleteBranch = useDeleteBranch();
+
+  const handleDelete = (r: any) => {
+    confirmDelete({
+      title: 'Delete site/plant/project?',
+      content: `"${r.name}" will be permanently removed.`,
+      onOk: async () => {
+        try {
+          await deleteBranch.mutateAsync(r._id || r.id);
+          message.success('Site deleted');
+        } catch (err: any) {
+          message.error(err?.message || 'Failed to delete site');
+        }
+      },
+    });
+  };
 
   // Draft = what's currently in the form inputs.
   // Applied = what the table is filtered by — only updates on Search click.
@@ -245,13 +264,15 @@ export default function SiteList() {
       render: (_: any, r: any) => r.isActive ? 'Active' : 'Inactive',
     },
     {
-      title: 'Edit', key: 'edit', width: 80, fixed: 'right' as const,
+      title: 'Actions', key: 'edit', width: 110, fixed: 'right' as const,
       render: (_: any, r: any) => (
         <Space size={2}>
           <Button type="text" size="small" icon={<Edit size={14} />}
             onClick={() => navigate(`/admin-module/master/site/edit/${r._id}`)} />
           <Button type="text" size="small" icon={<FileText size={14} />}
             onClick={() => navigate(`/admin-module/master/site/document?id=${r._id}`)} />
+          <Button type="text" size="small" danger icon={<Trash2 size={14} />}
+            onClick={() => handleDelete(r)} />
         </Space>
       ),
     },

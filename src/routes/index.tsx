@@ -80,6 +80,8 @@ const MasterEmployeeList = lazy(() => import('../pages/master/employee/List'));
 const MasterEmployeeView = lazy(() => import('../pages/master/employee/View'));
 const MasterEmployeeResignation = lazy(() => import('../pages/master/employee/Resignation'));
 const MasterUserAdd = lazy(() => import('../pages/master/user/UserAdd'));
+const MasterUserAddAdmin = lazy(() => import('../pages/master/user/UserAddAdmin'));
+const MasterUserAddByMapping = lazy(() => import('../pages/master/user/UserAddByMapping'));
 const MasterUserList = lazy(() => import('../pages/master/user/UserList'));
 const MasterUserRights = lazy(() => import('../pages/master/user/UserRights'));
 const MasterUserResetPassword = lazy(() => import('../pages/master/user/ResetPassword'));
@@ -267,6 +269,7 @@ export default function AppRoutes() {
       <Route path="/master/other/attendance-upload-site" element={<R roles={ADMINS}><MasterAttUploadSite /></R>} />
       <Route path="/master/other/attendance-auto-mail-sms" element={<R roles={ADMINS}><MasterAttAutoNotification /></R>} />
       <Route path="/master/other/sim/add" element={<R roles={ADMINS}><MasterSimAdd /></R>} />
+      <Route path="/master/other/sim/edit/:id" element={<R roles={ADMINS}><MasterSimAdd /></R>} />
       <Route path="/master/other/sim/list" element={<R roles={ADMINS}><MasterSimList /></R>} />
 
       {/* Master → TDS */}
@@ -377,8 +380,9 @@ export default function AppRoutes() {
       <Route path="/admin-module/master/state/add" element={<R roles={ADMINS}><AdminModuleStateAdd /></R>} />
       <Route path="/admin-module/master/state/edit/:id" element={<R roles={ADMINS}><AdminModuleStateAdd /></R>} />
       <Route path="/admin-module/master/state/list" element={<R roles={ADMINS}><AdminModuleStateList /></R>} />
-      <Route path="/admin-module/master/user/add" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
-      <Route path="/admin-module/master/user/edit/:id" element={<R roles={ADMINS}><MasterUserAdd /></R>} />
+      <Route path="/admin-module/master/user/add" element={<R roles={ADMINS}><MasterUserAddAdmin /></R>} />
+      <Route path="/admin-module/master/user/add-by-mapping" element={<R roles={ADMINS}><MasterUserAddByMapping /></R>} />
+      <Route path="/admin-module/master/user/edit/:id" element={<R roles={ADMINS}><MasterUserAddAdmin /></R>} />
       <Route path="/admin-module/master/user/list" element={<R roles={ADMINS}><MasterUserList /></R>} />
       <Route path="/admin-module/master/user/rights-summary" element={<R roles={ADMINS}><MasterUserRights /></R>} />
       <Route path="/admin-module/master/user/reset-password" element={<R roles={ADMINS}><MasterUserResetPassword /></R>} />
@@ -399,8 +403,7 @@ export default function AppRoutes() {
 // mis-project-setting, front-image-gallery, site-document-master, mobile-app-count,
 // reports/*) are NOT listed here — duplicating them would race the explicit Route.
 const ADMIN_MODULE_ROUTES: string[] = [
-  // User → still missing: bulk add by mapping + copy-rights flows.
-  '/admin-module/master/user/add-by-mapping',
+  // User → still missing: copy-rights flows.
   '/admin-module/master/user/copy-site-right',
   '/admin-module/master/user/copy-user-site-right',
   // Master → Item Ledger Update — placeholder.

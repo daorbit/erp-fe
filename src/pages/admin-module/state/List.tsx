@@ -3,6 +3,7 @@ import { Card, Table, Button, Typography, Input, App, Dropdown, Tag } from 'antd
 import { Plus, Search, Edit2, Trash2, MoreVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { stateHooks } from '@/hooks/queries/useMasterOther';
+import { confirmDelete } from '@/lib/confirm';
 
 const { Title, Text } = Typography;
 
@@ -52,7 +53,11 @@ export default function StateList() {
               },
               {
                 key: 'delete', icon: <Trash2 size={14} />, label: 'Delete', danger: true,
-                onClick: () => handleDelete(r._id || r.id),
+                onClick: () => confirmDelete({
+                  title: 'Delete state?',
+                  content: `"${r.name}" will be permanently removed.`,
+                  onOk: () => handleDelete(r._id || r.id),
+                }),
               },
             ],
           }}
