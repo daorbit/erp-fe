@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import {
   Card, Form, Input, Tabs, Button, Select, DatePicker, Checkbox, InputNumber,
-  Table, Typography, Space, Radio, App,
+  Table, Typography, Space, Radio, App, Popover,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { List as ListIcon } from 'lucide-react';
+import { List as ListIcon, Info } from 'lucide-react';
 import dayjs from 'dayjs';
 import api from '@/services/api';
 import { useAppSelector } from '@/store';
@@ -13,11 +13,42 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 
 const SITE_TYPE_OPTIONS = [
-  { value: 'site', label: 'SITE' },
+  { value: 'annuity', label: 'ANNUITY' },
+  { value: 'bot', label: 'BOT' },
+  { value: 'epc', label: 'EPC' },
+  { value: 'ham', label: 'HAM' },
+  { value: 'omt', label: 'OMT' },
   { value: 'plant', label: 'PLANT' },
+  { value: 'site', label: 'SITE' },
   { value: 'toll', label: 'TOLL' },
-  { value: 'project', label: 'PROJECT' },
+  { value: 'tot', label: 'TOT' },
+  { value: 'township', label: 'TOWNSHIP' },
+  { value: 'spv', label: 'SPV' },
+  { value: 'busport', label: 'BUSPORT' },
+  { value: 'joint_venture', label: 'JOINT VENTURE' },
+  { value: 'security', label: 'SECURITY' },
+  { value: 'pe', label: 'P&E (Plant And Equipment)' },
+  { value: 'others', label: 'OTHERS' },
+  { value: 'morth', label: 'MORTH' },
+  { value: 'only_supply', label: 'Only Supply' },
+  { value: 'supply_and_installation', label: 'Supply And Installation' },
+  { value: 'sitc_of_rwh', label: 'SITC Of RWH' },
+  { value: 'erection', label: 'ERECTION' },
+  { value: 'crash_barrier', label: 'CRASH BARRIER' },
 ];
+
+const SITE_TYPE_INFO = (
+  <div className="text-sm max-w-md space-y-1">
+    <div><b>ANNUITY</b> - Only Yearly Payment Basis</div>
+    <div><b>BOT</b> - Build Operate and Transfer.</div>
+    <div><b>EPC</b> - Engeneering, Procurement and Construction</div>
+    <div><b>TOWN SHIP</b> - Self Build and Sale By CO.</div>
+    <div><b>OMT</b> - Operate Maintain Transfer</div>
+    <div><b>TOLL + ANNUITY</b> - Toll Collection OR Annuity Given By Govt.</div>
+    <div><b>TOT</b> - Toll Operate Transfer</div>
+    <div><b>HAM</b> - Hybride Annuity Maint.( 40% PAYMENT DONE BY GOVT. ON CONSTRUCTION TIME AND 60% AMOUNT GIVEN TO YEARLY BASIS) BUT TOLL COLLECTION NOT APPROVED.</div>
+  </div>
+);
 
 function FRow({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">{children}</div>;
@@ -73,9 +104,15 @@ export default function SiteAdd() {
         <Form.Item label="Is HO" name="isHO" valuePropName="checked" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
           <Checkbox />
         </Form.Item>
-        <Form.Item label="Site Type" name="siteType" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}
-          rules={[{ required: true, message: 'Required' }]} initialValue="site">
-          <Select options={SITE_TYPE_OPTIONS} />
+        <Form.Item label="Site Type" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }} required>
+          <div className="flex items-center gap-2">
+            <Form.Item name="siteType" noStyle rules={[{ required: true, message: 'Required' }]} initialValue="site">
+              <Select options={SITE_TYPE_OPTIONS} className="flex-1" />
+            </Form.Item>
+            <Popover content={SITE_TYPE_INFO} trigger="click" placement="rightTop">
+              <Info size={16} className="cursor-pointer text-gray-500 hover:text-blue-500 shrink-0" />
+            </Popover>
+          </div>
         </Form.Item>
         <div />
       </div>

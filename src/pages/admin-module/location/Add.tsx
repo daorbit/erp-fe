@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card, Form, Input, Tabs, Button, Select, InputNumber, Table, Typography, App,
 } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
-import { List as ListIcon, Plus, Trash2 } from 'lucide-react';
+import { List as ListIcon } from 'lucide-react';
 import { useCreateLocation, useUpdateLocation, useLocation } from '@/hooks/queries/useLocations';
 import { cityHooks } from '@/hooks/queries/useMasterOther';
 import { useQuery } from '@tanstack/react-query';
@@ -45,6 +45,7 @@ export default function LocationAdd() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [routeKmMap, setRouteKmMap] = useState<Record<string, number>>({});
   const isEdit = !!id;
 
   const { data: locationData, isLoading } = useLocation(id || '');
@@ -59,10 +60,39 @@ export default function LocationAdd() {
     queryKey: ['branches-all'],
     queryFn: () => api.get('/branches', { limit: '500' }),
   });
-  const siteOptions = (branchesData?.data ?? []).map((b: any) => ({
+  const branches: any[] = ((branchesData as any)?.data ?? []) as any[];
+  const siteOptions = branches.map((b: any) => ({
     value: b._id || b.id,
     label: `${b.name} (${b.code || ''})`,
   }));
+
+  // All existing locations populate the Route Detail matrix (one row each,
+  // excluding the location being edited).
+  const { data: allLocationsData } = useQuery({
+    queryKey: ['site-locations-min'],
+    queryFn: () => api.get('/locations', { limit: '500' }),
+  });
+  const allLocations: any[] = ((allLocationsData as any)?.data ?? []) as any[];
+
+  const branchById = useMemo(() => {
+    const map: Record<string, any> = {};
+    for (const b of branches) map[b._id || b.id] = b;
+    return map;
+  }, [branches]);
+
+  const routeTargets = useMemo(() => {
+    return allLocations
+      .filter((loc) => !isEdit || (loc._id !== id))
+      .map((loc) => {
+        const siteId = typeof loc.site === 'object' ? loc.site?._id : loc.site;
+        const site = branchById[siteId];
+        return {
+          locationId: loc._id,
+          toLocation: (loc.name || '').toUpperCase(),
+          siteName: site?.name || '',
+        };
+      });
+  }, [allLocations, branchById, isEdit, id]);
 
   useEffect(() => {
     if (isEdit && locationData?.data) {
@@ -82,6 +112,12 @@ export default function LocationAdd() {
         pinCode: loc.pinCode,
         routeDetails: loc.routeDetails || [],
       });
+      // Seed the routeKmMap from existing routeDetails entries.
+      const seed: Record<string, number> = {};
+      for (const r of loc.routeDetails || []) {
+        if (r?.toLocation) seed[r.toLocation] = Number(r.km ?? r.distance ?? 0);
+      }
+      setRouteKmMap(seed);
     }
   }, [locationData, form, isEdit]);
 
@@ -89,11 +125,16 @@ export default function LocationAdd() {
     try {
       const values = await form.validateFields();
       setSaving(true);
+      // Build routeDetails from the matrix: one entry per target location with km > 0.
+      const routeDetails = Object.entries(routeKmMap)
+        .filter(([, km]) => km > 0)
+        .map(([toLocation, km]) => ({ toLocation, km }));
+      const payload = { ...values, routeDetails };
       if (isEdit) {
-        await updateMutation.mutateAsync({ id: id!, data: values });
+        await updateMutation.mutateAsync({ id: id!, data: payload });
         message.success('Location updated');
       } else {
-        await createMutation.mutateAsync(values);
+        await createMutation.mutateAsync(payload);
         message.success('Location created');
       }
       navigate('/admin-module/master/site-location/list');
@@ -165,61 +206,44 @@ export default function LocationAdd() {
   );
 
   // ─── Tab 2: Route Detail ──────────────────────────────────────────────────
+  // Auto-populated grid: one row per existing location, with a KM input.
   const routeDetailTab = (
     <div className="py-4">
-      <Form.List name="routeDetails">
-        {(fields, { add, remove }) => (
-          <>
-            <div className="flex justify-end mb-2">
-              <Button type="primary" size="small" danger icon={<Plus size={14} />} onClick={() => add()}>
-                Add
-              </Button>
-            </div>
-            <Table
-              dataSource={fields}
-              pagination={false}
-              size="small"
-              rowKey="key"
-              columns={[
-                {
-                  title: 'Route Name', key: 'routeName', width: 250,
-                  render: (_, field) => (
-                    <Form.Item name={[field.name, 'routeName']} noStyle>
-                      <Input />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Distance (km)', key: 'distance', width: 130,
-                  render: (_, field) => (
-                    <Form.Item name={[field.name, 'distance']} noStyle>
-                      <InputNumber min={0} className="w-full" />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: 'Remarks', key: 'remarks',
-                  render: (_, field) => (
-                    <Form.Item name={[field.name, 'remarks']} noStyle>
-                      <Input />
-                    </Form.Item>
-                  ),
-                },
-                {
-                  title: '', key: 'del', width: 60,
-                  render: (_, field) => (
-                    <Button
-                      type="primary" danger size="small"
-                      icon={<Trash2 size={12} />}
-                      onClick={() => remove(field.name)}
-                    />
-                  ),
-                },
-              ]}
-            />
-          </>
-        )}
-      </Form.List>
+      <Table
+        dataSource={routeTargets}
+        pagination={false}
+        size="small"
+        rowKey="locationId"
+        bordered
+        columns={[
+          {
+            title: 'SrNo.', key: 'sr', width: 80,
+            render: (_, __, i) => i + 1,
+          },
+          {
+            title: 'To Location', dataIndex: 'toLocation', key: 'toLocation', width: 280,
+          },
+          {
+            title: 'Site Name', dataIndex: 'siteName', key: 'siteName',
+          },
+          {
+            title: 'KM.', key: 'km', width: 200,
+            render: (_, row) => (
+              <InputNumber
+                size="small"
+                min={0}
+                step={0.01}
+                value={routeKmMap[row.locationId] ?? 0}
+                onChange={(v) =>
+                  setRouteKmMap((p) => ({ ...p, [row.locationId]: Number(v) || 0 }))
+                }
+                style={{ width: '100%' }}
+              />
+            ),
+          },
+        ]}
+        locale={{ emptyText: 'No other locations to route to' }}
+      />
     </div>
   );
 

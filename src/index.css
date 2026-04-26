@@ -509,3 +509,59 @@ body {
   animation-duration: 0.1s !important;
   transition-duration: 0.1s !important;
 }
+
+/* Counted tree-select popup — match legacy NwayERP tree look */
+.counted-tree-popup .ant-select-tree {
+  font-size: 13px;
+  padding: 4px 0;
+}
+.counted-tree-popup .ant-select-tree-treenode {
+  padding: 2px 4px !important;
+  width: 100%;
+}
+.counted-tree-popup .ant-select-tree-node-content-wrapper {
+  font-weight: 500;
+}
+/* Top-level (ALL / Company) — bold uppercase */
+.counted-tree-popup .ant-select-tree > div > .ant-select-tree-treenode > .ant-select-tree-node-content-wrapper,
+.counted-tree-popup .ant-select-tree-list-holder-inner > .ant-select-tree-treenode-leaf-last:first-child > .ant-select-tree-node-content-wrapper {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.counted-tree-popup .ant-select-tree-switcher {
+  width: 18px;
+}
+.counted-tree-popup .ant-select-tree-checkbox {
+  margin-inline-end: 6px;
+}
+
+
+/* Counted tree-select.
+   1) Belt-and-braces: kill any guide-line pseudo-elements antd renders
+      before each row — works regardless of treeLine prop.
+   2) Checkbox border: black in light, white in dark — only colour change. */
+/* Hide every connector/guide line antd may render. We blanket every tree
+   row child *except the checkbox* — so any vertical bar drawn by indent
+   units, switchers, or leaf-line markers disappears, but the checkbox
+   keeps its own border. */
+.counted-tree-popup .ant-select-tree-treenode > *:not(.ant-select-tree-checkbox)::before,
+.counted-tree-popup .ant-select-tree-treenode > *:not(.ant-select-tree-checkbox)::after {
+  content: none !important;
+  display: none !important;
+}
+.counted-tree-popup .ant-select-tree-indent,
+.counted-tree-popup .ant-select-tree-indent-unit,
+.counted-tree-popup .ant-select-tree-indent-unit-end,
+.counted-tree-popup .ant-select-tree-switcher,
+.counted-tree-popup .ant-select-tree-switcher-leaf-line,
+.counted-tree-popup .ant-select-tree-switcher-noop {
+  border: 0 !important;
+  background: transparent !important;
+}
+/* Only border colour — nothing else touched on the checkbox. */
+.counted-tree-popup.counted-tree-popup .ant-select-tree-checkbox .ant-select-tree-checkbox-inner {
+  border-color: #000000 !important;
+}
+html.dark .counted-tree-popup.counted-tree-popup .ant-select-tree-checkbox .ant-select-tree-checkbox-inner {
+  border-color: #ffffff !important;
+}

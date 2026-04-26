@@ -115,6 +115,27 @@ const AdminModuleSiteList = lazy(() => import('../pages/admin-module/site/List')
 const AdminModuleSiteDocument = lazy(() => import('../pages/admin-module/site/Document'));
 const AdminModuleLocationAdd = lazy(() => import('../pages/admin-module/location/Add'));
 const AdminModuleLocationList = lazy(() => import('../pages/admin-module/location/List'));
+const AdminModuleLocationRoute = lazy(() => import('../pages/admin-module/location/LocationRoute'));
+const AdminModuleViaRoute = lazy(() => import('../pages/admin-module/location/ViaRoute'));
+const AdminModuleMessageAdd = lazy(() => import('../pages/admin-module/message/Add'));
+const AdminModuleMessageList = lazy(() => import('../pages/admin-module/message/List'));
+const AdminModuleGstMaster = lazy(() => import('../pages/admin-module/gst/Master'));
+const AdminModuleSmsAlertAdd = lazy(() => import('../pages/admin-module/sms-alert/Add'));
+const AdminModuleSmsAlertList = lazy(() => import('../pages/admin-module/sms-alert/List'));
+const AdminModuleMisProjectSetting = lazy(() => import('../pages/admin-module/mis-project/Setting'));
+const AdminModuleFrontGallery = lazy(() => import('../pages/admin-module/front-gallery/Gallery'));
+const AdminModuleSiteDocMaster = lazy(() => import('../pages/admin-module/site-doc/Master'));
+const AdminModuleMobileAppAdd = lazy(() => import('../pages/admin-module/mobile-app/Add'));
+const AdminModuleMobileAppList = lazy(() => import('../pages/admin-module/mobile-app/List'));
+const AdminReportLoginLog = lazy(() => import('../pages/admin-module/reports/LoginLog'));
+const AdminReportCompany = lazy(() => import('../pages/admin-module/reports/CompanyReport'));
+const AdminReportSite = lazy(() => import('../pages/admin-module/reports/SiteReport'));
+const AdminReportLocation = lazy(() => import('../pages/admin-module/reports/LocationReport'));
+const AdminReportVoucher = lazy(() => import('../pages/admin-module/reports/VoucherStatus'));
+const AdminReportUserWork = lazy(() => import('../pages/admin-module/reports/UserWorkReport'));
+const AdminReportSiteWiseUsers = lazy(() => import('../pages/admin-module/reports/SiteWiseUsers'));
+const AdminReportUserRightSummary = lazy(() => import('../pages/admin-module/reports/UserRightSummary'));
+const AdminReportIdleUser = lazy(() => import('../pages/admin-module/reports/IdleUserReport'));
 const AdminModuleCityAdd = lazy(() => import('../pages/admin-module/city/Add'));
 const AdminModuleCityList = lazy(() => import('../pages/admin-module/city/List'));
 const AdminModuleStateAdd = lazy(() => import('../pages/admin-module/state/Add'));
@@ -321,6 +342,35 @@ export default function AppRoutes() {
       <Route path="/admin-module/master/site-location/add" element={<R roles={ADMINS}><AdminModuleLocationAdd /></R>} />
       <Route path="/admin-module/master/site-location/edit/:id" element={<R roles={ADMINS}><AdminModuleLocationAdd /></R>} />
       <Route path="/admin-module/master/site-location/list" element={<R roles={ADMINS}><AdminModuleLocationList /></R>} />
+      <Route path="/admin-module/master/site-location/location-route" element={<R roles={ADMINS}><AdminModuleLocationRoute /></R>} />
+      <Route path="/admin-module/master/site-location/via-route" element={<R roles={ADMINS}><AdminModuleViaRoute /></R>} />
+      <Route path="/admin-module/master/message-from-mng" element={<R roles={ADMINS}><AdminModuleMessageList /></R>} />
+      <Route path="/admin-module/master/message-from-mng/list" element={<R roles={ADMINS}><AdminModuleMessageList /></R>} />
+      <Route path="/admin-module/master/message-from-mng/add" element={<R roles={ADMINS}><AdminModuleMessageAdd /></R>} />
+      <Route path="/admin-module/master/message-from-mng/edit/:id" element={<R roles={ADMINS}><AdminModuleMessageAdd /></R>} />
+      <Route path="/admin-module/master/gst/master" element={<R roles={ADMINS}><AdminModuleGstMaster /></R>} />
+      <Route path="/admin-module/master/sms-alert-voucher" element={<R roles={ADMINS}><AdminModuleSmsAlertList /></R>} />
+      <Route path="/admin-module/master/sms-alert-voucher/list" element={<R roles={ADMINS}><AdminModuleSmsAlertList /></R>} />
+      <Route path="/admin-module/master/sms-alert-voucher/add" element={<R roles={ADMINS}><AdminModuleSmsAlertAdd /></R>} />
+      <Route path="/admin-module/master/sms-alert-voucher/edit/:id" element={<R roles={ADMINS}><AdminModuleSmsAlertAdd /></R>} />
+      <Route path="/admin-module/master/mis-project-setting" element={<R roles={ADMINS}><AdminModuleMisProjectSetting /></R>} />
+      <Route path="/admin-module/master/front-image-gallery" element={<R roles={ADMINS}><AdminModuleFrontGallery /></R>} />
+      <Route path="/admin-module/master/site-document-master" element={<R roles={ADMINS}><AdminModuleSiteDocMaster /></R>} />
+      <Route path="/admin-module/master/mobile-app-count" element={<R roles={ADMINS}><AdminModuleMobileAppAdd /></R>} />
+      <Route path="/admin-module/master/mobile-app-count/add" element={<R roles={ADMINS}><AdminModuleMobileAppAdd /></R>} />
+      <Route path="/admin-module/master/mobile-app-count/list" element={<R roles={ADMINS}><AdminModuleMobileAppList /></R>} />
+      <Route path="/admin-module/reports/login-log" element={<R roles={ADMINS}><AdminReportLoginLog /></R>} />
+      <Route path="/admin-module/reports/company" element={<R roles={ADMINS}><AdminReportCompany /></R>} />
+      <Route path="/admin-module/reports/site" element={<R roles={ADMINS}><AdminReportSite /></R>} />
+      <Route path="/admin-module/reports/location" element={<R roles={ADMINS}><AdminReportLocation /></R>} />
+      <Route path="/admin-module/reports/voucher-status" element={<R roles={ADMINS}><AdminReportVoucher /></R>} />
+      <Route path="/admin-module/reports/user-work" element={<R roles={ADMINS}><AdminReportUserWork /></R>} />
+      {/* Send SMS reports — work in progress; requirements not finalised. */}
+      <Route path="/admin-module/reports/send-sms/stock-report" element={<R roles={ADMINS}><InProgress /></R>} />
+      <Route path="/admin-module/reports/send-sms/machine-insurance-alert" element={<R roles={ADMINS}><InProgress /></R>} />
+      <Route path="/admin-module/reports/site-wise-users" element={<R roles={ADMINS}><AdminReportSiteWiseUsers /></R>} />
+      <Route path="/admin-module/reports/user-right-summary" element={<R roles={ADMINS}><AdminReportUserRightSummary /></R>} />
+      <Route path="/admin-module/reports/idle-user" element={<R roles={ADMINS}><AdminReportIdleUser /></R>} />
       <Route path="/admin-module/master/city/add" element={<R roles={ADMINS}><AdminModuleCityAdd /></R>} />
       <Route path="/admin-module/master/city/edit/:id" element={<R roles={ADMINS}><AdminModuleCityAdd /></R>} />
       <Route path="/admin-module/master/city/list" element={<R roles={ADMINS}><AdminModuleCityList /></R>} />
@@ -366,8 +416,8 @@ const ADMIN_MODULE_ROUTES: string[] = [
   // '/admin-module/master/city/add',  — LIVE
   // '/admin-module/master/city/list', — LIVE
   '/admin-module/master/item-ledger-update',
-  '/admin-module/master/sms-alert-voucher/add',
-  '/admin-module/master/sms-alert-voucher/list',
+  '/admin-module/master/sms-alert-voucher-voucher/add',
+  '/admin-module/master/sms-alert-voucher-voucher/list',
   '/admin-module/master/mis-project-setting',
   '/admin-module/master/front-image-gallery',
   '/admin-module/master/site-document-master',
