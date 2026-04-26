@@ -295,6 +295,8 @@ export default function AppRoutes() {
 
       {/* Master → Other (Phase 2 remaining) */}
       <Route path="/master/other/sms-email-alert" element={<R roles={ADMINS}><MasterSmsEmailAlert /></R>} />
+      <Route path="/master/other/sms-email-alert/add" element={<R roles={ADMINS}><MasterSmsEmailAlert /></R>} />
+      <Route path="/master/other/sms-email-alert/edit/:id" element={<R roles={ADMINS}><MasterSmsEmailAlert /></R>} />
       <Route path="/master/other/image-gallery" element={<R roles={ADMINS}><MasterImageGallery /></R>} />
       <Route path="/master/other/manage-messages" element={<R roles={ADMINS}><MasterManageMessages /></R>} />
 
