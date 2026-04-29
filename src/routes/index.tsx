@@ -36,6 +36,11 @@ const ShiftList = lazy(() => import('../pages/shifts/ShiftList'));
 const ShiftForm = lazy(() => import('../pages/shifts/ShiftForm'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
+// Employee Shift Sessions (punch in/out with selfie + GPS)
+const MyShift = lazy(() => import('../pages/shift-sessions/MyShift'));
+const ShiftSessionsList = lazy(() => import('../pages/shift-sessions/ShiftSessionsList'));
+const ShiftSessionView = lazy(() => import('../pages/shift-sessions/ShiftSessionView'));
+
 const AttendanceForm = lazy(() => import('../pages/attendance/AttendanceForm'));
 
 const JobForm = lazy(() => import('../pages/recruitment/JobForm'));
@@ -227,6 +232,15 @@ export default function AppRoutes() {
 
       {/* All company roles */}
       <Route path="/attendance/my" element={<R roles={ALL_COMPANY}><CS moduleName="Attendance"><MyAttendance /></CS></R>} />
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          Employee Shift Sessions — punch in/out with selfie + GPS
+         ══════════════════════════════════════════════════════════════════════ */}
+      {/* Employee self-service: any authenticated company user can run a shift */}
+      <Route path="/shift-sessions/my" element={<R roles={ALL_COMPANY}><MyShift /></R>} />
+      {/* Admin / HR list & detail (detail also accessible to owner — backend enforces) */}
+      <Route path="/shift-sessions" element={<R roles={ADMINS}><ShiftSessionsList /></R>} />
+      <Route path="/shift-sessions/:id" element={<R roles={ALL_COMPANY}><ShiftSessionView /></R>} />
 
 
       {/* ══════════════════════════════════════════════════════════════════════
