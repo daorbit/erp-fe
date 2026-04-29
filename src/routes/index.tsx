@@ -24,7 +24,6 @@ const KYCOnboarding = lazy(() => import('../pages/onboarding/KYCOnboarding'));
 const OnboardingList = lazy(() => import('../pages/onboarding/OnboardingList'));
 const AdminFillOnboarding = lazy(() => import('../pages/onboarding/AdminFillOnboarding'));
 const AttendanceList = lazy(() => import('../pages/attendance/AttendanceList'));
-const MyAttendance = lazy(() => import('../pages/attendance/MyAttendance'));
 const PayrollList = lazy(() => import('../pages/payroll/PayrollList'));
 const PayslipView = lazy(() => import('../pages/payroll/PayslipView'));
 const JobPostings = lazy(() => import('../pages/recruitment/JobPostings'));
@@ -229,9 +228,6 @@ export default function AppRoutes() {
       {/* Management (admin + HR + manager) */}
       <Route path="/attendance" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceList /></CS></R>} />
       <Route path="/attendance/mark" element={<R roles={MANAGEMENT}><CS moduleName="Attendance"><AttendanceForm /></CS></R>} />
-
-      {/* All company roles */}
-      <Route path="/attendance/my" element={<R roles={ALL_COMPANY}><CS moduleName="Attendance"><MyAttendance /></CS></R>} />
 
       {/* ══════════════════════════════════════════════════════════════════════
           Employee Shift Sessions — punch in/out with selfie + GPS

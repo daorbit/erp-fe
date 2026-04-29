@@ -431,13 +431,6 @@ export const navigationItems: NavItem[] = [
   { titleKey: 'shifts', href: '/shifts', icon: Timer, roles: ['employee'] },
   { titleKey: 'reports', href: '/reports', icon: BarChart3, roles: ['employee'] },
 
-  // Manager + self-service — only "My Attendance" is exposed in the sidebar.
-  {
-    titleKey: 'attendance', icon: Clock, roles: SELF_SERVICE,
-    children: [
-      { titleKey: 'my_attendance', href: '/attendance/my', icon: CalendarDays },
-    ],
-  },
 
   // ─── Settings (everyone) ───────────────────────────────────────────────────
   // ─── Audit & Settings ───────────────────────────────────────────────────────
