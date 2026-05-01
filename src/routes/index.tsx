@@ -224,7 +224,6 @@ export default function AppRoutes() {
       <Route path="/recruitment/:id/edit" element={<R roles={ADMINS}><CS moduleName="Recruitment"><JobForm /></CS></R>} />
       <Route path="/recruitment/applications" element={<R roles={ADMINS}><CS moduleName="Recruitment"><Applications /></CS></R>} />
       <Route path="/reports" element={<R roles={['employee']}><CS moduleName="Reports"><Reports /></CS></R>} />
-      <Route path="/shifts" element={<R roles={['employee']}><CS moduleName="Shifts"><ShiftList /></CS></R>} />
       <Route path="/shifts/create" element={<R roles={['employee']}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
       <Route path="/shifts/:id/edit" element={<R roles={['employee']}><CS moduleName="Shifts"><ShiftForm /></CS></R>} />
 
