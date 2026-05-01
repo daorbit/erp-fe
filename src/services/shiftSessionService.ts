@@ -50,6 +50,43 @@ export interface ListParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+export interface SiteDurationReportParams {
+  status?: 'active' | 'completed';
+  employee?: string;
+  site?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface SiteDurationReportRow {
+  key: string;
+  date: string;
+  employee: any;
+  employeeName: string;
+  employeeCode?: string;
+  site: any;
+  siteName?: string;
+  siteCode?: string;
+  siteLocation?: any;
+  siteLocationName?: string;
+  durationMinutes: number;
+  sessionCount: number;
+  firstSeenAt?: string;
+  lastSeenAt?: string;
+  minDistanceMeters?: number;
+  maxDistanceMeters?: number;
+}
+
+export interface SiteDurationReport {
+  rows: SiteDurationReportRow[];
+  totals: {
+    durationMinutes: number;
+    employeeCount: number;
+    siteCount: number;
+    rowCount: number;
+  };
+}
+
 const shiftSessionService = {
   /** Currently active shift for the logged-in user (returns null in `data` if none). */
   getActive: () => api.get<IShiftSession | null>(`${BASE_URL}/active`),
@@ -61,6 +98,10 @@ const shiftSessionService = {
   /** Admin/HR — all sessions in company. */
   getAll: (params?: ListParams) =>
     api.get<IShiftSession[]>(BASE_URL, params as Record<string, any>),
+
+  /** Admin/HR — employee x site duration report from GPS trail. */
+  getSiteDurationReport: (params?: SiteDurationReportParams) =>
+    api.get<SiteDurationReport>(`${BASE_URL}/reports/site-duration`, params as Record<string, any>),
 
   /** Detail (with full GPS trail). */
   getById: (id: string) => api.get<IShiftSession>(`${BASE_URL}/${id}`),

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import shiftSessionService, {
   type ListParams,
+  type SiteDurationReportParams,
 } from '../../services/shiftSessionService';
 
 export const shiftSessionKeys = {
@@ -8,6 +9,7 @@ export const shiftSessionKeys = {
   active: () => [...shiftSessionKeys.all, 'active'] as const,
   myList: (params?: ListParams) => [...shiftSessionKeys.all, 'my', params] as const,
   list: (params?: ListParams) => [...shiftSessionKeys.all, 'list', params] as const,
+  siteDurationReport: (params?: SiteDurationReportParams) => [...shiftSessionKeys.all, 'site-duration-report', params] as const,
   detail: (id: string) => [...shiftSessionKeys.all, 'detail', id] as const,
 };
 
@@ -31,6 +33,13 @@ export function useShiftSessions(params?: ListParams, options?: { refetchInterva
     queryKey: shiftSessionKeys.list(params),
     queryFn: () => shiftSessionService.getAll(params),
     refetchInterval: options?.refetchInterval,
+  });
+}
+
+export function useShiftSiteDurationReport(params?: SiteDurationReportParams) {
+  return useQuery({
+    queryKey: shiftSessionKeys.siteDurationReport(params),
+    queryFn: () => shiftSessionService.getSiteDurationReport(params),
   });
 }
 

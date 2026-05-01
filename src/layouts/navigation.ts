@@ -532,6 +532,7 @@ export const adminModuleNav: NavItem[] = [
       { titleKey: 'nav_adm_company_report', href: '/admin-module/reports/company', icon: Building2 },
       { titleKey: 'nav_adm_site_report', href: '/admin-module/reports/site', icon: Building },
       { titleKey: 'nav_adm_location_report', href: '/admin-module/reports/location', icon: MapPinned },
+      { titleKey: 'Employee Site Duration', href: '/admin-module/reports/employee-site-duration', icon: Timer },
       { titleKey: 'nav_adm_voucher_status_report', href: '/admin-module/reports/voucher-status', icon: FileCheck },
       { titleKey: 'nav_adm_user_work_report', href: '/admin-module/reports/user-work', icon: UsersRound },
       {

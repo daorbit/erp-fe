@@ -142,6 +142,7 @@ const AdminReportLoginLog = lazy(() => import('../pages/admin-module/reports/Log
 const AdminReportCompany = lazy(() => import('../pages/admin-module/reports/CompanyReport'));
 const AdminReportSite = lazy(() => import('../pages/admin-module/reports/SiteReport'));
 const AdminReportLocation = lazy(() => import('../pages/admin-module/reports/LocationReport'));
+const AdminReportShiftSiteDuration = lazy(() => import('../pages/admin-module/reports/ShiftSiteDurationReport'));
 const AdminReportVoucher = lazy(() => import('../pages/admin-module/reports/VoucherStatus'));
 const AdminReportUserWork = lazy(() => import('../pages/admin-module/reports/UserWorkReport'));
 const AdminReportSiteWiseUsers = lazy(() => import('../pages/admin-module/reports/SiteWiseUsers'));
@@ -385,6 +386,7 @@ export default function AppRoutes() {
       <Route path="/admin-module/reports/company" element={<R roles={ADMINS}><AdminReportCompany /></R>} />
       <Route path="/admin-module/reports/site" element={<R roles={ADMINS}><AdminReportSite /></R>} />
       <Route path="/admin-module/reports/location" element={<R roles={ADMINS}><AdminReportLocation /></R>} />
+      <Route path="/admin-module/reports/employee-site-duration" element={<R roles={ADMINS}><AdminReportShiftSiteDuration /></R>} />
       <Route path="/admin-module/reports/voucher-status" element={<R roles={ADMINS}><AdminReportVoucher /></R>} />
       <Route path="/admin-module/reports/user-work" element={<R roles={ADMINS}><AdminReportUserWork /></R>} />
       {/* Send SMS reports — work in progress; requirements not finalised. */}
