@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input, Button, Checkbox, Typography } from 'antd';
-import { EyeOutlined, EyeInvisibleOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import { EyeOutlined, EyeInvisibleOutlined, LockOutlined, IdcardOutlined } from '@ant-design/icons';
 import { useAppDispatch } from '@/store';
 import { setCredentials } from '@/store/authSlice';
 import { useLogin } from '@/hooks/queries/useAuth';
@@ -18,7 +18,7 @@ const modules = [
 ];
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -38,10 +38,10 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { message.error('Please enter email and password'); return; }
+    if (!identifier || !password) { message.error('Please enter Employee ID and password'); return; }
 
     loginMutation.mutate(
-      { email, password },
+      { identifier, password },
       {
         onSuccess: (response: any) => {
           const data = response?.data ?? response;
@@ -51,7 +51,7 @@ export default function Login() {
           dispatch(setCredentials({ token, user }));
           if (data.tokens?.refreshToken) localStorage.setItem('refreshToken', data.tokens.refreshToken);
           message.success('Welcome back!');
-          navigate('/admin');
+          navigate(user?.passwordChangeRequired ? '/force-password-change' : '/admin');
         },
         onError: (error: any) => message.error(error?.message || 'Invalid email or password'),
       },
@@ -131,14 +131,13 @@ export default function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-[13px] font-medium mb-1.5 text-gray-600 dark:text-gray-400">Email address</label>
+              <label className="block text-[13px] font-medium mb-1.5 text-gray-600 dark:text-gray-400">Employee ID or Email</label>
               <Input
-                prefix={<MailOutlined className="!text-gray-300 dark:!text-gray-600" />}
+                prefix={<IdcardOutlined className="!text-gray-300 dark:!text-gray-600" />}
                 size="large"
-                type="email"
-                placeholder="you@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="EMP0001 or you@company.com"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="!h-11 !rounded-lg"
               />
             </div>

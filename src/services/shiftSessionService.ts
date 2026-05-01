@@ -7,6 +7,8 @@ export interface IGpsPoint {
   longitude: number;
   accuracy?: number;
   capturedAt: string;
+  matchedSite?: any;
+  matchedSiteLocation?: any;
 }
 
 export interface IShiftSession {

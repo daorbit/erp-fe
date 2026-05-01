@@ -17,7 +17,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
   MapContainer,
-  Circle,
   Marker,
   Polyline,
   Popup,
@@ -56,26 +55,9 @@ function midIcon(n: number) {
   return ic;
 }
 
-function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const earthRadius = 6371000;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 function formatCoords(point?: { latitude: number; longitude: number } | null): string {
   if (!point) return '-';
   return `${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`;
-}
-
-function formatMeters(value?: number | null): string {
-  if (value == null) return '-';
-  if (value >= 1000) return `${(value / 1000).toFixed(2)} km`;
-  return `${Math.round(value)} m`;
 }
 
 const ShiftSessionView: React.FC = () => {
@@ -138,9 +120,6 @@ const ShiftSessionView: React.FC = () => {
   const siteCoords = typeof siteGeo?.latitude === 'number' && typeof siteGeo?.longitude === 'number'
     ? { latitude: siteGeo.latitude, longitude: siteGeo.longitude }
     : null;
-  const latestToSiteLine: [number, number][] = sitePosition && latestPoint
-    ? [sitePosition, [latestPoint.latitude, latestPoint.longitude]]
-    : [];
 
   const trailColumns = [
     {
@@ -170,11 +149,20 @@ const ShiftSessionView: React.FC = () => {
       render: (v?: number) => (v ? `±${Math.round(v)} m` : '—'),
     },
     {
-      title: 'From Site',
-      key: 'fromSite',
-      render: (_: unknown, p: any) => sitePosition
-        ? `${Math.round(distanceMeters(sitePosition[0], sitePosition[1], p.latitude, p.longitude))} m`
-        : '—',
+      title: 'Present Site',
+      key: 'matchedSite',
+      render: (_: unknown, p: any) => {
+        const siteName = p.matchedSiteLocation?.name ?? p.matchedSite?.name;
+        const subText = [p.matchedSite?.name, p.matchedSiteLocation?.city || p.matchedSite?.city]
+          .filter(Boolean)
+          .join(' · ');
+        return siteName ? (
+          <div>
+            <div className="font-medium">{siteName}</div>
+            <Text type="secondary" className="text-xs">{subText}</Text>
+          </div>
+        ) : 'Outside assigned site';
+      },
     },
   ];
 
@@ -240,25 +228,6 @@ const ShiftSessionView: React.FC = () => {
               <Descriptions.Item label="Distance">
                 {(session.totalDistanceMeters / 1000).toFixed(2)} km
               </Descriptions.Item>
-              <Descriptions.Item label="Start From Site">
-                {formatMeters(session.startSiteDistanceMeters)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Current From Site">
-                {formatMeters(session.latestSiteDistanceMeters)}
-              </Descriptions.Item>
-              <Descriptions.Item label="End From Site">
-                {formatMeters(session.endSiteDistanceMeters)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Allowed Buffer">
-                {session.siteBufferKm ? `${session.siteBufferKm} km` : '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Buffer Status">
-                {session.latestSiteWithinBuffer == null ? '—' : (
-                  <Tag color={session.latestSiteWithinBuffer ? 'green' : 'red'}>
-                    {session.latestSiteWithinBuffer ? 'INSIDE' : 'OUTSIDE'}
-                  </Tag>
-                )}
-              </Descriptions.Item>
               <Descriptions.Item label="GPS Pings">{trail.length}</Descriptions.Item>
               <Descriptions.Item label="Shift">{(session.shift as any)?.name ?? '—'}</Descriptions.Item>
               {session.notes && (
@@ -291,25 +260,11 @@ const ShiftSessionView: React.FC = () => {
             )}
             {sitePosition && (
               <>
-                {session.siteBufferKm ? (
-                  <Circle
-                    center={sitePosition}
-                    radius={session.siteBufferKm * 1000}
-                    pathOptions={{ color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.08, weight: 2 }}
-                  />
-                ) : null}
-                {latestToSiteLine.length === 2 && (
-                  <Polyline
-                    positions={latestToSiteLine as L.LatLngExpression[]}
-                    pathOptions={{ color: '#f59e0b', weight: 2, dashArray: '6 6' }}
-                  />
-                )}
               <Marker position={sitePosition} icon={siteIcon}>
                 <Popup>
                   <div className="text-xs">
                     <div><strong>{siteLocation?.name ?? site?.name ?? 'Assigned Site'}</strong></div>
                     <div>{sitePosition[0].toFixed(5)}, {sitePosition[1].toFixed(5)}</div>
-                    {session.siteBufferKm ? <div>Buffer: {session.siteBufferKm} km</div> : null}
                     <div>{[siteLocation?.city || site?.city, site?.stateName].filter(Boolean).join(', ')}</div>
                   </div>
                 </Popup>
@@ -326,6 +281,9 @@ const ShiftSessionView: React.FC = () => {
                     <div className="text-xs">
                       <div><strong>{isStart ? 'Start' : isEnd ? 'End' : `Point #${i + 1}`}</strong></div>
                       <div>{dayjs(p.capturedAt).format('DD MMM, h:mm:ss A')}</div>
+                      {(p as any).matchedSiteLocation?.name || (p as any).matchedSite?.name ? (
+                        <div>Present site: {(p as any).matchedSiteLocation?.name ?? (p as any).matchedSite?.name}</div>
+                      ) : null}
                       <div>{p.latitude.toFixed(5)}, {p.longitude.toFixed(5)}</div>
                       {p.accuracy ? <div>±{Math.round(p.accuracy)} m</div> : null}
                     </div>
@@ -347,7 +305,7 @@ const ShiftSessionView: React.FC = () => {
           dataSource={trail}
           rowKey={(_, i) => String(i)}
           pagination={{ pageSize: 20, showSizeChanger: true }}
-          scroll={{ x: 700 }}
+          scroll={{ x: 900 }}
         />
       </Card>
     </div>

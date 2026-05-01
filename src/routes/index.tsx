@@ -14,6 +14,7 @@ const COMING_SOON_MODULES: string[] = [
 ];
 
 const Login = lazy(() => import('../pages/auth/Login'));
+const ForcePasswordChange = lazy(() => import('../pages/auth/ForcePasswordChange'));
 const AcceptInvitation = lazy(() => import('../pages/auth/AcceptInvitation'));
 const CompanyManagement = lazy(() => import('../pages/admin/CompanyManagement'));
 const DashboardRouter = lazy(() => import('../pages/admin/DashboardRouter'));
@@ -195,6 +196,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<GuestRoute><Suspense><Login /></Suspense></GuestRoute>} />
+      <Route path="/force-password-change" element={<ProtectedRoute><Suspense><ForcePasswordChange /></Suspense></ProtectedRoute>} />
       <Route path="/invite/:token" element={<Suspense><AcceptInvitation /></Suspense>} />
       <Route path="/" element={<Navigate to="/admin" replace />} />
 

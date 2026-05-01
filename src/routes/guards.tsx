@@ -8,6 +8,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
 
+  if (user?.passwordChangeRequired && location.pathname !== '/force-password-change') {
+    return <Navigate to="/force-password-change" replace />;
+  }
+
   // If onboarding is pending, redirect to onboarding (admin & HR are exempt)
   const onboardingExempt = ['super_admin', 'admin', 'hr_manager'];
   if (
@@ -25,7 +29,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export function GuestRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  if (isAuthenticated) return <Navigate to="/admin" replace />;
+  const user = useAppSelector((state) => state.auth.user);
+  if (isAuthenticated) return <Navigate to={user?.passwordChangeRequired ? '/force-password-change' : '/admin'} replace />;
   return <>{children}</>;
 }
 

@@ -4,7 +4,7 @@ import {
   Card, Form, Input, InputNumber, Select, DatePicker, Checkbox, Button, Space, Typography,
   Tabs, App, Radio, Table, Popconfirm, Upload,
 } from 'antd';
-import { List as ListIcon, Plus as PlusIcon, Trash2, Upload as UploadIcon } from 'lucide-react';
+import { KeyRound, List as ListIcon, Plus as PlusIcon, RefreshCw, Trash2, Upload as UploadIcon } from 'lucide-react';
 import dayjs from 'dayjs';
 import { refId, toDayjs, mapList } from '@/lib/formValues';
 import employeeService from '@/services/employeeService';
@@ -28,12 +28,20 @@ const { TextArea } = Input;
 // Helper to convert DatePicker dayjs values into ISO strings before submission.
 const toIso = (v: any) => (v && dayjs.isDayjs(v) ? v.toISOString() : v);
 
+const generateTemporaryPassword = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  const bytes = new Uint32Array(10);
+  crypto.getRandomValues(bytes);
+  const randomPart = Array.from(bytes, (byte) => chars[byte % chars.length]).join('');
+  return `Emp@${randomPart}`;
+};
+
 const EmployeeAdd: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
   const [form] = Form.useForm();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [activeTab, setActiveTab] = useState('personal');
   const [submitting, setSubmitting] = useState(false);
   const [saveAndNext, setSaveAndNext] = useState(false);
@@ -89,6 +97,8 @@ const EmployeeAdd: React.FC = () => {
       const patch: Record<string, unknown> = { ...e };
       for (const f of SCALAR_DATE_FIELDS) patch[f] = toDayjs(e[f]);
       for (const f of REF_FIELDS) patch[f] = refId(e[f]);
+      const toSiteId = (site: any) => (typeof site === 'string' ? site : site?._id || site?.id);
+      patch.allowedBranches = (e.userId?.allowedBranches ?? []).map(toSiteId).filter(Boolean);
       // Form.List rows that contain DatePicker fields — re-hydrate per row.
       patch.relatives = mapList(e.relatives, (r: any) => ({ ...r, dob: toDayjs(r.dob) }));
       patch.previousOrgs = mapList(e.previousOrgs, (r: any) => ({
@@ -115,7 +125,26 @@ const EmployeeAdd: React.FC = () => {
         const emp = res?.data ?? res;
         const empCode = emp?.employeeId || emp?.customEmployeeCode || '-';
         const workId = emp?.workId || emp?.employeeCode || '-';
-        message.success(`Record Saved successfully - Allotted Emp Code ${empCode} and Work ID ${workId}`, 6);
+        const temporaryPassword = emp?.temporaryPassword;
+        const loginEmployeeId = emp?.loginEmployeeId || empCode;
+        modal.success({
+          title: 'Employee login created',
+          content: (
+            <div className="space-y-2">
+              <p>Record saved successfully.</p>
+              <p><strong>Employee ID:</strong> {loginEmployeeId}</p>
+              {temporaryPassword && <p><strong>Temporary Password:</strong> {temporaryPassword}</p>}
+              <p className="text-gray-500">Employee must change this password on first login.</p>
+            </div>
+          ),
+          okText: 'OK',
+          onOk: () => {
+            if (saveAndNext) navigate('/master/salary-structure/assign');
+            else navigate('/master/employee/list');
+          },
+        });
+        message.success(`Allotted Emp Code ${empCode} and Work ID ${workId}`, 6);
+        return;
       }
       if (saveAndNext) navigate('/master/salary-structure/assign');
       else navigate('/master/employee/list');
@@ -128,6 +157,12 @@ const EmployeeAdd: React.FC = () => {
 
   const opts = (list: any[], labelField = 'name') =>
     (list ?? []).map((x: any) => ({ value: x._id || x.id, label: x[labelField] }));
+
+  const handleGeneratePassword = () => {
+    const temporaryPassword = generateTemporaryPassword();
+    form.setFieldValue('temporaryPassword', temporaryPassword);
+    message.success('Temporary password generated');
+  };
 
   return (
     <div className="space-y-4">
@@ -174,6 +209,34 @@ const EmployeeAdd: React.FC = () => {
             <Form.Item name="branch" label="Branch Name" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} rules={[{ required: true }]}>
               <Select placeholder="Please Select" options={opts(branches?.data ?? [])} showSearch optionFilterProp="label" />
             </Form.Item>
+
+            <Form.Item name="allowedBranches" label="Assigned Sites" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
+              <Select
+                mode="multiple"
+                placeholder="Assign sites for employee login and shift tracking"
+                options={opts(branches?.data ?? [])}
+                showSearch
+                optionFilterProp="label"
+                allowClear
+              />
+            </Form.Item>
+
+            {!isEdit && (
+              <Form.Item
+                name="temporaryPassword"
+                label="Login Password"
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                rules={[{ min: 8, message: 'Password must be at least 8 characters' }]}
+              >
+                <Space.Compact className="w-full">
+                  <Input.Password readOnly prefix={<KeyRound size={14} />} placeholder="Generate temporary password" />
+                  <Button icon={<RefreshCw size={14} />} onClick={handleGeneratePassword}>
+                    Generate
+                  </Button>
+                </Space.Compact>
+              </Form.Item>
+            )}
 
             <Form.Item name="level" label="Level Name" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
               <Select placeholder="Please Select" options={opts(levels?.data ?? [])} allowClear />

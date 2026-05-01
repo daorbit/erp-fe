@@ -21,6 +21,7 @@ export interface IUser {
   avatar?: string;
   onboardingRequired: boolean;
   onboardingCompleted: boolean;
+  passwordChangeRequired?: boolean;
   isActive: boolean;
   lastLogin?: string;
   allowedModules?: string[];
@@ -45,7 +46,8 @@ export interface IUser {
 }
 
 export interface ILoginRequest {
-  email: string;
+  email?: string;
+  identifier?: string;
   password: string;
 }
 

@@ -6,7 +6,7 @@ const authService = {
   me: () =>
     api.get<any>(`${AUTH_URL}/me`),
 
-  login: (data: { email: string; password: string }) =>
+  login: (data: { identifier: string; password: string }) =>
     api.post<{ token: string; refreshToken: string; user: any }>(`${AUTH_URL}/login`, data),
 
   register: (data: any) =>
@@ -15,8 +15,8 @@ const authService = {
   refreshToken: (data: { refreshToken: string }) =>
     api.post<{ token: string; refreshToken: string }>(`${AUTH_URL}/refresh-token`, data),
 
-  changePassword: (data: { currentPassword: string; newPassword: string }) =>
-    api.put<void>(`${AUTH_URL}/change-password`, data),
+  changePassword: (data: { oldPassword: string; newPassword: string; confirmPassword: string }) =>
+    api.put<any>(`${AUTH_URL}/change-password`, data),
 
   getProfile: () =>
     api.get<any>(`${AUTH_URL}/profile`),

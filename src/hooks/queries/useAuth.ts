@@ -15,7 +15,7 @@ export function useProfile() {
 
 export function useLogin() {
   return useMutation({
-    mutationFn: (data: { email: string; password: string }) => authService.login(data),
+    mutationFn: (data: { identifier: string; password: string }) => authService.login(data),
   });
 }
 
@@ -33,7 +33,7 @@ export function useRefreshToken() {
 
 export function useChangePassword() {
   return useMutation({
-    mutationFn: (data: { currentPassword: string; newPassword: string }) =>
+    mutationFn: (data: { oldPassword: string; newPassword: string; confirmPassword: string }) =>
       authService.changePassword(data),
   });
 }
