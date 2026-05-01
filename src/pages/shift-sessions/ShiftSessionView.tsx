@@ -212,7 +212,7 @@ const ShiftSessionView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <button
@@ -229,7 +229,7 @@ const ShiftSessionView: React.FC = () => {
         </Tag>
       </div>
 
-      <Row gutter={[16, 16]} align="top">
+      <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} sm={8} md={5} lg={4}>
           <Card title="Selfie" bodyStyle={{ padding: 10 }} className="h-full">
             {session.selfieUrl ? (
@@ -243,11 +243,10 @@ const ShiftSessionView: React.FC = () => {
             )}
           </Card>
         </Col>
-      </Row>
-
-      <Card title="Journey Graph">
-        {journeySegments.length > 0 ? (
-          <div className="space-y-4">
+        <Col xs={24} sm={16} md={19} lg={20}>
+          <Card title="Journey Graph" className="h-full">
+            {journeySegments.length > 0 ? (
+              <div className="space-y-4">
             <div className="overflow-auto rounded-md border bg-white">
               <div className="w-[1680px]">
                 <div className="sticky top-0 z-20 flex border-b bg-gray-50">
@@ -352,11 +351,13 @@ const ShiftSessionView: React.FC = () => {
                 { title: 'GPS Points', dataIndex: 'points' },
               ]}
             />
-          </div>
-        ) : (
-          <Empty description="No assigned site matched for this session" />
-        )}
-      </Card>
+              </div>
+            ) : (
+              <Empty description="No assigned site matched for this session" />
+            )}
+          </Card>
+        </Col>
+      </Row>
 
       <div ref={gpsAccordionRef}>
         <Collapse
