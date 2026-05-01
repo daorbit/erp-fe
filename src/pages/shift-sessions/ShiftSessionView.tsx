@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import {
   Card,
   Col,
@@ -13,51 +13,36 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { ArrowLeft } from 'lucide-react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import {
-  MapContainer,
-  Marker,
-  Polyline,
-  Popup,
-  TileLayer,
-} from 'react-leaflet';
 import { useShiftSession } from '@/hooks/queries/useShiftSessions';
 
 const { Title, Text } = Typography;
 
-// Inline SVG marker — avoids asset-bundler issues with leaflet's PNG defaults.
-function makeNumberedIcon(label: string, color: string): L.DivIcon {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="42" viewBox="0 0 30 42">
-      <path d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 27 15 27s15-15.8 15-27C30 6.7 23.3 0 15 0z" fill="${color}"/>
-      <circle cx="15" cy="15" r="9" fill="white"/>
-      <text x="15" y="19" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="${color}">${label}</text>
-    </svg>`;
-  return L.divIcon({
-    html: svg,
-    className: 'shift-trail-marker',
-    iconSize: [30, 42],
-    iconAnchor: [15, 42],
-    popupAnchor: [0, -38],
-  });
-}
-
-const startIcon = makeNumberedIcon('S', '#10b981');
-const endIcon = makeNumberedIcon('E', '#ef4444');
-const siteIcon = makeNumberedIcon('SITE', '#f59e0b');
-const midIconCache = new Map<number, L.DivIcon>();
-function midIcon(n: number) {
-  const cached = midIconCache.get(n);
-  if (cached) return cached;
-  const ic = makeNumberedIcon(String(n), '#3b82f6');
-  midIconCache.set(n, ic);
-  return ic;
-}
+const SITE_COLORS = ['#0f766e', '#2563eb', '#7c3aed', '#c2410c', '#15803d', '#be123c'];
 
 function formatCoords(point?: { latitude: number; longitude: number } | null): string {
   if (!point) return '-';
   return `${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`;
+}
+
+function formatDuration(minutes?: number): string {
+  if (!minutes || minutes <= 0) return '0m';
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+}
+
+function getTrailSite(point: any) {
+  const site = point?.matchedSite;
+  const siteLocation = point?.matchedSiteLocation;
+  const siteName = siteLocation?.name ?? site?.name;
+  if (!siteName) return null;
+  return {
+    key: `${site?._id ?? 'site'}:${siteLocation?._id ?? 'site-coordinates'}`,
+    site,
+    siteLocation,
+    siteName,
+    subText: [site?.name, siteLocation?.city || site?.city].filter(Boolean).join(' · '),
+  };
 }
 
 const ShiftSessionView: React.FC = () => {
@@ -65,38 +50,97 @@ const ShiftSessionView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useShiftSession(id);
   const session = data?.data;
-  const mapRef = useRef<L.Map | null>(null);
 
   const trail = session?.gpsTrail ?? [];
-  const positions = useMemo<[number, number][]>(
-    () => trail.map((p) => [p.latitude, p.longitude]),
-    [trail],
-  );
-  const sitePosition = useMemo<[number, number] | null>(() => {
-    const geo: any = session?.siteLocation ?? session?.site;
-    if (typeof geo?.latitude !== 'number' || typeof geo?.longitude !== 'number') return null;
-    return [geo.latitude, geo.longitude];
-  }, [session?.site, session?.siteLocation]);
 
-  // Tell Leaflet to recalculate size + fit bounds once data + container exist.
-  useEffect(() => {
-    if (!mapRef.current || positions.length === 0) return;
-    const map = mapRef.current;
-    const t = setTimeout(() => {
-      map.invalidateSize();
-      if (positions.length > 1) {
-        map.fitBounds(positions as L.LatLngBoundsLiteral, { padding: [40, 40] });
+  const journeySegments = useMemo(() => {
+    if (!session || trail.length === 0) return [];
+    const sortedTrail = [...trail].sort(
+      (a, b) => new Date(a.capturedAt).getTime() - new Date(b.capturedAt).getTime(),
+    );
+    const segments: Array<{
+      key: string;
+      siteName: string;
+      subText: string;
+      startAt: string;
+      endAt: string;
+      durationMinutes: number;
+      points: number;
+    }> = [];
+
+    for (let index = 0; index < sortedTrail.length; index += 1) {
+      const point: any = sortedTrail[index];
+      const siteInfo = getTrailSite(point);
+      if (!siteInfo) continue;
+
+      const nextPoint = sortedTrail[index + 1];
+      const startAt = point.capturedAt;
+      const endAt = nextPoint?.capturedAt ?? session.shiftEndedAt ?? new Date().toISOString();
+      const durationMinutes = Math.max(1, dayjs(endAt).diff(dayjs(startAt), 'minute'));
+      const last = segments[segments.length - 1];
+
+      if (last && last.key === siteInfo.key) {
+        last.endAt = endAt;
+        last.durationMinutes += durationMinutes;
+        last.points += 1;
       } else {
-        map.setView(positions[0], 16);
+        segments.push({
+          key: siteInfo.key,
+          siteName: siteInfo.siteName,
+          subText: siteInfo.subText,
+          startAt,
+          endAt,
+          durationMinutes,
+          points: 1,
+        });
       }
-    }, 250);
-    return () => clearTimeout(t);
-  }, [positions]);
+    }
 
-  const center: [number, number] = positions[0] ??
-    (session?.startLocation
-      ? [session.startLocation.latitude, session.startLocation.longitude]
-      : [20.5937, 78.9629]); // India fallback
+    return segments;
+  }, [session, trail]);
+
+  const journeyDayStart = dayjs(session?.shiftDate ?? session?.shiftStartedAt ?? undefined)
+    .startOf('day');
+  const journeyDayEnd = journeyDayStart.add(1, 'day');
+  const totalDayMinutes = journeyDayEnd.diff(journeyDayStart, 'minute');
+  const timelineHours = Array.from({ length: 25 }, (_, index) => journeyDayStart.add(index, 'hour'));
+
+  const journeySiteRows = useMemo(() => {
+    const rows = new Map<string, {
+      key: string;
+      siteName: string;
+      subText: string;
+      color: string;
+      segments: typeof journeySegments;
+      durationMinutes: number;
+    }>();
+
+    journeySegments.forEach((segment, index) => {
+      const existing = rows.get(segment.key);
+      if (existing) {
+        existing.segments.push(segment);
+        existing.durationMinutes += segment.durationMinutes;
+        return;
+      }
+
+      rows.set(segment.key, {
+        key: segment.key,
+        siteName: segment.siteName,
+        subText: segment.subText,
+        color: SITE_COLORS[index % SITE_COLORS.length],
+        segments: [segment],
+        durationMinutes: segment.durationMinutes,
+      });
+    });
+
+    return Array.from(rows.values());
+  }, [journeySegments]);
+
+  const getTimelinePercent = (value: string): number => {
+    const minutes = dayjs(value).diff(journeyDayStart, 'minute');
+    const clamped = Math.min(totalDayMinutes, Math.max(0, minutes));
+    return (clamped / totalDayMinutes) * 100;
+  };
 
   if (isLoading) {
     return (
@@ -161,7 +205,7 @@ const ShiftSessionView: React.FC = () => {
             <div className="font-medium">{siteName}</div>
             <Text type="secondary" className="text-xs">{subText}</Text>
           </div>
-        ) : 'Outside assigned site';
+        ) : '-';
       },
     },
   ];
@@ -185,7 +229,7 @@ const ShiftSessionView: React.FC = () => {
       </div>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={8}>
+        <Col xs={24} md={4}>
           <Card title="Selfie">
             {session.selfieUrl ? (
               <img
@@ -198,7 +242,7 @@ const ShiftSessionView: React.FC = () => {
             )}
           </Card>
         </Col>
-        <Col xs={24} md={16}>
+        <Col xs={24} md={20}>
           <Card title="Summary">
             <Descriptions bordered column={{ xs: 1, sm: 2 }} size="small">
               <Descriptions.Item label="Employee">{empName}</Descriptions.Item>
@@ -238,64 +282,137 @@ const ShiftSessionView: React.FC = () => {
         </Col>
       </Row>
 
-      <Card title={`Journey Map (${trail.length} points)`} bodyStyle={{ padding: 0 }}>
-        {positions.length > 0 ? (
-          <MapContainer
-            center={center}
-            zoom={positions.length > 1 ? 14 : 16}
-            style={{ height: 460, width: '100%' }}
-            scrollWheelZoom
-            doubleClickZoom
-            touchZoom
-            dragging
-            zoomControl
-            ref={(m) => { mapRef.current = m; }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {positions.length > 1 && (
-              <Polyline positions={positions} pathOptions={{ color: '#3b82f6', weight: 4 }} />
-            )}
-            {sitePosition && (
-              <>
-              <Marker position={sitePosition} icon={siteIcon}>
-                <Popup>
-                  <div className="text-xs">
-                    <div><strong>{siteLocation?.name ?? site?.name ?? 'Assigned Site'}</strong></div>
-                    <div>{sitePosition[0].toFixed(5)}, {sitePosition[1].toFixed(5)}</div>
-                    <div>{[siteLocation?.city || site?.city, site?.stateName].filter(Boolean).join(', ')}</div>
+      <Card title="Journey Graph">
+        {journeySegments.length > 0 ? (
+          <div className="space-y-5">
+            <div className="overflow-x-auto rounded-md border bg-white">
+              <div className="min-w-[1440px]">
+                <div className="grid grid-cols-[180px_1fr] border-b bg-gray-50">
+                  <div className="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 border-r">
+                    Site
                   </div>
-                </Popup>
-              </Marker>
-              </>
-            )}
-            {trail.map((p, i) => {
-              const isStart = i === 0;
-              const isEnd = i === trail.length - 1 && trail.length > 1;
-              const icon = isStart ? startIcon : isEnd ? endIcon : midIcon(i + 1);
-              return (
-                <Marker key={i} position={[p.latitude, p.longitude]} icon={icon}>
-                  <Popup>
-                    <div className="text-xs">
-                      <div><strong>{isStart ? 'Start' : isEnd ? 'End' : `Point #${i + 1}`}</strong></div>
-                      <div>{dayjs(p.capturedAt).format('DD MMM, h:mm:ss A')}</div>
-                      {(p as any).matchedSiteLocation?.name || (p as any).matchedSite?.name ? (
-                        <div>Present site: {(p as any).matchedSiteLocation?.name ?? (p as any).matchedSite?.name}</div>
-                      ) : null}
-                      <div>{p.latitude.toFixed(5)}, {p.longitude.toFixed(5)}</div>
-                      {p.accuracy ? <div>±{Math.round(p.accuracy)} m</div> : null}
+                  <div className="relative h-12">
+                    {timelineHours.map((hour, index) => (
+                      <div
+                        key={hour.toISOString()}
+                        className="absolute top-0 bottom-0 border-l border-gray-200 px-2 pt-3 text-[11px] font-medium text-gray-500"
+                        style={{ left: `${(index / (timelineHours.length - 1)) * 100}%` }}
+                      >
+                        {index === timelineHours.length - 1 ? '12 AM' : hour.format('h A')}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-[180px_1fr]">
+                  <div className="border-r bg-white">
+                    {journeySiteRows.map((row) => (
+                      <div key={row.key} className="h-20 border-b last:border-b-0 px-3 py-3">
+                        <div className="font-medium text-sm truncate">{row.siteName}</div>
+                        <div className="text-xs text-gray-500 truncate">{row.subText || '-'}</div>
+                        <Tag color="blue" className="mt-2">{formatDuration(row.durationMinutes)}</Tag>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="relative bg-gray-50" style={{ height: journeySiteRows.length * 80 }}>
+                    {timelineHours.map((hour, index) => (
+                      <div
+                        key={hour.toISOString()}
+                        className="absolute top-0 bottom-0 border-l border-dashed border-gray-200"
+                        style={{ left: `${(index / (timelineHours.length - 1)) * 100}%` }}
+                      />
+                    ))}
+                    {journeySiteRows.map((row, index) => (
+                      <div
+                        key={`${row.key}-row-line`}
+                        className="absolute left-0 right-0 border-b border-gray-200"
+                        style={{ top: `${(index + 1) * 80}px` }}
+                      />
+                    ))}
+
+                    <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none">
+                      {journeySegments.map((segment, index) => {
+                        const rowIndex = journeySiteRows.findIndex((row) => row.key === segment.key);
+                        if (rowIndex < 0) return null;
+                        const x1 = getTimelinePercent(segment.startAt);
+                        const x2 = getTimelinePercent(segment.endAt);
+                        const y = rowIndex * 80 + 40;
+                        const color = journeySiteRows[rowIndex]?.color ?? SITE_COLORS[index % SITE_COLORS.length];
+                        return (
+                          <g key={`${segment.key}-${segment.startAt}-${index}`}>
+                            <line
+                              x1={`${x1}%`}
+                              x2={`${Math.max(x1 + 0.5, x2)}%`}
+                              y1={y}
+                              y2={y}
+                              stroke={color}
+                              strokeWidth="8"
+                              strokeLinecap="round"
+                            >
+                              <title>{`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}\nDuration: ${formatDuration(segment.durationMinutes)}\nGPS Points: ${segment.points}`}</title>
+                            </line>
+                            <circle cx={`${x1}%`} cy={y} r="5" fill={color}>
+                              <title>{`${segment.siteName} start: ${dayjs(segment.startAt).format('h:mm A')}`}</title>
+                            </circle>
+                            <circle cx={`${Math.max(x1 + 0.5, x2)}%`} cy={y} r="5" fill={color}>
+                              <title>{`${segment.siteName} end: ${dayjs(segment.endAt).format('h:mm A')}`}</title>
+                            </circle>
+                          </g>
+                        );
+                      })}
+                    </svg>
+
+                    {journeySegments.map((segment, index) => {
+                      const rowIndex = journeySiteRows.findIndex((row) => row.key === segment.key);
+                      if (rowIndex < 0) return null;
+                      const x1 = getTimelinePercent(segment.startAt);
+                      const x2 = getTimelinePercent(segment.endAt);
+                      const left = (x1 + x2) / 2;
+                      return (
+                        <div
+                          key={`${segment.key}-${segment.startAt}-${index}-label`}
+                          className="absolute -translate-x-1/2 rounded bg-white/95 px-2 py-0.5 text-[11px] font-medium text-gray-700 shadow-sm border"
+                          style={{ left: `${left}%`, top: `${rowIndex * 80 + 49}px` }}
+                          title={`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}`}
+                        >
+                          {dayjs(segment.startAt).format('h:mm A')} - {dayjs(segment.endAt).format('h:mm A')}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              {dayjs(session.shiftDate).format('DD MMM YYYY')} full 24-hour line graph. Hover a line to view timing details.
+            </div>
+
+            <Table
+              size="small"
+              dataSource={journeySegments}
+              rowKey={(row, index) => `${row.key}-${row.startAt}-${index}`}
+              pagination={false}
+              columns={[
+                {
+                  title: 'Site',
+                  render: (_: unknown, row: any) => (
+                    <div>
+                      <div className="font-medium">{row.siteName}</div>
+                      <Text type="secondary" className="text-xs">{row.subText || '-'}</Text>
                     </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-          </MapContainer>
-        ) : (
-          <div className="p-10">
-            <Empty description="No GPS points recorded" />
+                  ),
+                },
+                { title: 'From', dataIndex: 'startAt', render: (value: string) => dayjs(value).format('h:mm A') },
+                { title: 'To', dataIndex: 'endAt', render: (value: string) => dayjs(value).format('h:mm A') },
+                { title: 'Duration', dataIndex: 'durationMinutes', render: (value: number) => <Tag color="blue">{formatDuration(value)}</Tag> },
+                { title: 'GPS Points', dataIndex: 'points' },
+              ]}
+            />
           </div>
+        ) : (
+          <Empty description="No assigned site matched for this session" />
         )}
       </Card>
 

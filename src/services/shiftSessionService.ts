@@ -89,6 +89,43 @@ export interface SiteDurationReport {
   };
 }
 
+export interface EmployeeJourneyParams {
+  employee?: string;
+  date?: string;
+}
+
+export interface EmployeeJourneySegment {
+  siteKey: string;
+  site: any;
+  siteName?: string;
+  siteCode?: string;
+  siteLocation?: any;
+  siteLocationName?: string;
+  startAt: string;
+  endAt: string;
+  durationMinutes: number;
+  points: number;
+}
+
+export interface EmployeeJourneyReport {
+  date: string;
+  employee: any;
+  segments: EmployeeJourneySegment[];
+  siteTotals: Array<{
+    site: any;
+    siteName?: string;
+    siteCode?: string;
+    siteLocation?: any;
+    siteLocationName?: string;
+    durationMinutes: number;
+  }>;
+  totals: {
+    durationMinutes: number;
+    siteCount: number;
+    segmentCount: number;
+  };
+}
+
 const shiftSessionService = {
   /** Currently active shift for the logged-in user (returns null in `data` if none). */
   getActive: () => api.get<IShiftSession | null>(`${BASE_URL}/active`),
@@ -104,6 +141,10 @@ const shiftSessionService = {
   /** Admin/HR — employee x site duration report from GPS trail. */
   getSiteDurationReport: (params?: SiteDurationReportParams) =>
     api.get<SiteDurationReport>(`${BASE_URL}/reports/site-duration`, params as Record<string, any>),
+
+  /** Admin/HR — one employee/day site journey graph. */
+  getEmployeeJourneyReport: (params?: EmployeeJourneyParams) =>
+    api.get<EmployeeJourneyReport>(`${BASE_URL}/reports/employee-journey`, params as Record<string, any>),
 
   /** Detail (with full GPS trail). */
   getById: (id: string) => api.get<IShiftSession>(`${BASE_URL}/${id}`),
