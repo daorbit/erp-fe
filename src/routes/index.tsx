@@ -40,6 +40,7 @@ const NotFound = lazy(() => import('../pages/NotFound'));
 const MyShift = lazy(() => import('../pages/shift-sessions/MyShift'));
 const ShiftSessionsList = lazy(() => import('../pages/shift-sessions/ShiftSessionsList'));
 const ShiftSessionView = lazy(() => import('../pages/shift-sessions/ShiftSessionView'));
+const ShiftSessionsReport = lazy(() => import('../pages/shift-sessions/ShiftSessionsReport'));
 
 const AttendanceForm = lazy(() => import('../pages/attendance/AttendanceForm'));
 
@@ -239,6 +240,7 @@ export default function AppRoutes() {
       {/* Admin / HR list & detail (detail also accessible to owner — backend enforces) */}
       <Route path="/shift-sessions" element={<R roles={ADMINS}><ShiftSessionsList /></R>} />
       <Route path="/admin-module/shift-sessions" element={<R roles={ADMINS}><ShiftSessionsList /></R>} />
+      <Route path="/shift-sessions/report" element={<R roles={ADMINS}><ShiftSessionsReport /></R>} />
       <Route path="/shift-sessions/:id" element={<R roles={ALL_COMPANY}><ShiftSessionView /></R>} />
 
 

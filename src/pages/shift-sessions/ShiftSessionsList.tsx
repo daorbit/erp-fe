@@ -9,7 +9,7 @@ import {
   Space,
   Button,
 } from 'antd';
-import { Eye } from 'lucide-react';
+import { Eye, BarChart2 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { useShiftSessions } from '@/hooks/queries/useShiftSessions';
@@ -155,11 +155,19 @@ const ShiftSessionsList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Title level={4} className="!mb-1">Shift Sessions</Title>
-        <Text type="secondary">
-          All employee shift punches with selfies and journey trails.
-        </Text>
+      <div className="flex items-start justify-between">
+        <div>
+          <Title level={4} className="!mb-1">Shift Sessions</Title>
+          <Text type="secondary">
+            All employee shift punches with selfies and journey trails.
+          </Text>
+        </div>
+        <Button
+          icon={<BarChart2 size={14} />}
+          onClick={() => navigate('/shift-sessions/report')}
+        >
+          Consolidated Report
+        </Button>
       </div>
 
       <Card>

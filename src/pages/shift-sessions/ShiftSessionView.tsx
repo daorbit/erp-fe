@@ -1,18 +1,20 @@
 import React, { useMemo, useRef } from 'react';
 import {
+  Badge,
   Card,
   Col,
   Collapse,
   Empty,
   Row,
   Spin,
+  Statistic,
   Table,
   Tag,
   Typography,
 } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Navigation, Radio, UserCircle2 } from 'lucide-react';
 import { useShiftSession } from '@/hooks/queries/useShiftSessions';
 
 const { Title, Text } = Typography;
@@ -212,111 +214,181 @@ const ShiftSessionView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+
+      {/* ── Page header ── */}
+      <div className="flex items-start justify-between">
         <div>
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-sm text-gray-500 hover:text-gray-800 mb-1"
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-2 transition-colors"
           >
-            <ArrowLeft size={14} className="mr-1" /> Back
+            <ArrowLeft size={14} /> Back
           </button>
-          <Title level={4} className="!mb-1">Shift Session</Title>
-          <Text type="secondary">{empName} · {dayjs(session.shiftDate).format('DD MMM YYYY')}</Text>
+          <Title level={4} className="!mb-0.5">Shift Session</Title>
+          <Text type="secondary" className="text-sm">
+            {empName && empName !== '—' ? empName : user?.email ?? '—'} &nbsp;·&nbsp; {dayjs(session.shiftDate).format('DD MMM YYYY')}
+          </Text>
         </div>
-        <Tag color={session.status === 'active' ? 'green' : 'blue'} className="text-base px-3 py-1">
-          {session.status.toUpperCase()}
-        </Tag>
+        <Badge
+          status={session.status === 'active' ? 'processing' : 'default'}
+          text={
+            <span className={`font-semibold text-sm ${session.status === 'active' ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`}>
+              {session.status.toUpperCase()}
+            </span>
+          }
+        />
       </div>
 
-      <Row gutter={[16, 16]} align="top">
-        <Col xs={24} sm={8} md={5} lg={4}>
-          <Card title="Selfie" bodyStyle={{ padding: 10 }}>
+      {/* ── Stat cards row ── */}
+      <Row gutter={[12, 12]}>
+        {/* Selfie */}
+        <Col xs={24} sm={6} md={4} lg={3}>
+          <Card bodyStyle={{ padding: 8 }} className="h-full">
+            <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide">Selfie</div>
             {session.selfieUrl ? (
-              <img
-                src={session.selfieUrl}
-                alt="Shift selfie"
-                className="aspect-square w-full rounded-lg object-cover block"
-              />
+              <img src={session.selfieUrl} alt="selfie" className="w-full aspect-square rounded-lg object-cover" />
             ) : (
-              <Empty description="No selfie" />
+              <div className="w-full aspect-square rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <UserCircle2 size={32} className="text-gray-300 dark:text-gray-600" />
+              </div>
             )}
           </Card>
         </Col>
-        <Col xs={24} sm={16} md={19} lg={20}>
-          <Card title="Journey Graph">
-            {journeySegments.length > 0 ? (
-              <div className="space-y-3">
-            <div className="overflow-auto rounded-md border bg-white">
+
+        {/* Info stats */}
+        <Col xs={24} sm={18} md={20} lg={21}>
+          <Row gutter={[12, 12]} className="h-full">
+            <Col xs={12} sm={8} md={6}>
+              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
+                <div className="flex items-center gap-2 mb-1">
+                  <UserCircle2 size={14} className="text-blue-500" />
+                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Employee</span>
+                </div>
+                <div className="font-semibold text-sm truncate">{empName || '—'}</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500 truncate">{emp?.employeeId ?? user?.email ?? '—'}</div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={8} md={6}>
+              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={14} className="text-purple-500" />
+                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Duration</span>
+                </div>
+                <div className="font-semibold text-sm">
+                  {session.durationMinutes
+                    ? `${Math.floor(session.durationMinutes / 60)}h ${session.durationMinutes % 60}m`
+                    : session.status === 'active'
+                      ? `${dayjs().diff(dayjs(session.shiftStartedAt), 'minute')}m (live)`
+                      : '—'}
+                </div>
+                <div className="text-xs text-gray-400 dark:text-gray-500">
+                  {dayjs(session.shiftStartedAt).format('h:mm A')} – {session.shiftEndedAt ? dayjs(session.shiftEndedAt).format('h:mm A') : 'ongoing'}
+                </div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={8} md={6}>
+              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
+                <div className="flex items-center gap-2 mb-1">
+                  <Navigation size={14} className="text-orange-500" />
+                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Distance</span>
+                </div>
+                <Statistic
+                  value={(session.totalDistanceMeters / 1000).toFixed(2)}
+                  suffix="km"
+                  valueStyle={{ fontSize: 16, fontWeight: 600 }}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} sm={8} md={6}>
+              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
+                <div className="flex items-center gap-2 mb-1">
+                  <Radio size={14} className="text-pink-500" />
+                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">GPS Pings</span>
+                </div>
+                <Statistic value={trail.length} valueStyle={{ fontSize: 16, fontWeight: 600 }} />
+              </Card>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+
+      {/* ── Journey Graph ── */}
+      <Card
+        title={<span className="font-semibold">Journey Timeline</span>}
+        extra={<span className="text-xs text-gray-400 dark:text-gray-500">{dayjs(session.shiftDate).format('DD MMM YYYY')} · 24-hour view</span>}
+      >
+        {journeySegments.length > 0 ? (
+          <div className="space-y-4">
+            {/* Timeline graph */}
+            <div className="overflow-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="w-[1680px]">
-                <div className="sticky top-0 z-20 flex border-b bg-gray-50">
-                  <div className="sticky left-0 z-30 w-[200px] shrink-0 border-r bg-gray-50 px-3 py-3 text-xs font-semibold uppercase text-gray-500">
+                {/* Header */}
+                <div className="sticky top-0 z-20 flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 backdrop-blur">
+                  <div className="sticky left-0 z-30 w-[200px] shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                     Site
                   </div>
-                  <div className="relative h-11 w-[1480px] shrink-0">
+                  <div className="relative h-10 w-[1480px] shrink-0">
                     {timelineHourLabels.map((hour, index) => (
                       <div
                         key={hour.toISOString()}
-                        className="absolute bottom-0 top-0 border-l border-gray-200 px-2 pt-3 text-center text-[11px] font-medium text-gray-500"
+                        className="absolute bottom-0 top-0 border-l border-gray-200 dark:border-gray-700 pt-2.5 text-center text-[11px] font-medium text-gray-400 dark:text-gray-500"
                         style={{ left: `${(index / 24) * 100}%`, width: `${100 / 24}%` }}
                       >
                         {hour.format('h A')}
                       </div>
                     ))}
-                    <div className="absolute bottom-0 right-0 top-0 border-l border-gray-200" />
+                    <div className="absolute bottom-0 right-0 top-0 border-l border-gray-200 dark:border-gray-700" />
                   </div>
                 </div>
 
+                {/* Rows */}
                 {journeySiteRows.map((row) => (
-                  <div key={row.key} className="flex border-b last:border-b-0">
-                    <div className="sticky left-0 z-10 flex h-[72px] w-[200px] shrink-0 flex-col justify-center border-r bg-white px-3">
-                      <div className="font-medium text-sm truncate">{row.siteName}</div>
-                      <div className="text-xs text-gray-500 truncate">{row.subText || '-'}</div>
+                  <div key={row.key} className="flex border-b border-gray-100 dark:border-gray-800 last:border-b-0">
+                    <div className="sticky left-0 z-10 flex h-16 w-[200px] shrink-0 flex-col justify-center gap-0.5 border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4">
+                      <div className="font-semibold text-sm truncate leading-tight">{row.siteName}</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 truncate">{row.subText || '—'}</div>
+                      <Tag color="geekblue" style={{ marginTop: 2, fontSize: 10, lineHeight: '16px', padding: '0 4px' }}>{formatDuration(row.durationMinutes)}</Tag>
                     </div>
-                    <div className="relative h-[72px] w-[1480px] shrink-0 bg-gray-50">
-                      {timelineHours.map((hour, index) => (
+                    <div className="relative h-16 w-[1480px] shrink-0" style={{ background: 'var(--ant-color-bg-container, #fff)' }}>
+                      {/* Hour grid */}
+                      {timelineHours.map((_, index) => (
                         <div
-                          key={hour.toISOString()}
-                          className="absolute bottom-0 top-0 border-l border-dashed border-gray-200"
+                          key={index}
+                          className="absolute bottom-0 top-0 border-l border-dashed border-gray-100 dark:border-gray-800"
                           style={{ left: `${(index / (timelineHours.length - 1)) * 100}%` }}
                         />
                       ))}
                       <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none">
                         {journeySegments
                           .filter((seg) => seg.key === row.key)
-                          .map((segment, index) => {
+                          .map((segment, i) => {
                             const x1 = getTimelinePercent(segment.startAt);
                             const x2 = getTimelinePercent(segment.endAt);
-                            const y = 32;
+                            const y = 30;
                             return (
-                              <g key={`${segment.key}-${segment.startAt}-${index}`}>
-                                <line x1={`${x1}%`} x2={`${Math.max(x1 + 0.5, x2)}%`} y1={y} y2={y} stroke={row.color} strokeWidth="8" strokeLinecap="round">
-                                  <title>{`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}\nDuration: ${formatDuration(segment.durationMinutes)}\nGPS Points: ${segment.points}`}</title>
+                              <g key={`${segment.key}-${i}`}>
+                                <line x1={`${x1}%`} x2={`${Math.max(x1 + 0.4, x2)}%`} y1={y} y2={y} stroke={row.color} strokeWidth="6" strokeLinecap="round" opacity="0.9">
+                                  <title>{`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} – ${dayjs(segment.endAt).format('h:mm A')}\nDuration: ${formatDuration(segment.durationMinutes)}\nGPS Points: ${segment.points}`}</title>
                                 </line>
-                                <circle cx={`${x1}%`} cy={y} r="5" fill={row.color}>
-                                  <title>{`${segment.siteName} start: ${dayjs(segment.startAt).format('h:mm A')}`}</title>
-                                </circle>
-                                <circle cx={`${Math.max(x1 + 0.5, x2)}%`} cy={y} r="5" fill={row.color}>
-                                  <title>{`${segment.siteName} end: ${dayjs(segment.endAt).format('h:mm A')}`}</title>
-                                </circle>
+                                <circle cx={`${x1}%`} cy={y} r="4" fill={row.color} />
+                                <circle cx={`${Math.max(x1 + 0.4, x2)}%`} cy={y} r="4" fill={row.color} />
                               </g>
                             );
                           })}
                       </svg>
                       {journeySegments
                         .filter((seg) => seg.key === row.key)
-                        .map((segment, index) => {
+                        .map((segment, i) => {
                           const x1 = getTimelinePercent(segment.startAt);
                           const x2 = getTimelinePercent(segment.endAt);
-                          const left = (x1 + x2) / 2;
                           return (
                             <div
-                              key={`${segment.key}-${segment.startAt}-${index}-label`}
-                              className="absolute -translate-x-1/2 rounded bg-white/95 px-2 py-0.5 text-[11px] font-medium text-gray-700 shadow-sm border"
-                              style={{ left: `${left}%`, top: 42 }}
-                              title={`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}`}
+                              key={`label-${i}`}
+                              className="absolute -translate-x-1/2 rounded-md px-1.5 py-0.5 text-[10px] font-medium shadow-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 whitespace-nowrap"
+                              style={{ left: `${(x1 + x2) / 2}%`, top: 40 }}
                             >
-                              {dayjs(segment.startAt).format('h:mm A')} - {dayjs(segment.endAt).format('h:mm A')}
+                              {dayjs(segment.startAt).format('h:mm A')} – {dayjs(segment.endAt).format('h:mm A')}
                             </div>
                           );
                         })}
@@ -326,42 +398,37 @@ const ShiftSessionView: React.FC = () => {
               </div>
             </div>
 
-            <div className="text-xs text-gray-500">
-              {dayjs(session.shiftDate).format('DD MMM YYYY')} full 24-hour line graph. Hover a line to view timing details.
-            </div>
-
+            {/* Summary table */}
             <Table
               size="small"
               dataSource={journeySegments}
-              rowKey={(row, index) => `${row.key}-${row.startAt}-${index}`}
+              rowKey={(row, i) => `${row.key}-${i}`}
               pagination={false}
               columns={[
                 {
                   title: 'Site',
                   render: (_: unknown, row: any) => (
                     <div>
-                      <div className="font-medium">{row.siteName}</div>
-                      <Text type="secondary" className="text-xs">{row.subText || '-'}</Text>
+                      <div className="font-medium text-sm">{row.siteName}</div>
+                      <Text type="secondary" className="text-xs">{row.subText || '—'}</Text>
                     </div>
                   ),
                 },
-                { title: 'From', dataIndex: 'startAt', render: (value: string) => dayjs(value).format('h:mm A') },
-                { title: 'To', dataIndex: 'endAt', render: (value: string) => dayjs(value).format('h:mm A') },
-                { title: 'Duration', dataIndex: 'durationMinutes', render: (value: number) => <Tag color="blue">{formatDuration(value)}</Tag> },
+                { title: 'From', dataIndex: 'startAt', render: (v: string) => dayjs(v).format('h:mm A') },
+                { title: 'To', dataIndex: 'endAt', render: (v: string) => dayjs(v).format('h:mm A') },
+                { title: 'Duration', dataIndex: 'durationMinutes', render: (v: number) => <Tag color="geekblue">{formatDuration(v)}</Tag> },
                 { title: 'GPS Points', dataIndex: 'points' },
               ]}
             />
-              </div>
-            ) : (
-              <Empty description="No assigned site matched for this session" />
-            )}
-          </Card>
-        </Col>
-      </Row>
+          </div>
+        ) : (
+          <Empty description="No GPS data matched to any assigned site for this session" />
+        )}
+      </Card>
 
+      {/* ── GPS Trail accordion ── */}
       <div ref={gpsAccordionRef}>
         <Collapse
-          style={{ background: '#ffffff', borderRadius: 8 }}
           defaultActiveKey={[]}
           onChange={(keys) => {
             if ((keys as string[]).includes('gps-trail')) {
@@ -370,7 +437,11 @@ const ShiftSessionView: React.FC = () => {
           }}
           items={[{
             key: 'gps-trail',
-            label: `GPS Trail (${trail.length} points)`,
+            label: (
+              <span className="font-medium">
+                GPS Trail <span className="text-gray-400 dark:text-gray-500 font-normal">({trail.length} points)</span>
+              </span>
+            ),
             children: (
               <Table
                 columns={trailColumns}
@@ -378,6 +449,7 @@ const ShiftSessionView: React.FC = () => {
                 rowKey={(_, i) => String(i)}
                 pagination={{ pageSize: 20, showSizeChanger: true }}
                 scroll={{ x: 900 }}
+                size="small"
               />
             ),
           }]}
