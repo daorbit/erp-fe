@@ -236,6 +236,7 @@ export default function AppRoutes() {
       <Route path="/shift-sessions/my" element={<R roles={['employee']}><MyShift /></R>} />
       {/* Admin / HR list & detail (detail also accessible to owner — backend enforces) */}
       <Route path="/shift-sessions" element={<R roles={ADMINS}><ShiftSessionsList /></R>} />
+      <Route path="/admin-module/shift-sessions" element={<R roles={ADMINS}><ShiftSessionsList /></R>} />
       <Route path="/shift-sessions/:id" element={<R roles={ALL_COMPANY}><ShiftSessionView /></R>} />
 
 

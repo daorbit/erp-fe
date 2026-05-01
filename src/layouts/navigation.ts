@@ -443,6 +443,7 @@ export const navigationItems: NavItem[] = [
 // ══════════════════════════════════════════════════════════════════════════════
 export const adminModuleNav: NavItem[] = [
   { titleKey: 'dashboard', href: '/admin-module', icon: LayoutDashboard },
+  { titleKey: 'Shift Sessions', href: '/admin-module/shift-sessions', icon: Timer },
   {
     titleKey: 'nav_master', icon: Database,
     children: [
