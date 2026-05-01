@@ -2,12 +2,9 @@ import React, { useMemo, useRef } from 'react';
 import {
   Badge,
   Card,
-  Col,
   Collapse,
   Empty,
-  Row,
   Spin,
-  Statistic,
   Table,
   Tag,
   Typography,
@@ -240,78 +237,88 @@ const ShiftSessionView: React.FC = () => {
         />
       </div>
 
-      {/* ── Stat cards row ── */}
-      <Row gutter={[12, 12]}>
-        {/* Selfie */}
-        <Col xs={24} sm={6} md={4} lg={3}>
-          <Card bodyStyle={{ padding: 8 }} className="h-full">
-            <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-2 uppercase tracking-wide">Selfie</div>
+      {/* ── Profile + Stats card ── */}
+      <Card bodyStyle={{ padding: '20px 24px' }}>
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+
+          {/* Selfie circle */}
+          <div className="flex flex-col items-center gap-2 shrink-0">
             {session.selfieUrl ? (
-              <img src={session.selfieUrl} alt="selfie" className="w-full aspect-square rounded-lg object-cover" />
+              <img
+                src={session.selfieUrl}
+                alt="selfie"
+                className="w-24 h-24 rounded-full object-cover ring-4 ring-blue-500/30 shadow-lg"
+              />
             ) : (
-              <div className="w-full aspect-square rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                <UserCircle2 size={32} className="text-gray-300 dark:text-gray-600" />
+              <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 ring-4 ring-gray-200 dark:ring-gray-700 flex items-center justify-center shadow">
+                <UserCircle2 size={40} className="text-gray-300 dark:text-gray-600" />
               </div>
             )}
-          </Card>
-        </Col>
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Selfie</span>
+          </div>
 
-        {/* Info stats */}
-        <Col xs={24} sm={18} md={20} lg={21}>
-          <Row gutter={[12, 12]} className="h-full">
-            <Col xs={12} sm={8} md={6}>
-              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
-                <div className="flex items-center gap-2 mb-1">
-                  <UserCircle2 size={14} className="text-blue-500" />
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Employee</span>
-                </div>
-                <div className="font-semibold text-sm truncate">{empName || '—'}</div>
-                <div className="text-xs text-gray-400 dark:text-gray-500 truncate">{emp?.employeeId ?? user?.email ?? '—'}</div>
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6}>
-              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
-                <div className="flex items-center gap-2 mb-1">
-                  <Clock size={14} className="text-purple-500" />
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Duration</span>
-                </div>
-                <div className="font-semibold text-sm">
-                  {session.durationMinutes
-                    ? `${Math.floor(session.durationMinutes / 60)}h ${session.durationMinutes % 60}m`
-                    : session.status === 'active'
-                      ? `${dayjs().diff(dayjs(session.shiftStartedAt), 'minute')}m (live)`
-                      : '—'}
-                </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500">
-                  {dayjs(session.shiftStartedAt).format('h:mm A')} – {session.shiftEndedAt ? dayjs(session.shiftEndedAt).format('h:mm A') : 'ongoing'}
-                </div>
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6}>
-              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
-                <div className="flex items-center gap-2 mb-1">
-                  <Navigation size={14} className="text-orange-500" />
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">Distance</span>
-                </div>
-                <Statistic
-                  value={(session.totalDistanceMeters / 1000).toFixed(2)}
-                  suffix="km"
-                  valueStyle={{ fontSize: 16, fontWeight: 600 }}
-                />
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6}>
-              <Card bodyStyle={{ padding: '14px 16px' }} className="h-full">
-                <div className="flex items-center gap-2 mb-1">
-                  <Radio size={14} className="text-pink-500" />
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">GPS Pings</span>
-                </div>
-                <Statistic value={trail.length} valueStyle={{ fontSize: 16, fontWeight: 600 }} />
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-      </Row>
+          {/* Divider */}
+          <div className="hidden sm:block w-px self-stretch bg-gray-100 dark:bg-gray-700 mx-2" />
+
+          {/* Stat grid */}
+          <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-5 w-full">
+            {/* Employee */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5 mb-1">
+                <UserCircle2 size={13} className="text-blue-500" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Employee</span>
+              </div>
+              <div className="font-semibold text-sm leading-tight truncate">{empName || '—'}</div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 truncate">{emp?.employeeId ?? user?.email ?? '—'}</div>
+            </div>
+
+            {/* Duration */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Clock size={13} className="text-purple-500" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Duration</span>
+              </div>
+              <div className="font-semibold text-sm leading-tight">
+                {session.durationMinutes
+                  ? formatDuration(session.durationMinutes)
+                  : session.status === 'active'
+                    ? `${dayjs().diff(dayjs(session.shiftStartedAt), 'minute')}m (live)`
+                    : '—'}
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500">
+                {dayjs(session.shiftStartedAt).format('h:mm A')} – {session.shiftEndedAt ? dayjs(session.shiftEndedAt).format('h:mm A') : 'ongoing'}
+              </div>
+            </div>
+
+            {/* Site */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5 mb-1">
+                <MapPin size={13} className="text-green-500" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Site</span>
+              </div>
+              <div className="font-semibold text-sm leading-tight truncate">{site?.name ?? '—'}</div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                {[siteLocation?.name, siteLocation?.city || site?.city].filter(Boolean).join(' · ') || site?.code || '—'}
+              </div>
+            </div>
+
+            {/* Distance + GPS */}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Navigation size={13} className="text-orange-500" />
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">Distance / GPS</span>
+              </div>
+              <div className="font-semibold text-sm leading-tight">
+                {(session.totalDistanceMeters / 1000).toFixed(2)} km
+              </div>
+              <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                <Radio size={11} className="text-pink-500" />
+                {trail.length} ping{trail.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* ── Journey Graph ── */}
       <Card
