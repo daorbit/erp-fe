@@ -232,8 +232,8 @@ export default function AppRoutes() {
       {/* ══════════════════════════════════════════════════════════════════════
           Employee Shift Sessions — punch in/out with selfie + GPS
          ══════════════════════════════════════════════════════════════════════ */}
-      {/* Employee self-service: any authenticated company user can run a shift */}
-      <Route path="/shift-sessions/my" element={<R roles={ALL_COMPANY}><MyShift /></R>} />
+      {/* Employee self-service: only employee users can run a shift */}
+      <Route path="/shift-sessions/my" element={<R roles={['employee']}><MyShift /></R>} />
       {/* Admin / HR list & detail (detail also accessible to owner — backend enforces) */}
       <Route path="/shift-sessions" element={<R roles={ADMINS}><ShiftSessionsList /></R>} />
       <Route path="/shift-sessions/:id" element={<R roles={ALL_COMPANY}><ShiftSessionView /></R>} />

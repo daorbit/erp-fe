@@ -47,7 +47,7 @@ export const navigationItems: NavItem[] = [
   { titleKey: 'dashboard', href: '/admin', icon: LayoutDashboard },
 
   // Employee shift on/off (selfie + GPS journey)
-  { titleKey: 'My Shift', href: '/shift-sessions/my', icon: Activity },
+  { titleKey: 'My Shift', href: '/shift-sessions/my', icon: Activity, roles: ['employee'] },
   // Admin/HR view of all employee shift sessions
   { titleKey: 'Shift Sessions', href: '/shift-sessions', icon: Timer, roles: ADMINS },
 
