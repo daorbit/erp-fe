@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   Card,
   Col,
-  Descriptions,
+  Collapse,
   Empty,
   Row,
   Spin,
@@ -49,9 +49,10 @@ const ShiftSessionView: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useShiftSession(id);
+  const gpsAccordionRef = useRef<HTMLDivElement>(null);
   const session = data?.data;
 
-  const trail = session?.gpsTrail ?? [];
+  const trail = useMemo(() => session?.gpsTrail ?? [], [session]);
 
   const journeySegments = useMemo(() => {
     if (!session || trail.length === 0) return [];
@@ -164,7 +165,6 @@ const ShiftSessionView: React.FC = () => {
   const siteCoords = typeof siteGeo?.latitude === 'number' && typeof siteGeo?.longitude === 'number'
     ? { latitude: siteGeo.latitude, longitude: siteGeo.longitude }
     : null;
-
   const trailColumns = [
     {
       title: '#',
@@ -228,160 +228,100 @@ const ShiftSessionView: React.FC = () => {
         </Tag>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={4}>
-          <Card title="Selfie">
+      <Row gutter={[16, 16]} align="top">
+        <Col xs={24} sm={8} md={5} lg={4}>
+          <Card title="Selfie" bodyStyle={{ padding: 10 }} className="h-full">
             {session.selfieUrl ? (
               <img
                 src={session.selfieUrl}
                 alt="Shift selfie"
-                className="w-full rounded-xl object-cover"
+                className="aspect-square w-full rounded-lg object-cover"
               />
             ) : (
               <Empty description="No selfie" />
             )}
           </Card>
         </Col>
-        <Col xs={24} md={20}>
-          <Card title="Summary">
-            <Descriptions bordered column={{ xs: 1, sm: 2 }} size="small">
-              <Descriptions.Item label="Employee">{empName}</Descriptions.Item>
-              <Descriptions.Item label="Employee ID">{emp?.employeeId ?? '—'}</Descriptions.Item>
-              <Descriptions.Item label="Email">{user?.email ?? '—'}</Descriptions.Item>
-              <Descriptions.Item label="Phone">{user?.phone ?? '—'}</Descriptions.Item>
-              <Descriptions.Item label="Working Site">{site?.name ?? '—'}</Descriptions.Item>
-              <Descriptions.Item label="Site Location">{siteLocation?.name ?? '—'}</Descriptions.Item>
-              <Descriptions.Item label="Site Coordinates">{formatCoords(siteCoords)}</Descriptions.Item>
-              <Descriptions.Item label="Current GPS">{formatCoords(latestPoint)}</Descriptions.Item>
-              <Descriptions.Item label="Location Address">
-                {siteLocation || site
-                  ? [siteLocation?.address1, siteLocation?.address2, siteLocation?.city || site?.city, site?.stateName, siteLocation?.pinCode || site?.pincode].filter(Boolean).join(', ') || '—'
-                  : '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Started">{dayjs(session.shiftStartedAt).format('DD MMM YYYY h:mm A')}</Descriptions.Item>
-              <Descriptions.Item label="Ended">
-                {session.shiftEndedAt ? dayjs(session.shiftEndedAt).format('DD MMM YYYY h:mm A') : '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Duration">
-                {session.durationMinutes
-                  ? `${Math.floor(session.durationMinutes / 60)}h ${session.durationMinutes % 60}m`
-                  : (session.status === 'active'
-                      ? `${dayjs().diff(dayjs(session.shiftStartedAt), 'minute')} min (ongoing)`
-                      : '—')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Distance">
-                {(session.totalDistanceMeters / 1000).toFixed(2)} km
-              </Descriptions.Item>
-              <Descriptions.Item label="GPS Pings">{trail.length}</Descriptions.Item>
-              <Descriptions.Item label="Shift">{(session.shift as any)?.name ?? '—'}</Descriptions.Item>
-              {session.notes && (
-                <Descriptions.Item label="Notes" span={2}>{session.notes}</Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-        </Col>
       </Row>
 
       <Card title="Journey Graph">
         {journeySegments.length > 0 ? (
-          <div className="space-y-5">
-            <div className="overflow-x-auto rounded-md border bg-white">
-              <div className="min-w-[1440px]">
-                <div className="grid grid-cols-[180px_1fr] border-b bg-gray-50">
-                  <div className="px-3 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 border-r">
+          <div className="space-y-4">
+            <div className="overflow-auto rounded-md border bg-white">
+              <div className="w-[1680px]">
+                <div className="sticky top-0 z-20 flex border-b bg-gray-50">
+                  <div className="sticky left-0 z-30 w-[200px] shrink-0 border-r bg-gray-50 px-3 py-3 text-xs font-semibold uppercase text-gray-500">
                     Site
                   </div>
-                  <div className="relative h-12">
+                  <div className="relative h-11 w-[1480px] shrink-0">
                     {timelineHours.map((hour, index) => (
                       <div
                         key={hour.toISOString()}
-                        className="absolute top-0 bottom-0 border-l border-gray-200 px-2 pt-3 text-[11px] font-medium text-gray-500"
+                        className="absolute bottom-0 top-0 border-l border-gray-200 px-2 pt-3 text-[11px] font-medium text-gray-500"
                         style={{ left: `${(index / (timelineHours.length - 1)) * 100}%` }}
                       >
-                        {index === timelineHours.length - 1 ? '12 AM' : hour.format('h A')}
+                        {hour.format('h A')}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-[180px_1fr]">
-                  <div className="border-r bg-white">
-                    {journeySiteRows.map((row) => (
-                      <div key={row.key} className="h-20 border-b last:border-b-0 px-3 py-3">
-                        <div className="font-medium text-sm truncate">{row.siteName}</div>
-                        <div className="text-xs text-gray-500 truncate">{row.subText || '-'}</div>
-                        <Tag color="blue" className="mt-2">{formatDuration(row.durationMinutes)}</Tag>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="relative bg-gray-50" style={{ height: journeySiteRows.length * 80 }}>
-                    {timelineHours.map((hour, index) => (
-                      <div
-                        key={hour.toISOString()}
-                        className="absolute top-0 bottom-0 border-l border-dashed border-gray-200"
-                        style={{ left: `${(index / (timelineHours.length - 1)) * 100}%` }}
-                      />
-                    ))}
-                    {journeySiteRows.map((row, index) => (
-                      <div
-                        key={`${row.key}-row-line`}
-                        className="absolute left-0 right-0 border-b border-gray-200"
-                        style={{ top: `${(index + 1) * 80}px` }}
-                      />
-                    ))}
-
-                    <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none">
-                      {journeySegments.map((segment, index) => {
-                        const rowIndex = journeySiteRows.findIndex((row) => row.key === segment.key);
-                        if (rowIndex < 0) return null;
-                        const x1 = getTimelinePercent(segment.startAt);
-                        const x2 = getTimelinePercent(segment.endAt);
-                        const y = rowIndex * 80 + 40;
-                        const color = journeySiteRows[rowIndex]?.color ?? SITE_COLORS[index % SITE_COLORS.length];
-                        return (
-                          <g key={`${segment.key}-${segment.startAt}-${index}`}>
-                            <line
-                              x1={`${x1}%`}
-                              x2={`${Math.max(x1 + 0.5, x2)}%`}
-                              y1={y}
-                              y2={y}
-                              stroke={color}
-                              strokeWidth="8"
-                              strokeLinecap="round"
-                            >
-                              <title>{`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}\nDuration: ${formatDuration(segment.durationMinutes)}\nGPS Points: ${segment.points}`}</title>
-                            </line>
-                            <circle cx={`${x1}%`} cy={y} r="5" fill={color}>
-                              <title>{`${segment.siteName} start: ${dayjs(segment.startAt).format('h:mm A')}`}</title>
-                            </circle>
-                            <circle cx={`${Math.max(x1 + 0.5, x2)}%`} cy={y} r="5" fill={color}>
-                              <title>{`${segment.siteName} end: ${dayjs(segment.endAt).format('h:mm A')}`}</title>
-                            </circle>
-                          </g>
-                        );
-                      })}
-                    </svg>
-
-                    {journeySegments.map((segment, index) => {
-                      const rowIndex = journeySiteRows.findIndex((row) => row.key === segment.key);
-                      if (rowIndex < 0) return null;
-                      const x1 = getTimelinePercent(segment.startAt);
-                      const x2 = getTimelinePercent(segment.endAt);
-                      const left = (x1 + x2) / 2;
-                      return (
+                {journeySiteRows.map((row) => (
+                  <div key={row.key} className="flex border-b last:border-b-0">
+                    <div className="sticky left-0 z-10 flex h-[72px] w-[200px] shrink-0 flex-col justify-center border-r bg-white px-3">
+                      <div className="font-medium text-sm truncate">{row.siteName}</div>
+                      <div className="text-xs text-gray-500 truncate">{row.subText || '-'}</div>
+                    </div>
+                    <div className="relative h-[72px] w-[1480px] shrink-0 bg-gray-50">
+                      {timelineHours.map((hour, index) => (
                         <div
-                          key={`${segment.key}-${segment.startAt}-${index}-label`}
-                          className="absolute -translate-x-1/2 rounded bg-white/95 px-2 py-0.5 text-[11px] font-medium text-gray-700 shadow-sm border"
-                          style={{ left: `${left}%`, top: `${rowIndex * 80 + 49}px` }}
-                          title={`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}`}
-                        >
-                          {dayjs(segment.startAt).format('h:mm A')} - {dayjs(segment.endAt).format('h:mm A')}
-                        </div>
-                      );
-                    })}
+                          key={hour.toISOString()}
+                          className="absolute bottom-0 top-0 border-l border-dashed border-gray-200"
+                          style={{ left: `${(index / (timelineHours.length - 1)) * 100}%` }}
+                        />
+                      ))}
+                      <svg className="absolute inset-0 h-full w-full overflow-visible" preserveAspectRatio="none">
+                        {journeySegments
+                          .filter((seg) => seg.key === row.key)
+                          .map((segment, index) => {
+                            const x1 = getTimelinePercent(segment.startAt);
+                            const x2 = getTimelinePercent(segment.endAt);
+                            const y = 32;
+                            return (
+                              <g key={`${segment.key}-${segment.startAt}-${index}`}>
+                                <line x1={`${x1}%`} x2={`${Math.max(x1 + 0.5, x2)}%`} y1={y} y2={y} stroke={row.color} strokeWidth="8" strokeLinecap="round">
+                                  <title>{`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}\nDuration: ${formatDuration(segment.durationMinutes)}\nGPS Points: ${segment.points}`}</title>
+                                </line>
+                                <circle cx={`${x1}%`} cy={y} r="5" fill={row.color}>
+                                  <title>{`${segment.siteName} start: ${dayjs(segment.startAt).format('h:mm A')}`}</title>
+                                </circle>
+                                <circle cx={`${Math.max(x1 + 0.5, x2)}%`} cy={y} r="5" fill={row.color}>
+                                  <title>{`${segment.siteName} end: ${dayjs(segment.endAt).format('h:mm A')}`}</title>
+                                </circle>
+                              </g>
+                            );
+                          })}
+                      </svg>
+                      {journeySegments
+                        .filter((seg) => seg.key === row.key)
+                        .map((segment, index) => {
+                          const x1 = getTimelinePercent(segment.startAt);
+                          const x2 = getTimelinePercent(segment.endAt);
+                          const left = (x1 + x2) / 2;
+                          return (
+                            <div
+                              key={`${segment.key}-${segment.startAt}-${index}-label`}
+                              className="absolute -translate-x-1/2 rounded bg-white/95 px-2 py-0.5 text-[11px] font-medium text-gray-700 shadow-sm border"
+                              style={{ left: `${left}%`, top: 42 }}
+                              title={`${segment.siteName}\n${dayjs(segment.startAt).format('h:mm A')} - ${dayjs(segment.endAt).format('h:mm A')}`}
+                            >
+                              {dayjs(segment.startAt).format('h:mm A')} - {dayjs(segment.endAt).format('h:mm A')}
+                            </div>
+                          );
+                        })}
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
 
@@ -416,15 +356,30 @@ const ShiftSessionView: React.FC = () => {
         )}
       </Card>
 
-      <Card title="GPS Trail">
-        <Table
-          columns={trailColumns}
-          dataSource={trail}
-          rowKey={(_, i) => String(i)}
-          pagination={{ pageSize: 20, showSizeChanger: true }}
-          scroll={{ x: 900 }}
+      <div ref={gpsAccordionRef}>
+        <Collapse
+          style={{ background: '#ffffff', borderRadius: 8 }}
+          defaultActiveKey={[]}
+          onChange={(keys) => {
+            if ((keys as string[]).includes('gps-trail')) {
+              setTimeout(() => gpsAccordionRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            }
+          }}
+          items={[{
+            key: 'gps-trail',
+            label: `GPS Trail (${trail.length} points)`,
+            children: (
+              <Table
+                columns={trailColumns}
+                dataSource={trail}
+                rowKey={(_, i) => String(i)}
+                pagination={{ pageSize: 20, showSizeChanger: true }}
+                scroll={{ x: 900 }}
+              />
+            ),
+          }]}
         />
-      </Card>
+      </div>
     </div>
   );
 };
