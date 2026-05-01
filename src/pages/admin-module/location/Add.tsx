@@ -3,7 +3,7 @@ import {
   Card, Form, Input, Tabs, Button, Select, InputNumber, Table, Typography, App,
 } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
-import { List as ListIcon } from 'lucide-react';
+import { List as ListIcon, MapPin } from 'lucide-react';
 import { useCreateLocation, useUpdateLocation, useLocation } from '@/hooks/queries/useLocations';
 import { cityHooks } from '@/hooks/queries/useMasterOther';
 import { useQuery } from '@tanstack/react-query';
@@ -46,6 +46,7 @@ export default function LocationAdd() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [routeKmMap, setRouteKmMap] = useState<Record<string, number>>({});
+  const [previewCoords, setPreviewCoords] = useState<{ lat: number; lng: number } | null>(null);
   const isEdit = !!id;
 
   const { data: locationData, isLoading } = useLocation(id || '');
@@ -111,7 +112,12 @@ export default function LocationAdd() {
         city: loc.city,
         pinCode: loc.pinCode,
         routeDetails: loc.routeDetails || [],
+        latitude: loc.latitude,
+        longitude: loc.longitude,
       });
+      if (loc.latitude != null && loc.longitude != null) {
+        setPreviewCoords({ lat: loc.latitude, lng: loc.longitude });
+      }
       // Seed the routeKmMap from existing routeDetails entries.
       const seed: Record<string, number> = {};
       for (const r of loc.routeDetails || []) {
@@ -130,6 +136,9 @@ export default function LocationAdd() {
         .filter(([, km]) => km > 0)
         .map(([toLocation, km]) => ({ toLocation, km }));
       const payload = { ...values, routeDetails };
+      // Strip null coordinates (empty InputNumber) — don't send null to the server
+      if (payload.latitude == null) delete payload.latitude;
+      if (payload.longitude == null) delete payload.longitude;
       if (isEdit) {
         await updateMutation.mutateAsync({ id: id!, data: payload });
         message.success('Location updated');
@@ -147,6 +156,51 @@ export default function LocationAdd() {
   };
 
   // ─── Tab 1: Location Detail ───────────────────────────────────────────────
+  function handleCoordsChange() {
+    const lat = form.getFieldValue('latitude');
+    const lng = form.getFieldValue('longitude');
+    if (lat != null && lng != null) setPreviewCoords({ lat, lng });
+    else setPreviewCoords(null);
+  }
+
+  function parseGoogleMapsUrl(url: string): { lat: number; lng: number } | null {
+    // Handles full Google Maps URLs: .../@lat,lng,zoom... or .../@lat,lng,...
+    const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+    // Handles short ?q=lat,lng or ll=lat,lng params
+    const qMatch = url.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+    return null;
+  }
+
+  function handleMapLinkPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    const text = e.clipboardData.getData('text');
+    const coords = parseGoogleMapsUrl(text);
+    if (coords) {
+      form.setFieldsValue({ latitude: coords.lat, longitude: coords.lng });
+      setPreviewCoords(coords);
+      message.success(`Coordinates extracted: ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`);
+      // Clear the input field after extraction
+      setTimeout(() => (e.target as HTMLInputElement).value = '', 0);
+      e.preventDefault();
+    }
+  }
+
+  function detectMyLocation() {
+    if (!('geolocation' in navigator)) {
+      message.error('Geolocation not supported by your browser.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        form.setFieldsValue({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        setPreviewCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      (err) => message.error(err.message || 'Unable to fetch location.'),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  }
+
   const locationDetailTab = (
     <div className="py-4">
       <FRow>
@@ -202,6 +256,82 @@ export default function LocationAdd() {
         </FItem>
         <FItem label="PIN Code" name="pinCode"><Input /></FItem>
       </FRow>
+
+      {/* ─── Site Location (GPS) ──────────────────────────────────────────── */}
+      <div className="mt-4 border rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-between mb-3">
+          <span className="font-medium text-sm flex items-center gap-2">
+            <MapPin size={15} className="text-blue-500" />
+            Site Location (GPS Coordinates)
+          </span>
+          <Button size="small" icon={<MapPin size={13} />} onClick={detectMyLocation}>
+            Use my location
+          </Button>
+        </div>
+
+        {/* Google Maps link paste */}
+        <div className="mb-3">
+          <div className="text-xs text-gray-500 mb-1">
+            Paste a Google Maps link to auto-fill coordinates
+          </div>
+          <Input
+            placeholder="Paste Google Maps URL here — e.g. https://www.google.com/maps/place/.../@28.123,77.456,17z/..."
+            onPaste={handleMapLinkPaste}
+            allowClear
+            prefix={<MapPin size={13} className="text-gray-400" />}
+          />
+        </div>
+
+        <FRow>
+          <FItem label="Latitude" name="latitude">
+            <InputNumber
+              placeholder="e.g. 28.6139"
+              className="w-full"
+              precision={6}
+              min={-90}
+              max={90}
+              onChange={handleCoordsChange}
+            />
+          </FItem>
+          <FItem label="Longitude" name="longitude">
+            <InputNumber
+              placeholder="e.g. 77.2090"
+              className="w-full"
+              precision={6}
+              min={-180}
+              max={180}
+              onChange={handleCoordsChange}
+            />
+          </FItem>
+        </FRow>
+        {previewCoords ? (
+          <div className="mt-3 rounded-lg overflow-hidden border">
+            <iframe
+              title="Location map"
+              width="100%"
+              height="240"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${previewCoords.lng - 0.01},${previewCoords.lat - 0.01},${previewCoords.lng + 0.01},${previewCoords.lat + 0.01}&layer=mapnik&marker=${previewCoords.lat},${previewCoords.lng}`}
+              style={{ border: 0 }}
+            />
+            <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 flex items-center justify-between text-xs text-gray-500">
+              <span><MapPin size={11} className="inline mr-1" />{previewCoords.lat.toFixed(6)}, {previewCoords.lng.toFixed(6)}</span>
+              <a
+                href={`https://www.openstreetmap.org/?mlat=${previewCoords.lat}&mlon=${previewCoords.lng}&zoom=15`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                Open in map ↗
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 rounded-lg border border-dashed border-gray-300 h-20 flex items-center justify-center text-gray-400 text-xs gap-2">
+            <MapPin size={16} />
+            Enter coordinates or use "Use my location" to pin this location on the map
+          </div>
+        )}
+      </div>
     </div>
   );
 

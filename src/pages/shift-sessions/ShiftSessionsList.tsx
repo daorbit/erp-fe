@@ -16,6 +16,7 @@ import { useShiftSessions } from '@/hooks/queries/useShiftSessions';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
+const REFRESH_INTERVAL_MS = 2 * 60 * 1000;
 
 const ShiftSessionsList: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const ShiftSessionsList: React.FC = () => {
     dateTo: range?.[1]?.format('YYYY-MM-DD'),
   };
 
-  const { data, isLoading } = useShiftSessions(params);
+  const { data, isLoading } = useShiftSessions(params, { refetchInterval: REFRESH_INTERVAL_MS });
   const records: any[] = data?.data ?? [];
   const pagination = data?.pagination;
 
@@ -52,6 +53,22 @@ const ShiftSessionsList: React.FC = () => {
             </Text>
           </div>
         );
+      },
+    },
+    {
+      title: 'Site',
+      key: 'site',
+      render: (_: unknown, r: any) => {
+        const site = r.site;
+        const loc = r.siteLocation;
+        return site ? (
+          <div>
+            <div className="font-medium">{site.name}</div>
+            <Text type="secondary" className="text-xs">
+              {[loc?.name, loc?.city || site.city, site.stateName].filter(Boolean).join(' · ') || site.code || ''}
+            </Text>
+          </div>
+        ) : '—';
       },
     },
     {
@@ -78,6 +95,18 @@ const ShiftSessionsList: React.FC = () => {
       title: 'Distance',
       dataIndex: 'totalDistanceMeters',
       render: (v: number) => `${(v / 1000).toFixed(2)} km`,
+    },
+    {
+      title: 'Current Location',
+      key: 'latestLocation',
+      render: (_: unknown, r: any) => r.latestLocation
+        ? `${r.latestLocation.latitude.toFixed(5)}, ${r.latestLocation.longitude.toFixed(5)}`
+        : '—',
+    },
+    {
+      title: 'From Site',
+      dataIndex: 'latestSiteDistanceMeters',
+      render: (v?: number) => (v != null ? `${Math.round(v)} m` : 'No coordinates'),
     },
     {
       title: 'Status',

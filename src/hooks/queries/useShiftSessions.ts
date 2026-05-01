@@ -26,10 +26,11 @@ export function useMyShiftSessions(params?: ListParams) {
   });
 }
 
-export function useShiftSessions(params?: ListParams) {
+export function useShiftSessions(params?: ListParams, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: shiftSessionKeys.list(params),
     queryFn: () => shiftSessionService.getAll(params),
+    refetchInterval: options?.refetchInterval,
   });
 }
 

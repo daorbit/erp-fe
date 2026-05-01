@@ -45,6 +45,7 @@ function makeNumberedIcon(label: string, color: string): L.DivIcon {
 
 const startIcon = makeNumberedIcon('S', '#10b981');
 const endIcon = makeNumberedIcon('E', '#ef4444');
+const siteIcon = makeNumberedIcon('SITE', '#f59e0b');
 const midIconCache = new Map<number, L.DivIcon>();
 function midIcon(n: number) {
   const cached = midIconCache.get(n);
@@ -52,6 +53,17 @@ function midIcon(n: number) {
   const ic = makeNumberedIcon(String(n), '#3b82f6');
   midIconCache.set(n, ic);
   return ic;
+}
+
+function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const earthRadius = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 const ShiftSessionView: React.FC = () => {
@@ -66,6 +78,11 @@ const ShiftSessionView: React.FC = () => {
     () => trail.map((p) => [p.latitude, p.longitude]),
     [trail],
   );
+  const sitePosition = useMemo<[number, number] | null>(() => {
+    const geo: any = session?.siteLocation ?? session?.site;
+    if (typeof geo?.latitude !== 'number' || typeof geo?.longitude !== 'number') return null;
+    return [geo.latitude, geo.longitude];
+  }, [session?.site, session?.siteLocation]);
 
   // Tell Leaflet to recalculate size + fit bounds once data + container exist.
   useEffect(() => {
@@ -101,6 +118,8 @@ const ShiftSessionView: React.FC = () => {
 
   const emp: any = session.employee;
   const user: any = emp?.userId;
+  const site: any = session.site;
+  const siteLocation: any = session.siteLocation;
   const empName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : '—';
 
   const trailColumns = [
@@ -129,6 +148,13 @@ const ShiftSessionView: React.FC = () => {
       title: 'Accuracy',
       dataIndex: 'accuracy',
       render: (v?: number) => (v ? `±${Math.round(v)} m` : '—'),
+    },
+    {
+      title: 'From Site',
+      key: 'fromSite',
+      render: (_: unknown, p: any) => sitePosition
+        ? `${Math.round(distanceMeters(sitePosition[0], sitePosition[1], p.latitude, p.longitude))} m`
+        : '—',
     },
   ];
 
@@ -171,6 +197,13 @@ const ShiftSessionView: React.FC = () => {
               <Descriptions.Item label="Employee ID">{emp?.employeeId ?? '—'}</Descriptions.Item>
               <Descriptions.Item label="Email">{user?.email ?? '—'}</Descriptions.Item>
               <Descriptions.Item label="Phone">{user?.phone ?? '—'}</Descriptions.Item>
+              <Descriptions.Item label="Working Site">{site?.name ?? '—'}</Descriptions.Item>
+              <Descriptions.Item label="Site Location">{siteLocation?.name ?? '—'}</Descriptions.Item>
+              <Descriptions.Item label="Location Address">
+                {siteLocation || site
+                  ? [siteLocation?.address1, siteLocation?.address2, siteLocation?.city || site?.city, site?.stateName, siteLocation?.pinCode || site?.pincode].filter(Boolean).join(', ') || '—'
+                  : '—'}
+              </Descriptions.Item>
               <Descriptions.Item label="Started">{dayjs(session.shiftStartedAt).format('DD MMM YYYY h:mm A')}</Descriptions.Item>
               <Descriptions.Item label="Ended">
                 {session.shiftEndedAt ? dayjs(session.shiftEndedAt).format('DD MMM YYYY h:mm A') : '—'}
@@ -184,6 +217,9 @@ const ShiftSessionView: React.FC = () => {
               </Descriptions.Item>
               <Descriptions.Item label="Distance">
                 {(session.totalDistanceMeters / 1000).toFixed(2)} km
+              </Descriptions.Item>
+              <Descriptions.Item label="Current From Site">
+                {session.latestSiteDistanceMeters != null ? `${Math.round(session.latestSiteDistanceMeters)} m` : '—'}
               </Descriptions.Item>
               <Descriptions.Item label="GPS Pings">{trail.length}</Descriptions.Item>
               <Descriptions.Item label="Shift">{(session.shift as any)?.name ?? '—'}</Descriptions.Item>
@@ -210,6 +246,17 @@ const ShiftSessionView: React.FC = () => {
             />
             {positions.length > 1 && (
               <Polyline positions={positions} pathOptions={{ color: '#3b82f6', weight: 4 }} />
+            )}
+            {sitePosition && (
+              <Marker position={sitePosition} icon={siteIcon}>
+                <Popup>
+                  <div className="text-xs">
+                    <div><strong>{siteLocation?.name ?? site?.name ?? 'Assigned Site'}</strong></div>
+                    <div>{sitePosition[0].toFixed(5)}, {sitePosition[1].toFixed(5)}</div>
+                    <div>{[siteLocation?.city || site?.city, site?.stateName].filter(Boolean).join(', ')}</div>
+                  </div>
+                </Popup>
+              </Marker>
             )}
             {trail.map((p, i) => {
               const isStart = i === 0;

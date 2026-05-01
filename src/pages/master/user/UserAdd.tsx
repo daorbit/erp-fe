@@ -82,6 +82,7 @@ const UserAdd: React.FC = () => {
 
   // ─── Branch tree: ALL → Company → Division/Site Type → Branches ───────────
   const branchList: any[] = branches?.data ?? [];
+  const [selectedBranchKeys, setSelectedBranchKeys] = useState<string[]>([]);
   const [branchSearch, setBranchSearch] = useState('');
 
   // Group key for a branch — division if set, else uppercased siteType, else "SITE".
@@ -147,6 +148,7 @@ const UserAdd: React.FC = () => {
     api.get<any>('/auth/users').then((res) => {
       const u = (res?.data ?? []).find((x: any) => (x._id || x.id) === id);
       if (!u) return;
+      const allowed = u.allowedBranches ?? [];
       form.setFieldsValue({
         firstName: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(),
         email: u.email,
@@ -157,8 +159,9 @@ const UserAdd: React.FC = () => {
         isActive: u.isActive,
         remark: u.remark,
         allowedDepartments: u.allowedDepartments ?? [],
-        allowedBranches: u.allowedBranches ?? [],
+        allowedBranches: allowed,
       });
+      setSelectedBranchKeys(allowed);
     }).catch(() => {});
   }, [id, isEdit, form]);
 
@@ -392,11 +395,53 @@ const UserAdd: React.FC = () => {
                     treeData={branchTree}
                     defaultExpandAll
                     height={320}
+                    onCheck={(keys) => {
+                      const ids = (keys as string[]).filter(
+                        (k) => k !== 'all' && !k.startsWith('co::') && !k.startsWith('div::'),
+                      );
+                      setSelectedBranchKeys(ids);
+                    }}
                   />
                 </Form.Item>
               </div>
             </Form.Item>
           </div>
+
+          {/* Site coordinate preview */}
+          {selectedBranchKeys.length > 0 && (() => {
+            const sitesWithCoords = selectedBranchKeys
+              .map((bid) => branchList.find((b) => (b._id || b.id) === bid))
+              .filter(Boolean);
+            return (
+              <div className="mt-3 space-y-1">
+                <div className="text-xs font-semibold text-gray-500 mb-1">Assigned Site Coordinates</div>
+                {sitesWithCoords.map((site: any) => {
+                  const hasCoords = site.latitude != null && site.longitude != null;
+                  return (
+                    <div key={site._id || site.id} className="flex items-center gap-2 text-xs bg-gray-50 dark:bg-gray-800 rounded px-3 py-1.5 border border-dashed border-gray-200 dark:border-gray-700">
+                      <span className="font-medium text-gray-700 dark:text-gray-200 truncate">{site.name}</span>
+                      {hasCoords ? (
+                        <>
+                          <span className="text-gray-400">·</span>
+                          <span className="text-gray-500">{(site.latitude as number).toFixed(5)}, {(site.longitude as number).toFixed(5)}</span>
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${site.latitude}&mlon=${site.longitude}&zoom=15`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline ml-auto shrink-0"
+                          >
+                            Map ↗
+                          </a>
+                        </>
+                      ) : (
+                        <span className="text-amber-500 ml-auto shrink-0">No coordinates set</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           <div className="flex justify-center mt-4">
             <Space>

@@ -14,6 +14,8 @@ export interface IShiftSession {
   employee: any;
   user: string;
   company: string;
+  site?: any;
+  siteLocation?: any;
   shift?: any;
   shiftDate: string;
   shiftStartedAt: string;
@@ -22,8 +24,12 @@ export interface IShiftSession {
   selfieUrl?: string;
   startLocation?: { latitude: number; longitude: number; accuracy?: number };
   endLocation?: { latitude: number; longitude: number; accuracy?: number };
+  latestLocation?: { latitude: number; longitude: number; accuracy?: number; capturedAt?: string };
   gpsTrail?: IGpsPoint[];
   totalDistanceMeters: number;
+  startSiteDistanceMeters?: number;
+  latestSiteDistanceMeters?: number;
+  endSiteDistanceMeters?: number;
   durationMinutes?: number;
   notes?: string;
   createdAt: string;
@@ -35,6 +41,7 @@ export interface ListParams {
   limit?: number;
   status?: 'active' | 'completed';
   employee?: string;
+  site?: string;
   dateFrom?: string;
   dateTo?: string;
   sortBy?: string;
@@ -61,6 +68,7 @@ const shiftSessionService = {
    * Sent as multipart/form-data so the backend's `upload.single('selfie')` parses it.
    */
   start: (input: {
+    siteId?: string;
     latitude: number;
     longitude: number;
     accuracy?: number;
@@ -68,6 +76,7 @@ const shiftSessionService = {
     selfie?: Blob;
   }) => {
     const fd = new FormData();
+    if (input.siteId) fd.append('siteId', input.siteId);
     fd.append('latitude', String(input.latitude));
     fd.append('longitude', String(input.longitude));
     if (typeof input.accuracy === 'number') fd.append('accuracy', String(input.accuracy));
@@ -85,7 +94,13 @@ const shiftSessionService = {
       accuracy?: number;
       capturedAt?: string;
     },
-  ) => api.post<{ _id: string; totalDistanceMeters: number; gpsTrailCount: number }>(
+  ) => api.post<{
+    _id: string;
+    totalDistanceMeters: number;
+    latestLocation?: { latitude: number; longitude: number; accuracy?: number; capturedAt?: string };
+    latestSiteDistanceMeters?: number;
+    gpsTrailCount: number;
+  }>(
     `${BASE_URL}/${id}/track`,
     input,
   ),

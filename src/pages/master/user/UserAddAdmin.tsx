@@ -1,9 +1,11 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Card, Form, Input, Radio, Select, Button, Space, Typography, Checkbox, App,
 } from 'antd';
 import { USER_TYPE_OPTIONS, UserCategory } from '@/types/enums';
+import { useBranchList } from '@/hooks/queries/useBranches';
 import employeeService from '@/services/employeeService';
 import api from '@/services/api';
 
@@ -20,6 +22,24 @@ const UserAddAdmin: React.FC = () => {
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const [submitting, setSubmitting] = useState(false);
+  const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([]);
+
+  const { data: branches } = useBranchList();
+  const branchList: any[] = branches?.data ?? [];
+  const branchOptions = branchList.map((b: any) => ({ value: b._id || b.id, label: b.name }));
+
+  const { data: locationsData } = useQuery({
+    queryKey: ['site-locations-for-user-assignment'],
+    queryFn: () => api.get('/locations', { limit: '500' }),
+  });
+  const locationList: any[] = ((locationsData as any)?.data ?? []) as any[];
+  const locationBySiteId = locationList.reduce<Record<string, any>>((acc, loc) => {
+    const siteId = typeof loc.site === 'object' ? loc.site?._id || loc.site?.id : loc.site;
+    if (siteId && (loc.latitude != null || !acc[siteId])) acc[siteId] = loc;
+    return acc;
+  }, {});
+
+  const toSiteId = (site: any) => (typeof site === 'string' ? site : site?._id || site?.id);
 
   const [empOptions, setEmpOptions] = useState<{ value: string; label: string; emp: any }[]>([]);
   const [empSearching, setEmpSearching] = useState(false);
@@ -73,6 +93,7 @@ const UserAddAdmin: React.FC = () => {
     api.get<any>('/auth/users').then((res) => {
       const u = (res?.data ?? []).find((x: any) => (x._id || x.id) === id);
       if (!u) return;
+      const allowedSiteIds = (u.allowedBranches ?? []).map(toSiteId).filter(Boolean);
       form.setFieldsValue({
         firstName: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(),
         email: u.email,
@@ -82,7 +103,9 @@ const UserAddAdmin: React.FC = () => {
         userType: u.userType,
         remark: u.remark,
         isErpDevCoUser: !!u.isErpDevCoUser,
+        allowedBranches: allowedSiteIds,
       });
+      setSelectedSiteIds(allowedSiteIds);
     }).catch(() => {});
   }, [id, isEdit, form]);
 
@@ -103,6 +126,7 @@ const UserAddAdmin: React.FC = () => {
         userCategory: values.userCategory,
         userType: values.userType,
         remark: values.remark,
+        allowedBranches: values.allowedBranches ?? [],
         isErpDevCoUser: !!values.isErpDevCoUser,
       };
       if (values.password) payload.password = values.password;
@@ -157,7 +181,6 @@ const UserAddAdmin: React.FC = () => {
               label="Employee"
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 14 }}
-              rules={[{ required: !isEdit, message: 'Select an employee' }]}
             >
               <Select
                 showSearch
@@ -266,6 +289,69 @@ const UserAddAdmin: React.FC = () => {
               <Select placeholder="Please Select" options={USER_TYPE_OPTIONS} />
             </Form.Item>
           </div>
+
+          {/* Site assignment */}
+          <Form.Item
+            name="allowedBranches"
+            label="Assign Sites"
+            labelCol={{ span: 4 }}
+            wrapperCol={{ span: 20 }}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select sites to assign"
+              options={branchOptions}
+              showSearch
+              optionFilterProp="label"
+              allowClear
+              onChange={(vals: string[]) => setSelectedSiteIds(vals)}
+            />
+          </Form.Item>
+
+          {/* Site coordinate preview */}
+          {selectedSiteIds.length > 0 && (() => {
+            const sites = selectedSiteIds
+              .map((sid) => branchList.find((b: any) => (b._id || b.id) === sid))
+              .filter(Boolean);
+            return (
+              <div className="mb-4 space-y-1">
+                <div className="text-xs font-semibold text-gray-500 mb-1">Assigned Site Coordinates</div>
+                {sites.map((site: any) => {
+                  const siteId = site._id || site.id;
+                  const loc = locationBySiteId[siteId];
+                  const coordSource = loc?.latitude != null && loc?.longitude != null ? loc : site;
+                  const hasCoords = coordSource.latitude != null && coordSource.longitude != null;
+                  return (
+                    <div key={site._id || site.id} className="flex items-center gap-2 text-xs bg-gray-50 dark:bg-gray-800 rounded px-3 py-1.5 border border-dashed border-gray-200 dark:border-gray-700">
+                      <span className="font-medium text-gray-700 dark:text-gray-200 truncate">{site.name}</span>
+                      {site.siteType && <span className="text-gray-400">{site.siteType}</span>}
+                      {(loc?.name || loc?.city || site.city || site.stateName) && (
+                        <span className="text-gray-400 truncate">
+                          {[loc?.name, loc?.city || site.city, site.stateName].filter(Boolean).join(' · ')}
+                        </span>
+                      )}
+                      {hasCoords ? (
+                        <>
+                          <span className="text-gray-400">·</span>
+                          <span className="text-gray-500">{(coordSource.latitude as number).toFixed(5)}, {(coordSource.longitude as number).toFixed(5)}</span>
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${coordSource.latitude}&mlon=${coordSource.longitude}&zoom=15`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline ml-auto shrink-0"
+                          >
+                            Map ↗
+                          </a>
+                        </>
+                      ) : (
+                        <span className="text-amber-500 ml-auto shrink-0">No coordinates set</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           <div className="flex justify-center mt-2">
             <Space>

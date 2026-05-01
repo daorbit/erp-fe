@@ -24,6 +24,22 @@ export interface IUser {
   isActive: boolean;
   lastLogin?: string;
   allowedModules?: string[];
+  allowedBranches?: Array<string | {
+    _id: string;
+    id?: string;
+    name: string;
+    code?: string;
+    siteType?: string;
+    division?: string;
+    address01?: string;
+    address02?: string;
+    address03?: string;
+    city?: string;
+    pincode?: string;
+    stateName?: string;
+    latitude?: number;
+    longitude?: number;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
