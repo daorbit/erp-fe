@@ -109,6 +109,19 @@ const ShiftSessionsList: React.FC = () => {
       render: (v?: number) => (v != null ? `${Math.round(v)} m` : 'No coordinates'),
     },
     {
+      title: 'Buffer',
+      key: 'buffer',
+      render: (_: unknown, r: any) => {
+        if (!r.siteBufferKm) return '—';
+        const ok = r.latestSiteWithinBuffer;
+        return (
+          <Tag color={ok ? 'green' : 'red'}>
+            {ok ? 'INSIDE' : 'OUTSIDE'} {r.siteBufferKm} km
+          </Tag>
+        );
+      },
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
       render: (s: string) => (

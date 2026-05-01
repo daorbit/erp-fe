@@ -114,6 +114,7 @@ export default function LocationAdd() {
         routeDetails: loc.routeDetails || [],
         latitude: loc.latitude,
         longitude: loc.longitude,
+        approxLocationKm: loc.approxLocationKm,
       });
       if (loc.latitude != null && loc.longitude != null) {
         setPreviewCoords({ lat: loc.latitude, lng: loc.longitude });
@@ -139,6 +140,7 @@ export default function LocationAdd() {
       // Strip null coordinates (empty InputNumber) — don't send null to the server
       if (payload.latitude == null) delete payload.latitude;
       if (payload.longitude == null) delete payload.longitude;
+      if (payload.approxLocationKm == null) delete payload.approxLocationKm;
       if (isEdit) {
         await updateMutation.mutateAsync({ id: id!, data: payload });
         message.success('Location updated');
@@ -303,6 +305,18 @@ export default function LocationAdd() {
               onChange={handleCoordsChange}
             />
           </FItem>
+        </FRow>
+        <FRow>
+          <FItem label="Approx Buffer (KM)" name="approxLocationKm">
+            <InputNumber
+              placeholder="e.g. 1.5"
+              className="w-full"
+              min={0}
+              step={0.1}
+              precision={2}
+            />
+          </FItem>
+          <div />
         </FRow>
         {previewCoords ? (
           <div className="mt-3 rounded-lg overflow-hidden border">

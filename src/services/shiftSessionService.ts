@@ -30,6 +30,8 @@ export interface IShiftSession {
   startSiteDistanceMeters?: number;
   latestSiteDistanceMeters?: number;
   endSiteDistanceMeters?: number;
+  siteBufferKm?: number;
+  latestSiteWithinBuffer?: boolean;
   durationMinutes?: number;
   notes?: string;
   createdAt: string;
@@ -68,7 +70,6 @@ const shiftSessionService = {
    * Sent as multipart/form-data so the backend's `upload.single('selfie')` parses it.
    */
   start: (input: {
-    siteId?: string;
     latitude: number;
     longitude: number;
     accuracy?: number;
@@ -76,7 +77,6 @@ const shiftSessionService = {
     selfie?: Blob;
   }) => {
     const fd = new FormData();
-    if (input.siteId) fd.append('siteId', input.siteId);
     fd.append('latitude', String(input.latitude));
     fd.append('longitude', String(input.longitude));
     if (typeof input.accuracy === 'number') fd.append('accuracy', String(input.accuracy));
@@ -99,6 +99,8 @@ const shiftSessionService = {
     totalDistanceMeters: number;
     latestLocation?: { latitude: number; longitude: number; accuracy?: number; capturedAt?: string };
     latestSiteDistanceMeters?: number;
+    siteBufferKm?: number;
+    latestSiteWithinBuffer?: boolean;
     gpsTrailCount: number;
   }>(
     `${BASE_URL}/${id}/track`,

@@ -8,7 +8,6 @@ import {
   Empty,
   Row,
   Col,
-  Select,
   Space,
   Spin,
   Statistic,
@@ -74,11 +73,6 @@ const MyShift: React.FC = () => {
     queryFn: () => api.get<any>('/auth/me'),
     refetchInterval: TRACK_INTERVAL_MS,
   });
-  const { data: locationsData } = useQuery({
-    queryKey: ['site-locations-for-my-shift'],
-    queryFn: () => api.get<any>('/locations', { limit: '500' }),
-    refetchInterval: TRACK_INTERVAL_MS,
-  });
   const startMutation = useStartShiftSession();
   const endMutation = useEndShiftSession();
   const trackMutation = useTrackShiftLocation();
@@ -86,19 +80,8 @@ const MyShift: React.FC = () => {
   const activeSession = activeData?.data ?? null;
   const history: any[] = historyData?.data ?? [];
   const userWithSites = meData?.data ?? currentUser;
-  const locationList: any[] = locationsData?.data ?? [];
-  const locationBySiteId = locationList.reduce<Record<string, any>>((acc, loc) => {
-    const siteId = typeof loc.site === 'object' ? loc.site?._id || loc.site?.id : loc.site;
-    if (siteId && (loc.latitude != null || !acc[siteId])) acc[siteId] = loc;
-    return acc;
-  }, {});
   const assignedSites = (userWithSites?.allowedBranches ?? [])
     .filter((site: any) => site && typeof site === 'object') as any[];
-  const assignedSiteOptions = assignedSites.map((site: any) => ({
-    value: site._id || site.id,
-    label: [site.name, locationBySiteId[site._id || site.id]?.name || site.city].filter(Boolean).join(' - '),
-  }));
-  const [selectedSiteId, setSelectedSiteId] = useState<string | undefined>();
 
   // ── Camera state for selfie ──────────────────────────────────────────────
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -116,14 +99,8 @@ const MyShift: React.FC = () => {
   // Sync trail count when active session changes (the active query doesn't
   // include the trail, but `track` returns the new count).
   useEffect(() => {
-    if (!activeSession) setTrailCount(0);
-  }, [activeSession?._id]);
-
-  useEffect(() => {
-    if (!selectedSiteId && assignedSiteOptions.length === 1) {
-      setSelectedSiteId(assignedSiteOptions[0].value);
-    }
-  }, [assignedSiteOptions, selectedSiteId]);
+    if (!activeSession?._id) setTrailCount(0);
+  }, [activeSession]);
 
   // Cleanup camera on unmount
   useEffect(() => {
@@ -131,7 +108,6 @@ const MyShift: React.FC = () => {
       stopCamera();
       if (trackTimerRef.current) window.clearInterval(trackTimerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Start/stop the 2-minute interval based on active session.
@@ -233,15 +209,13 @@ const MyShift: React.FC = () => {
       message.warning('Please take a selfie before starting your shift.');
       return;
     }
-    const siteId = selectedSiteId || (assignedSiteOptions.length === 1 ? assignedSiteOptions[0].value : undefined);
-    if (!siteId) {
-      message.warning('Please select the site you are working on.');
+    if (assignedSites.length === 0) {
+      message.warning('No site is assigned to your user. Please contact admin.');
       return;
     }
     try {
       const coords = await getCurrentPosition();
       await startMutation.mutateAsync({
-        siteId,
         ...coords,
         selfie: selfieBlob,
       });
@@ -316,11 +290,6 @@ const MyShift: React.FC = () => {
                     type="success"
                     showIcon
                     message={`Working site: ${(activeSession.site as any).name}`}
-                    description={
-                      activeSession.latestSiteDistanceMeters != null
-                        ? `${Math.round(activeSession.latestSiteDistanceMeters)} m from assigned site location`
-                        : 'Assigned site location has no coordinates saved yet.'
-                    }
                   />
                 )}
                 <Row gutter={16}>
@@ -427,15 +396,7 @@ const MyShift: React.FC = () => {
             <Col xs={24} md={12}>
               <div className="space-y-3">
                 <Text strong>Step 2 — Allow location & start</Text>
-                <Select
-                  className="w-full"
-                  placeholder="Select working site"
-                  value={selectedSiteId}
-                  options={assignedSiteOptions}
-                  onChange={setSelectedSiteId}
-                  disabled={assignedSiteOptions.length === 0}
-                />
-                {assignedSiteOptions.length === 0 && (
+                {assignedSites.length === 0 && (
                   <Alert
                     type="warning"
                     showIcon
@@ -453,7 +414,7 @@ const MyShift: React.FC = () => {
                   size="large"
                   icon={<Play size={16} />}
                   loading={startMutation.isPending}
-                  disabled={!selfieBlob || assignedSiteOptions.length === 0}
+                  disabled={!selfieBlob || assignedSites.length === 0}
                   onClick={handleStart}
                 >
                   Start Shift
@@ -483,14 +444,6 @@ const MyShift: React.FC = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Working Site">
               {(activeSession.site as any)?.name ?? '—'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Site Location">
-              {(activeSession.siteLocation as any)?.name ?? '—'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Distance From Site">
-              {activeSession.latestSiteDistanceMeters != null
-                ? `${Math.round(activeSession.latestSiteDistanceMeters)} m`
-                : '—'}
             </Descriptions.Item>
             <Descriptions.Item label="Start Location">
               {activeSession.startLocation
@@ -537,7 +490,7 @@ const MyShift: React.FC = () => {
             {
               title: 'Duration',
               dataIndex: 'durationMinutes',
-              render: (m?: number, r: any) => {
+              render: (m: number | undefined, r: any) => {
                 if (m) return `${Math.floor(m / 60)}h ${m % 60}m`;
                 if (r.status === 'active') {
                   const mins = dayjs().diff(dayjs(r.shiftStartedAt), 'minute');
@@ -550,11 +503,6 @@ const MyShift: React.FC = () => {
               title: 'Distance',
               dataIndex: 'totalDistanceMeters',
               render: (v: number) => `${(v / 1000).toFixed(2)} km`,
-            },
-            {
-              title: 'From Site',
-              dataIndex: 'latestSiteDistanceMeters',
-              render: (v?: number) => (v != null ? `${Math.round(v)} m` : '—'),
             },
             {
               title: 'Status',

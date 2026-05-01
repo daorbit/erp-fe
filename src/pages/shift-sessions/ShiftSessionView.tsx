@@ -17,6 +17,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
   MapContainer,
+  Circle,
   Marker,
   Polyline,
   Popup,
@@ -64,6 +65,17 @@ function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number):
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatCoords(point?: { latitude: number; longitude: number } | null): string {
+  if (!point) return '-';
+  return `${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`;
+}
+
+function formatMeters(value?: number | null): string {
+  if (value == null) return '-';
+  if (value >= 1000) return `${(value / 1000).toFixed(2)} km`;
+  return `${Math.round(value)} m`;
 }
 
 const ShiftSessionView: React.FC = () => {
@@ -121,6 +133,14 @@ const ShiftSessionView: React.FC = () => {
   const site: any = session.site;
   const siteLocation: any = session.siteLocation;
   const empName = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : '—';
+  const latestPoint = session.latestLocation ?? trail[trail.length - 1] ?? null;
+  const siteGeo = siteLocation ?? site;
+  const siteCoords = typeof siteGeo?.latitude === 'number' && typeof siteGeo?.longitude === 'number'
+    ? { latitude: siteGeo.latitude, longitude: siteGeo.longitude }
+    : null;
+  const latestToSiteLine: [number, number][] = sitePosition && latestPoint
+    ? [sitePosition, [latestPoint.latitude, latestPoint.longitude]]
+    : [];
 
   const trailColumns = [
     {
@@ -199,6 +219,8 @@ const ShiftSessionView: React.FC = () => {
               <Descriptions.Item label="Phone">{user?.phone ?? '—'}</Descriptions.Item>
               <Descriptions.Item label="Working Site">{site?.name ?? '—'}</Descriptions.Item>
               <Descriptions.Item label="Site Location">{siteLocation?.name ?? '—'}</Descriptions.Item>
+              <Descriptions.Item label="Site Coordinates">{formatCoords(siteCoords)}</Descriptions.Item>
+              <Descriptions.Item label="Current GPS">{formatCoords(latestPoint)}</Descriptions.Item>
               <Descriptions.Item label="Location Address">
                 {siteLocation || site
                   ? [siteLocation?.address1, siteLocation?.address2, siteLocation?.city || site?.city, site?.stateName, siteLocation?.pinCode || site?.pincode].filter(Boolean).join(', ') || '—'
@@ -218,8 +240,24 @@ const ShiftSessionView: React.FC = () => {
               <Descriptions.Item label="Distance">
                 {(session.totalDistanceMeters / 1000).toFixed(2)} km
               </Descriptions.Item>
+              <Descriptions.Item label="Start From Site">
+                {formatMeters(session.startSiteDistanceMeters)}
+              </Descriptions.Item>
               <Descriptions.Item label="Current From Site">
-                {session.latestSiteDistanceMeters != null ? `${Math.round(session.latestSiteDistanceMeters)} m` : '—'}
+                {formatMeters(session.latestSiteDistanceMeters)}
+              </Descriptions.Item>
+              <Descriptions.Item label="End From Site">
+                {formatMeters(session.endSiteDistanceMeters)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Allowed Buffer">
+                {session.siteBufferKm ? `${session.siteBufferKm} km` : '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Buffer Status">
+                {session.latestSiteWithinBuffer == null ? '—' : (
+                  <Tag color={session.latestSiteWithinBuffer ? 'green' : 'red'}>
+                    {session.latestSiteWithinBuffer ? 'INSIDE' : 'OUTSIDE'}
+                  </Tag>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="GPS Pings">{trail.length}</Descriptions.Item>
               <Descriptions.Item label="Shift">{(session.shift as any)?.name ?? '—'}</Descriptions.Item>
@@ -237,7 +275,11 @@ const ShiftSessionView: React.FC = () => {
             center={center}
             zoom={positions.length > 1 ? 14 : 16}
             style={{ height: 460, width: '100%' }}
-            scrollWheelZoom={false}
+            scrollWheelZoom
+            doubleClickZoom
+            touchZoom
+            dragging
+            zoomControl
             ref={(m) => { mapRef.current = m; }}
           >
             <TileLayer
@@ -248,15 +290,31 @@ const ShiftSessionView: React.FC = () => {
               <Polyline positions={positions} pathOptions={{ color: '#3b82f6', weight: 4 }} />
             )}
             {sitePosition && (
+              <>
+                {session.siteBufferKm ? (
+                  <Circle
+                    center={sitePosition}
+                    radius={session.siteBufferKm * 1000}
+                    pathOptions={{ color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.08, weight: 2 }}
+                  />
+                ) : null}
+                {latestToSiteLine.length === 2 && (
+                  <Polyline
+                    positions={latestToSiteLine as L.LatLngExpression[]}
+                    pathOptions={{ color: '#f59e0b', weight: 2, dashArray: '6 6' }}
+                  />
+                )}
               <Marker position={sitePosition} icon={siteIcon}>
                 <Popup>
                   <div className="text-xs">
                     <div><strong>{siteLocation?.name ?? site?.name ?? 'Assigned Site'}</strong></div>
                     <div>{sitePosition[0].toFixed(5)}, {sitePosition[1].toFixed(5)}</div>
+                    {session.siteBufferKm ? <div>Buffer: {session.siteBufferKm} km</div> : null}
                     <div>{[siteLocation?.city || site?.city, site?.stateName].filter(Boolean).join(', ')}</div>
                   </div>
                 </Popup>
               </Marker>
+              </>
             )}
             {trail.map((p, i) => {
               const isStart = i === 0;
