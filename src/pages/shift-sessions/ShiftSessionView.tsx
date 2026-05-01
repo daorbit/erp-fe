@@ -212,7 +212,7 @@ const ShiftSessionView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <button
@@ -229,14 +229,14 @@ const ShiftSessionView: React.FC = () => {
         </Tag>
       </div>
 
-      <Row gutter={[16, 16]} align="stretch">
+      <Row gutter={[16, 16]} align="top">
         <Col xs={24} sm={8} md={5} lg={4}>
-          <Card title="Selfie" bodyStyle={{ padding: 10 }} className="h-full">
+          <Card title="Selfie" bodyStyle={{ padding: 10 }}>
             {session.selfieUrl ? (
               <img
                 src={session.selfieUrl}
                 alt="Shift selfie"
-                className="aspect-square w-full rounded-lg object-cover"
+                className="aspect-square w-full rounded-lg object-cover block"
               />
             ) : (
               <Empty description="No selfie" />
@@ -244,9 +244,9 @@ const ShiftSessionView: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={16} md={19} lg={20}>
-          <Card title="Journey Graph" className="h-full">
+          <Card title="Journey Graph">
             {journeySegments.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
             <div className="overflow-auto rounded-md border bg-white">
               <div className="w-[1680px]">
                 <div className="sticky top-0 z-20 flex border-b bg-gray-50">
