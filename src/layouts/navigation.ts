@@ -428,7 +428,6 @@ export const navigationItems: NavItem[] = [
       { titleKey: 'applications', href: '/recruitment/applications', icon: Users },
     ],
   },
-  { titleKey: 'shifts', href: '/shifts', icon: Timer, roles: ['employee'] },
   { titleKey: 'reports', href: '/reports', icon: BarChart3, roles: ['employee'] },
 
 
