@@ -260,75 +260,82 @@ export default function LocationAdd() {
       </FRow>
 
       {/* ─── Site Location (GPS) ──────────────────────────────────────────── */}
-      <div className="mt-4 border rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center justify-between mb-3">
-          <span className="font-medium text-sm flex items-center gap-2">
-            <MapPin size={15} className="text-blue-500" />
-            Site Location (GPS Coordinates)
-          </span>
+      <div className="mt-5 overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+              <MapPin size={16} className="text-blue-500" />
+              Site Location
+            </div>
+            <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              GPS pin and allowed buffer used for shift distance checks.
+            </div>
+          </div>
           <Button size="small" icon={<MapPin size={13} />} onClick={detectMyLocation}>
-            Use my location
+            Use current GPS
           </Button>
         </div>
 
-        {/* Google Maps link paste */}
-        <div className="mb-3">
-          <div className="text-xs text-gray-500 mb-1">
-            Paste a Google Maps link to auto-fill coordinates
+        <div className="space-y-4 p-4">
+          <div>
+            <div className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">Google Maps Link</div>
+            <Input
+              placeholder="Paste Google Maps URL to auto-fill latitude and longitude"
+              onPaste={handleMapLinkPaste}
+              allowClear
+              prefix={<MapPin size={13} className="text-slate-400" />}
+            />
           </div>
-          <Input
-            placeholder="Paste Google Maps URL here — e.g. https://www.google.com/maps/place/.../@28.123,77.456,17z/..."
-            onPaste={handleMapLinkPaste}
-            allowClear
-            prefix={<MapPin size={13} className="text-gray-400" />}
-          />
-        </div>
 
-        <FRow>
-          <FItem label="Latitude" name="latitude">
-            <InputNumber
-              placeholder="e.g. 28.6139"
-              className="w-full"
-              precision={6}
-              min={-90}
-              max={90}
-              onChange={handleCoordsChange}
-            />
-          </FItem>
-          <FItem label="Longitude" name="longitude">
-            <InputNumber
-              placeholder="e.g. 77.2090"
-              className="w-full"
-              precision={6}
-              min={-180}
-              max={180}
-              onChange={handleCoordsChange}
-            />
-          </FItem>
-        </FRow>
-        <FRow>
-          <FItem label="Approx Buffer (KM)" name="approxLocationKm">
-            <InputNumber
-              placeholder="e.g. 1.5"
-              className="w-full"
-              min={0}
-              step={0.1}
-              precision={2}
-            />
-          </FItem>
-          <div />
-        </FRow>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <Form.Item label="Latitude" name="latitude" className="!mb-0">
+              <InputNumber
+                placeholder="28.613900"
+                className="w-full"
+                precision={6}
+                min={-90}
+                max={90}
+                onChange={handleCoordsChange}
+              />
+            </Form.Item>
+            <Form.Item label="Longitude" name="longitude" className="!mb-0">
+              <InputNumber
+                placeholder="77.209000"
+                className="w-full"
+                precision={6}
+                min={-180}
+                max={180}
+                onChange={handleCoordsChange}
+              />
+            </Form.Item>
+            <Form.Item
+              label="Allowed Buffer (KM)"
+              name="approxLocationKm"
+              className="!mb-0"
+              tooltip="Admin tracking marks the user inside this radius from the site location."
+            >
+              <InputNumber
+                placeholder="1.50"
+                className="w-full"
+                min={0}
+                step={0.1}
+                precision={2}
+                addonAfter="km"
+              />
+            </Form.Item>
+          </div>
+
         {previewCoords ? (
-          <div className="mt-3 rounded-lg overflow-hidden border">
+          <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
             <iframe
               title="Location map"
               width="100%"
-              height="240"
+              height="260"
               src={`https://www.openstreetmap.org/export/embed.html?bbox=${previewCoords.lng - 0.01},${previewCoords.lat - 0.01},${previewCoords.lng + 0.01},${previewCoords.lat + 0.01}&layer=mapnik&marker=${previewCoords.lat},${previewCoords.lng}`}
               style={{ border: 0 }}
             />
-            <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 flex items-center justify-between text-xs text-gray-500">
-              <span><MapPin size={11} className="inline mr-1" />{previewCoords.lat.toFixed(6)}, {previewCoords.lng.toFixed(6)}</span>
+            <div className="flex flex-col gap-2 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:flex-row sm:items-center sm:justify-between">
+              <span className="font-medium"><MapPin size={12} className="inline mr-1" />{previewCoords.lat.toFixed(6)}, {previewCoords.lng.toFixed(6)}</span>
               <a
                 href={`https://www.openstreetmap.org/?mlat=${previewCoords.lat}&mlon=${previewCoords.lng}&zoom=15`}
                 target="_blank"
@@ -340,11 +347,15 @@ export default function LocationAdd() {
             </div>
           </div>
         ) : (
-          <div className="mt-3 rounded-lg border border-dashed border-gray-300 h-20 flex items-center justify-center text-gray-400 text-xs gap-2">
-            <MapPin size={16} />
-            Enter coordinates or use "Use my location" to pin this location on the map
+          <div className="flex min-h-[132px] flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-blue-500 shadow-sm dark:bg-slate-900">
+              <MapPin size={17} />
+            </div>
+            <div className="font-medium text-slate-600 dark:text-slate-300">No map pin selected</div>
+            <div className="mt-1">Paste a map link, enter coordinates, or use current GPS.</div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
