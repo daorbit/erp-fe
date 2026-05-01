@@ -15,7 +15,8 @@ import {
 import { Download, ArrowLeft } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
-import { useShiftSessions } from '@/hooks/queries/useShiftSessions';
+import { useShiftSessions, useMyShiftSessions } from '@/hooks/queries/useShiftSessions';
+import { useAppSelector } from '@/store';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -38,18 +39,25 @@ function formatDuration(minutes?: number) {
 
 const ShiftSessionsReport: React.FC = () => {
   const navigate = useNavigate();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isEmployee = currentUser?.role === 'employee';
+
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('today');
   const [customRange, setCustomRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [status, setStatus] = useState<'active' | 'completed' | undefined>();
 
   const activeRange = quickFilter === 'custom' ? customRange : getRange(quickFilter);
 
-  const { data, isLoading } = useShiftSessions({
+  const queryParams = {
     limit: 1000,
     status,
     dateFrom: activeRange?.[0]?.format('YYYY-MM-DD'),
     dateTo: activeRange?.[1]?.format('YYYY-MM-DD'),
-  });
+  };
+
+  const adminQuery = useShiftSessions(queryParams, { enabled: !isEmployee });
+  const myQuery = useMyShiftSessions(isEmployee ? queryParams : undefined);
+  const { data, isLoading } = isEmployee ? myQuery : adminQuery;
 
   const records: any[] = data?.data ?? [];
 

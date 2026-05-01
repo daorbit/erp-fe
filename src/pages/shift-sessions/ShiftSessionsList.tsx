@@ -12,7 +12,8 @@ import {
 import { Eye, BarChart2 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
-import { useShiftSessions } from '@/hooks/queries/useShiftSessions';
+import { useShiftSessions, useMyShiftSessions } from '@/hooks/queries/useShiftSessions';
+import { useAppSelector } from '@/store';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -20,6 +21,9 @@ const REFRESH_INTERVAL_MS = 2 * 60 * 1000;
 
 const ShiftSessionsList: React.FC = () => {
   const navigate = useNavigate();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isEmployee = currentUser?.role === 'employee';
+
   const [status, setStatus] = useState<'active' | 'completed' | undefined>();
   const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [page, setPage] = useState(1);
@@ -33,12 +37,14 @@ const ShiftSessionsList: React.FC = () => {
     dateTo: range?.[1]?.format('YYYY-MM-DD'),
   };
 
-  const { data, isLoading } = useShiftSessions(params, { refetchInterval: REFRESH_INTERVAL_MS });
+  const adminQuery = useShiftSessions(params, { refetchInterval: REFRESH_INTERVAL_MS, enabled: !isEmployee });
+  const myQuery = useMyShiftSessions(isEmployee ? params : undefined);
+  const { data, isLoading } = isEmployee ? myQuery : adminQuery;
   const records: any[] = data?.data ?? [];
   const pagination = data?.pagination;
 
   const columns = [
-    {
+    ...(!isEmployee ? [{
       title: 'Employee',
       key: 'employee',
       render: (_: unknown, r: any) => {
@@ -54,7 +60,7 @@ const ShiftSessionsList: React.FC = () => {
           </div>
         );
       },
-    },
+    }] : []),
     {
       title: 'Site',
       key: 'site',

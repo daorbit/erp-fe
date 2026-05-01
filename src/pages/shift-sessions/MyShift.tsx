@@ -15,7 +15,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { Camera, Eye, MapPin, Play, Square, RefreshCw } from 'lucide-react';
+import { Camera, Eye, MapPin, Play, Square, RefreshCw, BarChart2 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -258,9 +258,17 @@ const MyShift: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Title level={4} className="!mb-1">My Shift</Title>
-        <Text type="secondary">Punch in with a selfie. Your location is recorded every 2 minutes while your shift is active.</Text>
+      <div className="flex items-start justify-between">
+        <div>
+          <Title level={4} className="!mb-1">My Shift</Title>
+          <Text type="secondary">Punch in with a selfie. Your location is recorded every 2 minutes while your shift is active.</Text>
+        </div>
+        <Button
+          icon={<BarChart2 size={14} />}
+          onClick={() => navigate('/shift-sessions/report')}
+        >
+          Consolidated Report
+        </Button>
       </div>
 
       {activeSession ? (
