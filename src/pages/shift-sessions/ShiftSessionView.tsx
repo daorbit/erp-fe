@@ -105,6 +105,7 @@ const ShiftSessionView: React.FC = () => {
   const journeyDayEnd = journeyDayStart.add(1, 'day');
   const totalDayMinutes = journeyDayEnd.diff(journeyDayStart, 'minute');
   const timelineHours = Array.from({ length: 25 }, (_, index) => journeyDayStart.add(index, 'hour'));
+  const timelineHourLabels = timelineHours.slice(0, 24);
 
   const journeySiteRows = useMemo(() => {
     const rows = new Map<string, {
@@ -254,15 +255,16 @@ const ShiftSessionView: React.FC = () => {
                     Site
                   </div>
                   <div className="relative h-11 w-[1480px] shrink-0">
-                    {timelineHours.map((hour, index) => (
+                    {timelineHourLabels.map((hour, index) => (
                       <div
                         key={hour.toISOString()}
-                        className="absolute bottom-0 top-0 border-l border-gray-200 px-2 pt-3 text-[11px] font-medium text-gray-500"
-                        style={{ left: `${(index / (timelineHours.length - 1)) * 100}%` }}
+                        className="absolute bottom-0 top-0 border-l border-gray-200 px-2 pt-3 text-center text-[11px] font-medium text-gray-500"
+                        style={{ left: `${(index / 24) * 100}%`, width: `${100 / 24}%` }}
                       >
                         {hour.format('h A')}
                       </div>
                     ))}
+                    <div className="absolute bottom-0 right-0 top-0 border-l border-gray-200" />
                   </div>
                 </div>
 
