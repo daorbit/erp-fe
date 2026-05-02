@@ -430,14 +430,14 @@ const ShiftSessionsReport: React.FC = () => {
               <Button
                 key={f}
                 type={quickFilter === f ? 'primary' : 'default'}
-                size="small"
+                size="medium"
                 onClick={() => handlePickQuickFilter(f)}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </Button>
             ))}
             <Button
-              size="small"
+              size="medium"
               type={quickFilter === 'custom' ? 'primary' : 'default'}
               onClick={() => handlePickQuickFilter('custom')}
             >
@@ -445,7 +445,7 @@ const ShiftSessionsReport: React.FC = () => {
             </Button>
             {quickFilter === 'custom' && (
               <RangePicker
-                size="small"
+                size="medium"
                 value={customRange as any}
                 onChange={(v) => setCustomRange(v as any)}
               />
@@ -453,7 +453,7 @@ const ShiftSessionsReport: React.FC = () => {
             <Select
               placeholder="Status"
               allowClear
-              size="small"
+              size="medium"
               style={{ width: 130 }}
               value={status}
               onChange={(v) => setStatus(v)}
@@ -536,7 +536,7 @@ const ShiftSessionsReport: React.FC = () => {
             dataSource={employeeRows}
             rowKey="key"
             loading={isLoading}
-            size="small"
+            size="medium"
             scroll={{ x: 700 }}
             pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (t) => `${t} employees` }}
             locale={{ emptyText: 'No employee activity in this range' }}
@@ -617,7 +617,7 @@ const ShiftSessionsReport: React.FC = () => {
             dataSource={siteRows}
             rowKey="key"
             loading={isLoading}
-            size="small"
+            size="medium"
             scroll={{ x: 1050 }}
             pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (t) => `${t} sites` }}
             locale={{ emptyText: 'No site activity in this range' }}
@@ -632,7 +632,7 @@ const ShiftSessionsReport: React.FC = () => {
             dataSource={records}
             rowKey="_id"
             loading={isLoading}
-            size="small"
+            size="medium"
             scroll={{ x: 1000 }}
             pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (t) => `${t} records` }}
             onRow={(r: any) => ({
