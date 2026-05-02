@@ -464,13 +464,14 @@ const ShiftSessionsReport: React.FC = () => {
             />
           </Space>
           <Segmented
-            size="small"
+            size="medium"
             value={view}
+            style={{display:"flex"}}
             onChange={(v) => setView(v as ViewMode)}
             options={[
-              { label: 'Sessions', value: 'sessions', icon: <ListChecks size={12} /> },
-              { label: 'By Site', value: 'sites', icon: <Building2 size={12} /> },
-              { label: 'By Employee', value: 'employees', icon: <Users size={12} /> },
+              { label: 'Sessions', value: 'sessions' },
+              { label: 'By Site', value: 'sites' },
+              { label: 'By Employee', value: 'employees' },
             ]}
           />
         </div>
