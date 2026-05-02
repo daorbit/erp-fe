@@ -12,7 +12,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
-import { Download, ArrowLeft } from 'lucide-react';
+import { Download, ArrowLeft, RefreshCw } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { useShiftSessions, useMyShiftSessions } from '@/hooks/queries/useShiftSessions';
@@ -48,18 +48,36 @@ const ShiftSessionsReport: React.FC = () => {
 
   const activeRange = quickFilter === 'custom' ? customRange : getRange(quickFilter);
 
+  // Send full ISO timestamps (with TZ offset) so server-vs-client timezone
+  // skew can't drop records out of the requested window. RangePicker hands
+  // back midnight-local dayjs values; widen them to a full local-day window.
   const queryParams = {
     limit: 1000,
     status,
-    dateFrom: activeRange?.[0]?.format('YYYY-MM-DD'),
-    dateTo: activeRange?.[1]?.format('YYYY-MM-DD'),
+    dateFrom: activeRange?.[0]?.startOf('day').toISOString(),
+    dateTo: activeRange?.[1]?.endOf('day').toISOString(),
   };
 
-  const adminQuery = useShiftSessions(queryParams, { enabled: !isEmployee });
-  const myQuery = useMyShiftSessions(isEmployee ? queryParams : undefined);
-  const { data, isLoading } = isEmployee ? myQuery : adminQuery;
+  // Only the role-appropriate hook is enabled — the other stays idle so we
+  // don't fire requests the backend will reject (e.g. /my for an admin).
+  // staleTime: 0 forces a network fetch every time the filter (and thus the
+  // queryKey) changes — including when the user clicks back to a previously
+  // selected filter — instead of serving the global 5-min cache.
+  const adminQuery = useShiftSessions(queryParams, { enabled: !isEmployee, staleTime: 0 });
+  const myQuery = useMyShiftSessions(queryParams, { enabled: isEmployee, staleTime: 0 });
+  const activeQuery = isEmployee ? myQuery : adminQuery;
+  const { data, isLoading, refetch } = activeQuery;
 
   const records: any[] = data?.data ?? [];
+
+  const handlePickQuickFilter = (next: QuickFilter) => {
+    setQuickFilter(next);
+    if (next !== 'custom') setCustomRange(null);
+  };
+
+  const handleRefresh = () => {
+    void refetch();
+  };
 
   // Summary stats
   const stats = useMemo(() => {
@@ -199,14 +217,23 @@ const ShiftSessionsReport: React.FC = () => {
           <Title level={4} className="!mb-0.5">Consolidated Shift Report</Title>
           <Text type="secondary" className="text-sm">Download and filter shift session records</Text>
         </div>
-        <Button
-          type="primary"
-          icon={<Download size={14} />}
-          onClick={handleDownload}
-          disabled={records.length === 0}
-        >
-          Download CSV
-        </Button>
+        <Space>
+          <Button
+            icon={<RefreshCw size={14} />}
+            onClick={handleRefresh}
+            loading={isLoading}
+          >
+            Refresh
+          </Button>
+          <Button
+            type="primary"
+            icon={<Download size={14} />}
+            onClick={handleDownload}
+            disabled={records.length === 0}
+          >
+            Download CSV
+          </Button>
+        </Space>
       </div>
 
       {/* Quick filter + controls */}
@@ -217,7 +244,7 @@ const ShiftSessionsReport: React.FC = () => {
               key={f}
               type={quickFilter === f ? 'primary' : 'default'}
               size="small"
-              onClick={() => setQuickFilter(f)}
+              onClick={() => handlePickQuickFilter(f)}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </Button>
@@ -225,7 +252,7 @@ const ShiftSessionsReport: React.FC = () => {
           <Button
             size="small"
             type={quickFilter === 'custom' ? 'primary' : 'default'}
-            onClick={() => setQuickFilter('custom')}
+            onClick={() => handlePickQuickFilter('custom')}
           >
             Custom
           </Button>

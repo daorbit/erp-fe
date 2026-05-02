@@ -33,12 +33,12 @@ const ShiftSessionsList: React.FC = () => {
     page,
     limit: pageSize,
     status,
-    dateFrom: range?.[0]?.format('YYYY-MM-DD'),
-    dateTo: range?.[1]?.format('YYYY-MM-DD'),
+    dateFrom: range?.[0]?.startOf('day').toISOString(),
+    dateTo: range?.[1]?.endOf('day').toISOString(),
   };
 
   const adminQuery = useShiftSessions(params, { refetchInterval: REFRESH_INTERVAL_MS, enabled: !isEmployee });
-  const myQuery = useMyShiftSessions(isEmployee ? params : undefined);
+  const myQuery = useMyShiftSessions(params, { enabled: isEmployee });
   const { data, isLoading } = isEmployee ? myQuery : adminQuery;
   const records: any[] = data?.data ?? [];
   const pagination = data?.pagination;

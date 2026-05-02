@@ -23,19 +23,28 @@ export function useActiveShiftSession(options?: { refetchInterval?: number }) {
   });
 }
 
-export function useMyShiftSessions(params?: ListParams) {
+export function useMyShiftSessions(
+  params?: ListParams,
+  options?: { enabled?: boolean; staleTime?: number },
+) {
   return useQuery({
     queryKey: shiftSessionKeys.myList(params),
     queryFn: () => shiftSessionService.getMy(params),
+    enabled: options?.enabled !== false,
+    staleTime: options?.staleTime,
   });
 }
 
-export function useShiftSessions(params?: ListParams, options?: { refetchInterval?: number; enabled?: boolean }) {
+export function useShiftSessions(
+  params?: ListParams,
+  options?: { refetchInterval?: number; enabled?: boolean; staleTime?: number },
+) {
   return useQuery({
     queryKey: shiftSessionKeys.list(params),
     queryFn: () => shiftSessionService.getAll(params),
     refetchInterval: options?.refetchInterval,
     enabled: options?.enabled !== false,
+    staleTime: options?.staleTime,
   });
 }
 
