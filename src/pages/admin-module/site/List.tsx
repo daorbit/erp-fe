@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Card, Table, Button, Typography, Radio, Select, TreeSelect, Input, Space, App } from 'antd';
-import { Plus, Edit, FileText, Trash2 } from 'lucide-react';
+import { Plus, Edit, FileText, Trash2, BarChart2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
@@ -264,14 +264,28 @@ export default function SiteList() {
       render: (_: any, r: any) => r.isActive ? 'Active' : 'Inactive',
     },
     {
-      title: 'Actions', key: 'edit', width: 110, fixed: 'right' as const,
+      title: 'Actions', key: 'edit', width: 170, fixed: 'right' as const,
       render: (_: any, r: any) => (
         <Space size={2}>
-          <Button type="text" size="small" icon={<Edit size={14} />}
+          <Button
+            type="text"
+            size="small"
+            icon={<Eye size={14} />}
+            title="View site details"
+            onClick={() => navigate(`/admin-module/master/site/view/${r._id}`)}
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<BarChart2 size={14} />}
+            title="View shift report"
+            onClick={() => navigate(`/shift-sessions/report?site=${r._id}`)}
+          />
+          <Button type="text" size="small" icon={<Edit size={14} />} title="Edit"
             onClick={() => navigate(`/admin-module/master/site/edit/${r._id}`)} />
-          <Button type="text" size="small" icon={<FileText size={14} />}
+          <Button type="text" size="small" icon={<FileText size={14} />} title="Documents"
             onClick={() => navigate(`/admin-module/master/site/document?id=${r._id}`)} />
-          <Button type="text" size="small" danger icon={<Trash2 size={14} />}
+          <Button type="text" size="small" danger icon={<Trash2 size={14} />} title="Delete"
             onClick={() => handleDelete(r)} />
         </Space>
       ),

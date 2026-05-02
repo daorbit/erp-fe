@@ -22,7 +22,7 @@ import {
   // Admin module additions
   MapPinned, Route, Clipboard, FolderKey, Smartphone as SmartphoneIcon,
   LogIn, Send, UsersRound, Clock4, FileWarning,
-  BookOpen,
+  BookOpen, Eye,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -31,6 +31,11 @@ export interface NavItem {
   icon: LucideIcon;
   children?: NavItem[];
   roles?: string[];
+  /**
+   * If set, the Sidebar replaces `titleKey`-translated label with a value
+   * resolved from app state. Currently supports: `'companyName'`.
+   */
+  dynamicLabel?: 'companyName';
 }
 
 // ─── Role groups ─────────────────────────────────────────────────────────────
@@ -447,17 +452,21 @@ export const adminModuleNav: NavItem[] = [
     titleKey: 'nav_master', icon: Database,
     children: [
       {
-        titleKey: 'nav_adm_company', icon: Building2,
+        titleKey: 'nav_adm_company',
+        icon: Building2,
+        dynamicLabel: 'companyName',
         children: [
-          { titleKey: 'nav_list', href: '/admin-module/master/company/list', icon: List },
-        ],
-      },
-      {
-        titleKey: 'nav_adm_site_plant_project', icon: Building,
-        children: [
-          { titleKey: 'nav_add', href: '/admin-module/master/site/add', icon: Plus },
-          { titleKey: 'nav_list', href: '/admin-module/master/site/list', icon: List },
-          { titleKey: 'nav_document', href: '/admin-module/master/site/document', icon: FileText },
+          { titleKey: 'nav_adm_company_overview', href: '/admin-module/master/company', icon: Eye },
+          {
+            titleKey: 'nav_adm_site_plant_project',
+            icon: Building,
+            href: '/admin-module/master/site/list',
+            children: [
+              { titleKey: 'nav_add', href: '/admin-module/master/site/add', icon: Plus },
+              { titleKey: 'nav_list', href: '/admin-module/master/site/list', icon: List },
+              { titleKey: 'nav_document', href: '/admin-module/master/site/document', icon: FileText },
+            ],
+          },
         ],
       },
       {

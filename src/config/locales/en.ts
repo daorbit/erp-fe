@@ -279,6 +279,7 @@ const en: Record<string, string> = {
   nav_tag: 'Tag',
   nav_city: 'City',
   nav_document: 'Document',
+  nav_adm_company_overview: 'Overview',
   nav_shift: 'Shift',
   nav_important_form: 'Important Form',
   nav_level: 'Level',

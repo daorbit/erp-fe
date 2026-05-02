@@ -1,18 +1,20 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { Input, Table, Calendar, Select, Empty, Tooltip, Spin } from 'antd';
+import { Input, Table, Calendar, Select, Empty, Tooltip, Spin, Tag } from 'antd';
 import {
   Users, ClipboardList, Clock, CalendarCheck, Banknote,
   CircleDollarSign, IndianRupee, Search,
   Cake, PartyPopper, RefreshCw, Minus, Plus,
   ChevronLeft, ChevronRight, UserPlus, CarFront, Award,
   AlertTriangle, Megaphone, FileText, ShieldCheck, BriefcaseBusiness,
-  TrendingUp,
+  TrendingUp, Timer, ArrowRight,
 } from 'lucide-react';
 import employeeService from '@/services/employeeService';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useDashboardStats, useBirthdays, useAnniversaries } from '@/hooks/queries/useDashboard';
+import { useShiftSessions, useMyShiftSessions } from '@/hooks/queries/useShiftSessions';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAppSelector } from '@/store';
 import AnimateIn from '@/components/AnimateIn';
 
 // ─── Quick Action Button ─────────────────────────────────────────────────────
@@ -119,6 +121,10 @@ function WidgetEmpty({ text = 'No records found' }: { text?: string }) {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const role = currentUser?.role;
+  const isEmployee = role === 'employee';
+  const canSeeAllShifts = role === 'admin' || role === 'hr_manager' || role === 'super_admin';
 
   const { data: statsData } = useDashboardStats();
   const { data: birthdayData } = useBirthdays();
@@ -126,6 +132,31 @@ const Dashboard: React.FC = () => {
 
   const birthdays: any[] = birthdayData?.data ?? [];
   const anniversaries: any[] = anniversaryData?.data ?? [];
+
+  // Today's shifts — feed the dashboard widget. Employees see their own;
+  // admin/HR see the company-wide list. Other roles skip the widget.
+  // Use a high limit so stats reflect the full day, not the first 5 rows.
+  const todayShiftParams = useMemo(() => ({
+    limit: 200,
+    dateFrom: dayjs().startOf('day').toISOString(),
+    dateTo: dayjs().endOf('day').toISOString(),
+  }), []);
+  const adminShiftsQuery = useShiftSessions(todayShiftParams, {
+    enabled: canSeeAllShifts,
+    staleTime: 0,
+  });
+  const myShiftsQuery = useMyShiftSessions(todayShiftParams, { enabled: isEmployee, staleTime: 0 });
+  const shiftsQuery = isEmployee ? myShiftsQuery : adminShiftsQuery;
+  const todayShifts: any[] = shiftsQuery.data?.data ?? [];
+  const shiftsTotal = shiftsQuery.data?.pagination?.total ?? todayShifts.length;
+  const showShiftsWidget = canSeeAllShifts || isEmployee;
+  const shiftsError = shiftsQuery.error as { message?: string } | null | undefined;
+  const shiftStats = useMemo(() => {
+    const active = todayShifts.filter((s: any) => s.status === 'active').length;
+    const completed = todayShifts.filter((s: any) => s.status === 'completed').length;
+    const minutes = todayShifts.reduce((sum: number, s: any) => sum + (s.durationMinutes ?? 0), 0);
+    return { active, completed, total: shiftsTotal, hours: (minutes / 60).toFixed(1) };
+  }, [todayShifts, shiftsTotal]);
 
   const [quickSearchQuery, setQuickSearchQuery] = useState('');
   const [quickSearchResults, setQuickSearchResults] = useState<any[]>([]);
@@ -228,6 +259,98 @@ const Dashboard: React.FC = () => {
             />
           </WidgetCard>
         </AnimateIn>
+
+        {/* Today's Shifts — quick view + link to consolidated report */}
+        {showShiftsWidget && (
+          <AnimateIn variant="fadeUp" delay={0.11}>
+            <WidgetCard
+              title="Today's Shifts"
+              accentColor="from-violet-500 to-blue-500"
+              icon={<Timer size={16} />}
+              onRefresh={() => shiftsQuery.refetch()}
+            >
+              {/* Stats row */}
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                <div className="rounded-xl bg-violet-50/60 dark:bg-violet-900/10 p-2.5 text-center">
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">Total</div>
+                  <div className="text-lg font-semibold text-violet-600 dark:text-violet-400">{shiftStats.total}</div>
+                </div>
+                <div className="rounded-xl bg-emerald-50/60 dark:bg-emerald-900/10 p-2.5 text-center">
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">Active</div>
+                  <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{shiftStats.active}</div>
+                </div>
+                <div className="rounded-xl bg-blue-50/60 dark:bg-blue-900/10 p-2.5 text-center">
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">Done</div>
+                  <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">{shiftStats.completed}</div>
+                </div>
+                <div className="rounded-xl bg-amber-50/60 dark:bg-amber-900/10 p-2.5 text-center">
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--text-secondary)]">Hours</div>
+                  <div className="text-lg font-semibold text-amber-600 dark:text-amber-400">{shiftStats.hours}</div>
+                </div>
+              </div>
+
+              {/* Recent sessions list / loading / error / empty */}
+              {shiftsQuery.isLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Spin size="small" />
+                </div>
+              ) : shiftsError ? (
+                <div className="rounded-xl bg-red-50/60 dark:bg-red-900/10 p-3 text-xs text-red-600 dark:text-red-400">
+                  {shiftsError.message || 'Could not load shift data.'}
+                </div>
+              ) : todayShifts.length > 0 ? (
+                <div className="space-y-2">
+                  {todayShifts.slice(0, 5).map((s: any) => {
+                    const u = s.employee?.userId;
+                    const name = u
+                      ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email
+                      : 'Unknown';
+                    const siteLabel = s.site?.name ?? '—';
+                    return (
+                      <button
+                        key={s._id}
+                        onClick={() => navigate(`/shift-sessions/${s._id}`)}
+                        className="w-full flex items-center gap-3 p-2 rounded-xl
+                          hover:bg-black/[0.03] dark:hover:bg-white/[0.04] transition text-left"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-blue-500
+                          flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          {(name?.[0] || 'E').toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-[var(--text-primary)] truncate">{name}</div>
+                          <div className="text-xs text-[var(--text-secondary)] truncate">
+                            {siteLabel} · {dayjs(s.shiftStartedAt).format('h:mm A')}
+                          </div>
+                        </div>
+                        <Tag color={s.status === 'active' ? 'green' : 'blue'} className="!m-0 shrink-0">
+                          {s.status === 'active' ? 'ACTIVE' : 'DONE'}
+                        </Tag>
+                      </button>
+                    );
+                  })}
+                  {shiftStats.total > 5 && (
+                    <div className="text-center text-xs text-[var(--text-secondary)] pt-1">
+                      +{shiftStats.total - 5} more
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <WidgetEmpty text="No shifts started today" />
+              )}
+
+              <button
+                onClick={() => navigate('/shift-sessions/report')}
+                className="mt-3 w-full flex items-center justify-center gap-1.5
+                  py-2 rounded-xl text-sm font-medium
+                  bg-gradient-to-r from-violet-500 to-blue-500 text-white
+                  hover:from-violet-600 hover:to-blue-600 transition shadow-sm"
+              >
+                View Consolidated Report <ArrowRight size={14} />
+              </button>
+            </WidgetCard>
+          </AnimateIn>
+        )}
 
         {/* Today's Birthday */}
         <AnimateIn variant="fadeUp" delay={0.12}>

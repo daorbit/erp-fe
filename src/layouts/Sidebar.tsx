@@ -36,22 +36,32 @@ interface SidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
 }
 
-function buildMenuItems(items: NavItem[], t: (key: string) => string, depth = 0): MenuProps['items'] {
+function buildMenuItems(
+  items: NavItem[],
+  t: (key: string) => string,
+  resolveDynamicLabel: (token: NonNullable<NavItem['dynamicLabel']>) => string | undefined,
+  onParentNavigate: (href: string) => void,
+  depth = 0,
+): MenuProps['items'] {
   const iconSize = depth === 0 ? 18 : depth === 1 ? 16 : 14;
   return items.map((item) => {
     const Icon = item.icon;
+    const label = (item.dynamicLabel && resolveDynamicLabel(item.dynamicLabel)) || t(item.titleKey);
     if (item.children && item.children.length > 0) {
       return {
         key: item.titleKey,
         icon: <Icon size={iconSize} />,
-        label: t(item.titleKey),
-        children: buildMenuItems(item.children, t, depth + 1),
+        label,
+        children: buildMenuItems(item.children, t, resolveDynamicLabel, onParentNavigate, depth + 1),
+        // If a parent also carries an `href`, clicking its title both
+        // expands the submenu (default Antd behavior) and navigates.
+        ...(item.href ? { onTitleClick: () => onParentNavigate(item.href!) } : {}),
       };
     }
     return {
       key: item.href || item.titleKey,
       icon: <Icon size={iconSize} />,
-      label: t(item.titleKey),
+      label,
     };
   });
 }
@@ -192,7 +202,28 @@ export default function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps
     () => filterNavBySearch(roleFilteredNav, searchQuery, t),
     [roleFilteredNav, searchQuery, t],
   );
-  const menuItems = useMemo(() => buildMenuItems(visibleNav, t), [visibleNav, t]);
+  const companyName =
+    typeof user?.company === 'object' && user.company
+      ? (user.company as any).name || (user.company as any).code
+      : undefined;
+
+  const resolveDynamicLabel = useCallback(
+    (token: 'companyName') => (token === 'companyName' ? companyName : undefined),
+    [companyName],
+  );
+
+  const handleParentNavigate = useCallback(
+    (href: string) => {
+      navigate(href);
+      onMobileOpenChange?.(false);
+    },
+    [navigate, onMobileOpenChange],
+  );
+
+  const menuItems = useMemo(
+    () => buildMenuItems(visibleNav, t, resolveDynamicLabel, handleParentNavigate),
+    [visibleNav, t, resolveDynamicLabel, handleParentNavigate],
+  );
   const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
 
   // While searching, expand every parent so the matches are visible.

@@ -123,9 +123,11 @@ const MasterShift = lazy(() => import('../pages/master/other/Shift'));
 const AdminModuleDashboard = lazy(() => import('../pages/admin-module/Dashboard'));
 const AdminModuleCompanyList = lazy(() => import('../pages/admin-module/company/List'));
 const AdminModuleCompanyEdit = lazy(() => import('../pages/admin-module/company/Edit'));
+const AdminModuleCompanyView = lazy(() => import('../pages/admin-module/company/View'));
 const AdminModuleSiteAdd = lazy(() => import('../pages/admin-module/site/Add'));
 const AdminModuleSiteList = lazy(() => import('../pages/admin-module/site/List'));
 const AdminModuleSiteDocument = lazy(() => import('../pages/admin-module/site/Document'));
+const AdminModuleSiteView = lazy(() => import('../pages/admin-module/site/View'));
 const AdminModuleLocationAdd = lazy(() => import('../pages/admin-module/location/Add'));
 const AdminModuleLocationList = lazy(() => import('../pages/admin-module/location/List'));
 const AdminModuleLocationRoute = lazy(() => import('../pages/admin-module/location/LocationRoute'));
@@ -359,11 +361,13 @@ export default function AppRoutes() {
           Admin Module (ERP module = "admin") — dashboard + sub-routes
          ══════════════════════════════════════════════════════════════════════ */}
       <Route path="/admin-module" element={<R roles={ADMINS}><AdminModuleDashboard /></R>} />
+      <Route path="/admin-module/master/company" element={<R roles={ADMINS}><AdminModuleCompanyView /></R>} />
       <Route path="/admin-module/master/company/list" element={<R roles={ADMINS}><AdminModuleCompanyList /></R>} />
       <Route path="/admin-module/master/company/edit/:id" element={<R roles={ADMINS}><AdminModuleCompanyEdit /></R>} />
       <Route path="/admin-module/master/site/add" element={<R roles={ADMINS}><AdminModuleSiteAdd /></R>} />
       <Route path="/admin-module/master/site/list" element={<R roles={ADMINS}><AdminModuleSiteList /></R>} />
       <Route path="/admin-module/master/site/edit/:id" element={<R roles={ADMINS}><AdminModuleSiteAdd /></R>} />
+      <Route path="/admin-module/master/site/view/:id" element={<R roles={ADMINS}><AdminModuleSiteView /></R>} />
       <Route path="/admin-module/master/site/document" element={<R roles={ADMINS}><AdminModuleSiteDocument /></R>} />
       <Route path="/admin-module/master/site-location/add" element={<R roles={ADMINS}><AdminModuleLocationAdd /></R>} />
       <Route path="/admin-module/master/site-location/edit/:id" element={<R roles={ADMINS}><AdminModuleLocationAdd /></R>} />
