@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Card,
   Table,
@@ -13,6 +13,7 @@ import { Eye, BarChart2 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { useShiftSessions, useMyShiftSessions } from '@/hooks/queries/useShiftSessions';
+import { useEmployeeList } from '@/hooks/queries/useEmployees';
 import { useAppSelector } from '@/store';
 
 const { Title, Text } = Typography;
@@ -26,6 +27,7 @@ const ShiftSessionsList: React.FC = () => {
 
   const [status, setStatus] = useState<'active' | 'completed' | undefined>();
   const [range, setRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+  const [employeeId, setEmployeeId] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -33,6 +35,7 @@ const ShiftSessionsList: React.FC = () => {
     page,
     limit: pageSize,
     status,
+    employee: employeeId,
     dateFrom: range?.[0]?.startOf('day').toISOString(),
     dateTo: range?.[1]?.endOf('day').toISOString(),
   };
@@ -43,18 +46,38 @@ const ShiftSessionsList: React.FC = () => {
   const records: any[] = data?.data ?? [];
   const pagination = data?.pagination;
 
+  // Employee list for the filter — admin view only.
+  const { data: employeesData } = useEmployeeList(!isEmployee ? { limit: 1000 } : undefined);
+  const employeeOptions = useMemo(() => {
+    if (isEmployee) return [];
+    const list: any[] = (employeesData as any)?.data ?? [];
+    return list
+      .map((emp) => {
+        const u = emp.userId ?? {};
+        const name = `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email || 'Unknown';
+        return {
+          value: emp._id,
+          label: emp.employeeId ? `${name} · ${emp.employeeId}` : name,
+          search: `${name} ${emp.employeeId ?? ''} ${u.email ?? ''}`.toLowerCase(),
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [employeesData, isEmployee]);
+
   const columns = [
     ...(!isEmployee ? [{
       title: 'Employee',
       key: 'employee',
+      width: 220,
+      fixed: 'left' as const,
       render: (_: unknown, r: any) => {
         const emp = r.employee;
         const user = emp?.userId;
         const name = user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : '—';
         return (
-          <div>
-            <div className="font-medium">{name}</div>
-            <Text type="secondary" className="text-xs">
+          <div className="leading-tight">
+            <div className="font-medium whitespace-nowrap">{name}</div>
+            <Text type="secondary" className="text-xs whitespace-nowrap">
               {emp?.employeeId ?? user?.email ?? ''}
             </Text>
           </div>
@@ -64,72 +87,62 @@ const ShiftSessionsList: React.FC = () => {
     {
       title: 'Site',
       key: 'site',
+      width: 220,
       render: (_: unknown, r: any) => {
         const site = r.site;
         const loc = r.siteLocation;
-        return site ? (
-          <div>
-            <div className="font-medium">{site.name}</div>
-            <Text type="secondary" className="text-xs">
-              {[loc?.name, loc?.city || site.city, site.stateName].filter(Boolean).join(' · ') || site.code || ''}
-            </Text>
+        if (!site) return '—';
+        const sub = [loc?.name, loc?.city || site.city, site.stateName].filter(Boolean).join(' · ') || site.code || '';
+        return (
+          <div className="leading-tight">
+            <div className="font-medium whitespace-nowrap">{site.name}</div>
+            {sub && (
+              <Text type="secondary" className="text-xs whitespace-nowrap">{sub}</Text>
+            )}
           </div>
-        ) : '—';
+        );
       },
     },
     {
       title: 'Date',
       dataIndex: 'shiftDate',
-      render: (d: string) => dayjs(d).format('DD MMM YYYY'),
+      width: 120,
+      render: (d: string) => (
+        <span className="whitespace-nowrap">{dayjs(d).format('DD MMM YYYY')}</span>
+      ),
     },
     {
-      title: 'Started',
+      title: 'Check-in',
       dataIndex: 'shiftStartedAt',
-      render: (d: string) => dayjs(d).format('h:mm A'),
+      width: 100,
+      render: (d: string) => (
+        <span className="whitespace-nowrap">{dayjs(d).format('h:mm A')}</span>
+      ),
     },
     {
-      title: 'Ended',
+      title: 'Check-out',
       dataIndex: 'shiftEndedAt',
-      render: (d?: string) => (d ? dayjs(d).format('h:mm A') : '—'),
+      width: 100,
+      render: (d?: string) => (
+        <span className="whitespace-nowrap">{d ? dayjs(d).format('h:mm A') : '—'}</span>
+      ),
     },
     {
       title: 'Duration',
       dataIndex: 'durationMinutes',
+      width: 110,
       render: (m?: number) => (m ? `${Math.floor(m / 60)}h ${m % 60}m` : '—'),
     },
     {
       title: 'Distance',
       dataIndex: 'totalDistanceMeters',
+      width: 100,
       render: (v: number) => `${(v / 1000).toFixed(2)} km`,
-    },
-    {
-      title: 'Current Location',
-      key: 'latestLocation',
-      render: (_: unknown, r: any) => r.latestLocation
-        ? `${r.latestLocation.latitude.toFixed(5)}, ${r.latestLocation.longitude.toFixed(5)}`
-        : '—',
-    },
-    {
-      title: 'From Site',
-      dataIndex: 'latestSiteDistanceMeters',
-      render: (v?: number) => (v != null ? `${Math.round(v)} m` : 'No coordinates'),
-    },
-    {
-      title: 'Buffer',
-      key: 'buffer',
-      render: (_: unknown, r: any) => {
-        if (!r.siteBufferKm) return '—';
-        const ok = r.latestSiteWithinBuffer;
-        return (
-          <Tag color={ok ? 'green' : 'red'}>
-            {ok ? 'INSIDE' : 'OUTSIDE'} {r.siteBufferKm} km
-          </Tag>
-        );
-      },
     },
     {
       title: 'Status',
       dataIndex: 'status',
+      width: 110,
       render: (s: string) => (
         <Tag color={s === 'active' ? 'green' : 'blue'}>{s.toUpperCase()}</Tag>
       ),
@@ -137,19 +150,23 @@ const ShiftSessionsList: React.FC = () => {
     {
       title: 'Selfie',
       dataIndex: 'selfieUrl',
+      width: 70,
       render: (u?: string) =>
         u ? (
-          <img src={u} alt="" className="w-10 h-10 rounded-full object-cover" />
+          <img src={u} alt="" className="w-9 h-9 rounded-full object-cover" />
         ) : (
           '—'
         ),
     },
     {
-      title: 'Action',
+      title: '',
       key: 'action',
+      width: 90,
+      fixed: 'right' as const,
       render: (_: unknown, r: any) => (
         <Button
           type="link"
+          size="small"
           icon={<Eye size={14} />}
           onClick={() => navigate(`/shift-sessions/${r._id}`)}
         >
@@ -178,6 +195,23 @@ const ShiftSessionsList: React.FC = () => {
 
       <Card>
         <Space wrap className="mb-4">
+          {!isEmployee && (
+            <Select
+              placeholder="Employee"
+              allowClear
+              showSearch
+              style={{ width: 260 }}
+              value={employeeId}
+              onChange={(v) => {
+                setEmployeeId(v);
+                setPage(1);
+              }}
+              options={employeeOptions}
+              filterOption={(input, option) =>
+                (option as any)?.search?.includes(input.toLowerCase()) ?? false
+              }
+            />
+          )}
           <Select
             placeholder="Status"
             allowClear
@@ -206,7 +240,7 @@ const ShiftSessionsList: React.FC = () => {
           dataSource={records}
           rowKey="_id"
           loading={isLoading}
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1200 }}
           pagination={{
             current: page,
             pageSize,
