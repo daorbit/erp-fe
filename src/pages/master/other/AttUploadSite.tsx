@@ -3,7 +3,7 @@ import { Card, Form, Select, Button, Space, Typography, Table, App, Popconfirm }
 import { Trash2 } from 'lucide-react';
 import { attUploadSiteHooks } from '@/hooks/queries/useMasterOther';
 import { useBranchList } from '@/hooks/queries/useBranches';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 
 const { Title } = Typography;
 
@@ -12,10 +12,7 @@ const AttUploadSitePage: React.FC = () => {
   const { message } = App.useApp();
   const { data, isLoading } = attUploadSiteHooks.useList();
   const { data: branches } = useBranchList();
-  const { data: myCompanyData } = useMyCompany();
-  const companyOptions = myCompanyData?.data
-    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
-    : [];
+  const { companyOptions, firstCompanyId } = useGroupCompanies();
   const create = attUploadSiteHooks.useCreate();
   const del = attUploadSiteHooks.useDelete();
 
@@ -23,10 +20,10 @@ const AttUploadSitePage: React.FC = () => {
 
   // Auto-select the user's company
   useEffect(() => {
-    if (myCompanyData?.data && !companyId) {
-      setCompanyId(myCompanyData.data._id || myCompanyData.data.id);
+    if (firstCompanyId && !companyId) {
+      setCompanyId(firstCompanyId);
     }
-  }, [myCompanyData, companyId]);
+  }, [firstCompanyId, companyId]);
 
   const handleSubmit = async (values: any) => {
     try {

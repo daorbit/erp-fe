@@ -3,7 +3,7 @@ import { Card, Form, Select, Button, Space, Typography, Table, App, Popconfirm }
 import { Trash2 } from 'lucide-react';
 import { attAutoNotificationHooks } from '@/hooks/queries/useMasterOther';
 import { useBranchList } from '@/hooks/queries/useBranches';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 
 const { Title } = Typography;
 
@@ -12,10 +12,7 @@ const AttAutoNotificationPage: React.FC = () => {
   const { message } = App.useApp();
   const { data, isLoading } = attAutoNotificationHooks.useList();
   const { data: branches } = useBranchList();
-  const { data: myCompanyData } = useMyCompany();
-  const companyOptions = myCompanyData?.data
-    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
-    : [];
+  const { companyOptions } = useGroupCompanies();
   const create = attAutoNotificationHooks.useCreate();
   const del = attAutoNotificationHooks.useDelete();
 

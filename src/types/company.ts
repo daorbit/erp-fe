@@ -22,6 +22,8 @@ export interface ICompany {
   maxEmployees?: number;
   subscription?: string;
   isActive: boolean;
+  /** Set on sibling companies; absent on main (parent) companies. */
+  parentCompany?: string;
   createdAt: string;
   updatedAt: string;
 }

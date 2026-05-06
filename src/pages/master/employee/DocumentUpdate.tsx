@@ -4,7 +4,7 @@ import {
   Card, Select, Button, Space, Typography, App, Table, Input, Empty, Spin,
 } from 'antd';
 import { Edit2, Trash2 } from 'lucide-react';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import employeeService from '@/services/employeeService';
 import { documentMasterHooks } from '@/hooks/queries/useMasterOther';
@@ -58,17 +58,14 @@ const DocumentUpdate: React.FC = () => {
     }, 400);
   }, []);
 
-  const { data: myCompanyData } = useMyCompany();
-  const companyOptions = myCompanyData?.data
-    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
-    : [];
+  const { companyOptions, firstCompanyId } = useGroupCompanies();
 
   // Auto-select the user's company
   useEffect(() => {
-    if (myCompanyData?.data && !company) {
-      setCompany(myCompanyData.data._id || myCompanyData.data.id);
+    if (firstCompanyId && !company) {
+      setCompany(firstCompanyId);
     }
-  }, [myCompanyData, company]);
+  }, [firstCompanyId, company]);
 
   const { data: branches } = useBranchList();
   const { data: docTypes } = documentMasterHooks.useList();

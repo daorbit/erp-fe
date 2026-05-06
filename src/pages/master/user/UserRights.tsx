@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Select, Button, Space, Typography, App, Transfer } from 'antd';
 import api from '@/services/api';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useUserRight, useSaveUserRight, useCopyUserRight } from '@/hooks/queries/usePhase2';
 
@@ -24,10 +24,7 @@ const UserRightsPage: React.FC = () => {
   const [branchId, setBranchId] = useState<string | undefined>();
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
 
-  const { data: myCompanyData } = useMyCompany();
-  const companyOptions = myCompanyData?.data
-    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
-    : [];
+  const { companyOptions } = useGroupCompanies();
   const { data: branches } = useBranchList();
   const { data: currentRights, refetch } = useUserRight(userId, branchId);
   const save = useSaveUserRight();

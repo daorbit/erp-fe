@@ -4,7 +4,7 @@ import {
   Card, Select, Button, Space, Typography, App, Descriptions, Statistic, Row, Col,
 } from 'antd';
 import { List as ListIcon } from 'lucide-react';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
@@ -25,17 +25,14 @@ const FullAndFinal: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const { data: myCompanyData } = useMyCompany();
-  const companyOptions = myCompanyData?.data
-    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
-    : [];
+  const { companyOptions, firstCompanyId } = useGroupCompanies();
 
   // Auto-select the user's company
   useEffect(() => {
-    if (myCompanyData?.data && !company) {
-      setCompany(myCompanyData.data._id || myCompanyData.data.id);
+    if (firstCompanyId && !company) {
+      setCompany(firstCompanyId);
     }
-  }, [myCompanyData, company]);
+  }, [firstCompanyId, company]);
 
   const { data: branches } = useBranchList();
   const { data: depts } = useDepartmentList();
