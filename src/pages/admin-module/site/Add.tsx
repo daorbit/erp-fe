@@ -56,7 +56,7 @@ function FRow({ children }: { children: React.ReactNode }) {
 
 function FItem({ label, name, children, required }: { label: string; name: string; children?: React.ReactNode; required?: boolean }) {
   return (
-    <Form.Item label={label} name={name} labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}
+    <Form.Item label={label} name={name}
       rules={required ? [{ required: true, message: `${label} is required` }] : undefined}>
       {children || <Input />}
     </Form.Item>
@@ -141,10 +141,10 @@ export default function SiteAdd() {
         <FItem label="Short Name" name="code" required><Input /></FItem>
       </FRow>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
-        <Form.Item label="Is HO" name="isHO" valuePropName="checked" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
+        <Form.Item label="Is HO" name="isHO" valuePropName="checked">
           <Checkbox />
         </Form.Item>
-        <Form.Item label="Site Type" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }} required>
+        <Form.Item label="Site Type" required>
           <div className="flex items-center gap-2">
             <Form.Item name="siteType" noStyle rules={[{ required: true, message: 'Required' }]} initialValue="site">
               <Select options={SITE_TYPE_OPTIONS} className="flex-1" />
@@ -157,42 +157,42 @@ export default function SiteAdd() {
         <div />
       </div>
       <FRow>
-        <Form.Item label="Company" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
+        <Form.Item label="Company">
           <Input value={companyName} disabled />
         </Form.Item>
         <FItem label="Division" name="division"><Input /></FItem>
       </FRow>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-1">
-        <Form.Item label="Dept. Type" name="departmentType" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
+        <Form.Item label="Dept. Type" name="departmentType">
           <Select placeholder="Please Select" options={[
             { value: 'civil', label: 'Civil' }, { value: 'electrical', label: 'Electrical' },
             { value: 'mechanical', label: 'Mechanical' }, { value: 'it', label: 'IT' },
           ]} allowClear />
         </Form.Item>
-        <Form.Item label="Project Type" name="projectType" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}>
+        <Form.Item label="Project Type" name="projectType">
           <Select placeholder="Please Select" options={[
             { value: 'road', label: 'Road' }, { value: 'bridge', label: 'Bridge' },
             { value: 'building', label: 'Building' }, { value: 'canal', label: 'Canal' },
           ]} allowClear />
         </Form.Item>
-        <Form.Item label="Start Date" name="startDate" labelCol={{ span: 14 }} wrapperCol={{ span: 10 }}>
+        <Form.Item label="Start Date" name="startDate">
           <DatePicker className="w-full" defaultValue={dayjs()} />
         </Form.Item>
-        <Form.Item label="Purchase Limit" name="purchaseLimit" labelCol={{ span: 14 }} wrapperCol={{ span: 10 }}>
+        <Form.Item label="Purchase Limit" name="purchaseLimit">
           <InputNumber className="w-full" defaultValue={0} />
         </Form.Item>
       </div>
       <FRow>
-        <Form.Item label="Is Locked" name="isLocked" valuePropName="checked" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
+        <Form.Item label="Is Locked" name="isLocked" valuePropName="checked">
           <Checkbox><Text type="danger" className="text-xs">After Locking entry can not be made.</Text></Checkbox>
         </Form.Item>
-        <Form.Item label="Order No." name="orderNo" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
+        <Form.Item label="Order No." name="orderNo">
           <InputNumber className="w-full" defaultValue={0} />
         </Form.Item>
       </FRow>
       <FRow>
         <div />
-        <Form.Item name="cgstApplicable" valuePropName="checked" wrapperCol={{ offset: 9, span: 15 }}>
+        <Form.Item name="cgstApplicable" valuePropName="checked">
           <Checkbox>
             <Text className="text-xs">As per rules 38,42 & 43 of CGST Rules and section 17(5) — Yes</Text>
           </Checkbox>
@@ -234,16 +234,18 @@ export default function SiteAdd() {
   // ─── Tab 2: Tax Details ──────────────────────────────────────────────────
   const taxTab = (
     <div className="py-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
-        <Form.Item label="TIN No." name="tinNo" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
-        <Form.Item label="STC No." name="stcNo" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
-        <Form.Item label="ECC No." name="eccNo" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
-        <Form.Item label="Excise Range" name="exciseRange" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
-        <Form.Item label="Excise Division" name="exciseDivision" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
-        <Form.Item label="Commissionerate" name="commissionerate" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><Input /></Form.Item>
-      </div>
+      <FRow>
+        <Form.Item label="TIN No." name="tinNo"><Input /></Form.Item>
+        <Form.Item label="STC No." name="stcNo"><Input /></Form.Item>
+      </FRow>
+      <FRow>
+        <Form.Item label="ECC No." name="eccNo"><Input /></Form.Item>
+        <Form.Item label="Excise Range" name="exciseRange"><Input /></Form.Item>
+      </FRow>
+      <FRow>
+        <Form.Item label="Excise Division" name="exciseDivision"><Input /></Form.Item>
+        <Form.Item label="Commissionerate" name="commissionerate"><Input /></Form.Item>
+      </FRow>
     </div>
   );
 
@@ -258,23 +260,22 @@ export default function SiteAdd() {
         <FItem label="Remark" name="remark"><TextArea rows={2} /></FItem>
         <FItem label="Rera Reg. No." name="reraRegNo"><Input /></FItem>
       </FRow>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+      <FRow>
+        <Form.Item label="Completion Certificate" name="completionCertificate"><Input /></Form.Item>
+        <Form.Item label="Work Capital" name="workCapital"><InputNumber className="w-full" defaultValue={0} /></Form.Item>
+      </FRow>
+      <FRow>
+        <Form.Item label="LOI/LOA No." name="loiLoaNo"><Input /></Form.Item>
+        <Form.Item label="LOI/LOA Date" name="loiLoaDate"><DatePicker className="w-full" /></Form.Item>
+      </FRow>
+      <FRow>
+        <Form.Item label="Agreement No." name="agreementNo"><Input /></Form.Item>
+        <Form.Item label="Agreement Date" name="agreementDate"><DatePicker className="w-full" /></Form.Item>
+      </FRow>
+      <FRow>
+        <Form.Item label="Mandi Licence No." name="mandiLicenceNo"><Input /></Form.Item>
         <div />
-        <Form.Item label="Completion Certificate" name="completionCertificate" labelCol={{ span: 9 }} wrapperCol={{ span: 15 }}>
-          <Input />
-        </Form.Item>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-1">
-        <Form.Item label="LOI/LOA No." name="loiLoaNo" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><Input /></Form.Item>
-        <Form.Item label="LOI/LOA Date" name="loiLoaDate" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><DatePicker className="w-full" /></Form.Item>
-        <Form.Item label="Agreement No." name="agreementNo" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><Input /></Form.Item>
-        <Form.Item label="Agreement Date" name="agreementDate" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><DatePicker className="w-full" /></Form.Item>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
-        <Form.Item label="Work Capital" name="workCapital" labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}><InputNumber className="w-full" defaultValue={0} /></Form.Item>
-        <Form.Item label="Mandi Licence No." name="mandiLicenceNo" labelCol={{ span: 12 }} wrapperCol={{ span: 12 }}><Input /></Form.Item>
-        <div />
-      </div>
+      </FRow>
     </div>
   );
 
@@ -332,7 +333,7 @@ export default function SiteAdd() {
         <Button icon={<ListIcon size={14} />} onClick={() => navigate('/admin-module/master/site/list')}>List</Button>
       </div>
       <Card bordered={false} className="!rounded-lg !shadow-sm" loading={loading}>
-        <Form form={form} layout="horizontal" size="small">
+        <Form form={form} layout="vertical" size="small">
           {headerSection}
           <Tabs items={[
             { key: 'address', label: 'Address Details', children: addressTab },

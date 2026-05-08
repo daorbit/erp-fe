@@ -30,8 +30,6 @@ function FItem({
     <Form.Item
       label={label}
       name={name}
-      labelCol={{ span: 9 }}
-      wrapperCol={{ span: 15 }}
       rules={required ? [{ required: true, message: `${label} is required` }] : undefined}
     >
       {children || <Input />}
@@ -231,7 +229,9 @@ export default function LocationAdd() {
       </FRow>
       <FRow>
         <FItem label="Store Manager" name="storeManager"><Input /></FItem>
-        <div />
+        <FItem label="Location Type" name="locationType" required>
+          <Select options={LOCATION_TYPE_OPTIONS} placeholder="Please Select" allowClear />
+        </FItem>
       </FRow>
       <FRow>
         <FItem label="Address 1" name="address1">
@@ -245,14 +245,9 @@ export default function LocationAdd() {
         <FItem label="Address 3" name="address3">
           <TextArea rows={2} maxLength={100} showCount />
         </FItem>
-        <div className="grid grid-cols-1 gap-y-1">
-          <FItem label="Location Type" name="locationType" required>
-            <Select options={LOCATION_TYPE_OPTIONS} placeholder="Please Select" allowClear />
-          </FItem>
-          <FItem label="Order No." name="orderNo">
-            <InputNumber min={0} className="w-full" />
-          </FItem>
-        </div>
+        <FItem label="Order No." name="orderNo">
+          <InputNumber min={0} className="w-full" />
+        </FItem>
       </FRow>
       <FRow>
         <FItem label="City" name="city" required>
@@ -285,15 +280,19 @@ export default function LocationAdd() {
         </div>
 
         <div className="space-y-4 p-4">
-          <div>
-            <div className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">Google Maps Link</div>
+          <Form.Item
+            label="Google Maps Link"
+            name="googleMapLink"
+            className="!mb-0"
+            rules={[{ required: true, message: 'Please paste a Google Maps link' }]}
+          >
             <Input
               placeholder="Paste Google Maps URL to auto-fill latitude and longitude"
               onPaste={handleMapLinkPaste}
               allowClear
               prefix={<MapPin size={13} className="text-slate-400" />}
             />
-          </div>
+          </Form.Item>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <Form.Item label="Latitude" name="latitude" className="!mb-0">
@@ -432,7 +431,7 @@ export default function LocationAdd() {
       </Text>
 
       <Card bordered={false} className="!rounded-lg !shadow-sm" loading={isEdit && isLoading}>
-        <Form form={form} layout="horizontal" size="small" initialValues={{ orderNo: 0 }}>
+        <Form form={form} layout="vertical" size="small" initialValues={{ orderNo: 0 }}>
           <Tabs items={tabItems} type="card" />
 
           <div className="flex justify-center gap-3 mt-4">
