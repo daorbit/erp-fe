@@ -54,9 +54,9 @@ function FRow({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">{children}</div>;
 }
 
-function FItem({ label, name, children, required }: { label: string; name: string; children?: React.ReactNode; required?: boolean }) {
+function FItem({ label, name, children, required, tooltip }: { label: string; name: string; children?: React.ReactNode; required?: boolean; tooltip?: string }) {
   return (
-    <Form.Item label={label} name={name}
+    <Form.Item label={label} name={name} tooltip={tooltip}
       rules={required ? [{ required: true, message: `${label} is required` }] : undefined}>
       {children || <Input />}
     </Form.Item>
@@ -137,11 +137,11 @@ export default function SiteAdd() {
     <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
       <Text type="danger" className="block text-center font-medium mb-4">{isEdit ? 'Edit Mode' : 'New Mode'}</Text>
       <FRow>
-        <FItem label="Site Name" name="name" required><Input /></FItem>
-        <FItem label="Short Name" name="code" required><Input /></FItem>
+        <FItem label="Site Name" name="name" required tooltip="Full name of the site, plant, or project."><Input /></FItem>
+        <FItem label="Short Name" name="code" required tooltip="A short code or abbreviation used to identify this site (e.g. HQ, SITE01)."><Input /></FItem>
       </FRow>
       <FRow>
-        <Form.Item label="Is HO" name="isHO" valuePropName="checked">
+        <Form.Item label="Is HO" name="isHO" valuePropName="checked" tooltip="Check if this is the Head Office location.">
           <Checkbox />
         </Form.Item>
         <Form.Item label="Site Type" required>
@@ -156,19 +156,19 @@ export default function SiteAdd() {
         </Form.Item>
       </FRow>
       <FRow>
-        <Form.Item label="Company">
+        <Form.Item label="Company" tooltip="Company this site belongs to (auto-filled from your account).">
           <Input value={companyName} disabled />
         </Form.Item>
-        <FItem label="Division" name="division"><Input /></FItem>
+        <FItem label="Division" name="division" tooltip="Business division or unit this site falls under (e.g. North Zone, Infrastructure)."><Input /></FItem>
       </FRow>
       <FRow>
-        <Form.Item label="Dept. Type" name="departmentType">
+        <Form.Item label="Dept. Type" name="departmentType" tooltip="Primary department type operating at this site (Civil, Electrical, etc.).">
           <Select placeholder="Please Select" options={[
             { value: 'civil', label: 'Civil' }, { value: 'electrical', label: 'Electrical' },
             { value: 'mechanical', label: 'Mechanical' }, { value: 'it', label: 'IT' },
           ]} allowClear />
         </Form.Item>
-        <Form.Item label="Project Type" name="projectType">
+        <Form.Item label="Project Type" name="projectType" tooltip="Nature of the project at this site (Road, Bridge, Building, etc.).">
           <Select placeholder="Please Select" options={[
             { value: 'road', label: 'Road' }, { value: 'bridge', label: 'Bridge' },
             { value: 'building', label: 'Building' }, { value: 'canal', label: 'Canal' },
@@ -176,18 +176,18 @@ export default function SiteAdd() {
         </Form.Item>
       </FRow>
       <FRow>
-        <Form.Item label="Start Date" name="startDate">
+        <Form.Item label="Start Date" name="startDate" tooltip="Date when operations or the project at this site officially started.">
           <DatePicker className="w-full" defaultValue={dayjs()} />
         </Form.Item>
-        <Form.Item label="Purchase Limit" name="purchaseLimit">
+        <Form.Item label="Purchase Limit" name="purchaseLimit" tooltip="Maximum purchase value allowed without higher approval at this site.">
           <InputNumber className="w-full" defaultValue={0} />
         </Form.Item>
       </FRow>
       <FRow>
-        <Form.Item label="Is Locked" name="isLocked" valuePropName="checked">
+        <Form.Item label="Is Locked" name="isLocked" valuePropName="checked" tooltip="Locking prevents any further data entry or modifications for this site.">
           <Checkbox><Text type="danger" className="text-xs">After Locking entry can not be made.</Text></Checkbox>
         </Form.Item>
-        <Form.Item label="Order No." name="orderNo">
+        <Form.Item label="Order No." name="orderNo" tooltip="Display order for sorting this site in lists and reports.">
           <InputNumber className="w-full" defaultValue={0} />
         </Form.Item>
       </FRow>
@@ -206,28 +206,28 @@ export default function SiteAdd() {
   const addressTab = (
     <div className="py-4">
       <FRow>
-        <FItem label="Address 01" name="address01"><Input /></FItem>
-        <FItem label="Address 02" name="address02"><Input /></FItem>
+        <FItem label="Address 01" name="address01" tooltip="First line of the site's postal address (building, street)."><Input /></FItem>
+        <FItem label="Address 02" name="address02" tooltip="Second line of the site's postal address (area, landmark)."><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Address 03" name="address03"><Input /></FItem>
-        <FItem label="City" name="city" required><Input placeholder="Type here atleast 3 character to search data" /></FItem>
+        <FItem label="Address 03" name="address03" tooltip="Third line of the site's postal address (city/district/state if not separate fields)."><Input /></FItem>
+        <FItem label="City" name="city" required tooltip="City or town where this site is located."><Input placeholder="Type here atleast 3 character to search data" /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Pincode" name="pincode"><Input /></FItem>
-        <FItem label="Email" name="email"><Input /></FItem>
+        <FItem label="Pincode" name="pincode" tooltip="Postal/ZIP code for this site's address."><Input /></FItem>
+        <FItem label="Email" name="email" tooltip="Primary email address for correspondence related to this site."><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Email Id For PO From" name="emailForPO"><Input /></FItem>
-        <FItem label="Phone No.1" name="phone1"><Input /></FItem>
+        <FItem label="Email Id For PO From" name="emailForPO" tooltip="Email address used specifically for sending Purchase Orders from this site."><Input /></FItem>
+        <FItem label="Phone No.1" name="phone1" tooltip="Primary phone number for this site."><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Phone No.2" name="phone2"><Input /></FItem>
-        <FItem label="Fax No.1" name="faxNo1"><Input /></FItem>
+        <FItem label="Phone No.2" name="phone2" tooltip="Alternate or secondary phone number for this site."><Input /></FItem>
+        <FItem label="Fax No.1" name="faxNo1" tooltip="Primary fax number for this site."><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Fax No.2" name="faxNo2"><Input /></FItem>
-        <FItem label="Principal Employer" name="principalEmployer"><Input /></FItem>
+        <FItem label="Fax No.2" name="faxNo2" tooltip="Secondary fax number for this site."><Input /></FItem>
+        <FItem label="Principal Employer" name="principalEmployer" tooltip="Name of the principal employer at this site (required for labour compliance)."><Input /></FItem>
       </FRow>
     </div>
   );
@@ -254,27 +254,27 @@ export default function SiteAdd() {
   const otherTab = (
     <div className="py-4">
       <FRow>
-        <FItem label="Desc. Exciseable Commodity" name="descExciseableCommodity"><Input disabled className="!bg-red-50" /></FItem>
-        <FItem label="Contact Person" name="contactPerson"><Input /></FItem>
+        <FItem label="Desc. Exciseable Commodity" name="descExciseableCommodity" tooltip="Description of exciseable goods produced or handled at this site (auto-filled)."><Input disabled className="!bg-red-50" /></FItem>
+        <FItem label="Contact Person" name="contactPerson" tooltip="Primary point of contact at this site for admin or HR purposes."><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Remark" name="remark"><TextArea rows={2} /></FItem>
-        <FItem label="Rera Reg. No." name="reraRegNo"><Input /></FItem>
+        <FItem label="Remark" name="remark" tooltip="Any additional notes or remarks about this site."><TextArea rows={2} /></FItem>
+        <FItem label="Rera Reg. No." name="reraRegNo" tooltip="RERA (Real Estate Regulatory Authority) registration number, if applicable."><Input /></FItem>
       </FRow>
       <FRow>
-        <Form.Item label="Completion Certificate" name="completionCertificate"><Input /></Form.Item>
-        <Form.Item label="Work Capital" name="workCapital"><InputNumber className="w-full" defaultValue={0} /></Form.Item>
+        <Form.Item label="Completion Certificate" name="completionCertificate" tooltip="Completion certificate number issued upon project completion."><Input /></Form.Item>
+        <Form.Item label="Work Capital" name="workCapital" tooltip="Working capital amount allocated for operations at this site."><InputNumber className="w-full" defaultValue={0} /></Form.Item>
       </FRow>
       <FRow>
-        <Form.Item label="LOI/LOA No." name="loiLoaNo"><Input /></Form.Item>
-        <Form.Item label="LOI/LOA Date" name="loiLoaDate"><DatePicker className="w-full" /></Form.Item>
+        <Form.Item label="LOI/LOA No." name="loiLoaNo" tooltip="Letter of Intent / Letter of Award number for this project."><Input /></Form.Item>
+        <Form.Item label="LOI/LOA Date" name="loiLoaDate" tooltip="Date on which the LOI/LOA was issued."><DatePicker className="w-full" /></Form.Item>
       </FRow>
       <FRow>
-        <Form.Item label="Agreement No." name="agreementNo"><Input /></Form.Item>
-        <Form.Item label="Agreement Date" name="agreementDate"><DatePicker className="w-full" /></Form.Item>
+        <Form.Item label="Agreement No." name="agreementNo" tooltip="Contract or agreement number signed for this project."><Input /></Form.Item>
+        <Form.Item label="Agreement Date" name="agreementDate" tooltip="Date on which the project agreement/contract was signed."><DatePicker className="w-full" /></Form.Item>
       </FRow>
       <FRow>
-        <Form.Item label="Mandi Licence No." name="mandiLicenceNo"><Input /></Form.Item>
+        <Form.Item label="Mandi Licence No." name="mandiLicenceNo" tooltip="Agricultural market (Mandi) licence number, if applicable for this site."><Input /></Form.Item>
         <div />
       </FRow>
     </div>

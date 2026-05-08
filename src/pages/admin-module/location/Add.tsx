@@ -24,12 +24,13 @@ function FRow({ children }: { children: React.ReactNode }) {
 }
 
 function FItem({
-  label, name, children, required,
-}: { label: string; name: string; children?: React.ReactNode; required?: boolean }) {
+  label, name, children, required, tooltip,
+}: { label: string; name: string; children?: React.ReactNode; required?: boolean; tooltip?: string }) {
   return (
     <Form.Item
       label={label}
       name={name}
+      tooltip={tooltip}
       rules={required ? [{ required: true, message: `${label} is required` }] : undefined}
     >
       {children || <Input />}
@@ -212,8 +213,8 @@ export default function LocationAdd() {
   const locationDetailTab = (
     <div className="py-4">
       <FRow>
-        <FItem label="Location Name" name="name" required><Input /></FItem>
-        <FItem label="Site Name" name="site" required>
+        <FItem label="Location Name" name="name" required tooltip="Name of this specific location within the site (e.g. Store, Quarry Entrance, Admin Block)."><Input /></FItem>
+        <FItem label="Site Name" name="site" required tooltip="The parent site/plant/project this location belongs to.">
           <Select
             options={siteOptions}
             showSearch
@@ -224,33 +225,33 @@ export default function LocationAdd() {
         </FItem>
       </FRow>
       <FRow>
-        <FItem label="Contact Person 1" name="contactPerson1"><Input /></FItem>
-        <FItem label="Contact Person 2" name="contactPerson2"><Input /></FItem>
+        <FItem label="Contact Person 1" name="contactPerson1" tooltip="Primary contact person responsible for this location."><Input /></FItem>
+        <FItem label="Contact Person 2" name="contactPerson2" tooltip="Secondary contact person for this location."><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Store Manager" name="storeManager"><Input /></FItem>
-        <FItem label="Location Type" name="locationType" required>
+        <FItem label="Store Manager" name="storeManager" tooltip="Name of the store manager or in-charge at this location."><Input /></FItem>
+        <FItem label="Location Type" name="locationType" required tooltip="Category of this location (e.g. Store, Office, Quarry) used for attendance and reporting.">
           <Select options={LOCATION_TYPE_OPTIONS} placeholder="Please Select" allowClear />
         </FItem>
       </FRow>
       <FRow>
-        <FItem label="Address 1" name="address1">
+        <FItem label="Address 1" name="address1" tooltip="First line of the physical address for this location.">
           <TextArea rows={2} maxLength={100} showCount />
         </FItem>
-        <FItem label="Address 2" name="address2">
+        <FItem label="Address 2" name="address2" tooltip="Second line of the physical address for this location.">
           <TextArea rows={2} maxLength={100} showCount />
         </FItem>
       </FRow>
       <FRow>
-        <FItem label="Address 3" name="address3">
+        <FItem label="Address 3" name="address3" tooltip="Third line of the physical address for this location.">
           <TextArea rows={2} maxLength={100} showCount />
         </FItem>
-        <FItem label="Order No." name="orderNo">
+        <FItem label="Order No." name="orderNo" tooltip="Display order for this location in lists and dropdowns.">
           <InputNumber min={0} className="w-full" />
         </FItem>
       </FRow>
       <FRow>
-        <FItem label="City" name="city" required>
+        <FItem label="City" name="city" required tooltip="City or district where this location is situated.">
           <Select
             options={cityOptions}
             showSearch
@@ -259,7 +260,7 @@ export default function LocationAdd() {
             allowClear
           />
         </FItem>
-        <FItem label="PIN Code" name="pinCode"><Input /></FItem>
+        <FItem label="PIN Code" name="pinCode" tooltip="Postal/ZIP code for this location's address."><Input /></FItem>
       </FRow>
 
       {/* ─── Site Location (GPS) ──────────────────────────────────────────── */}
