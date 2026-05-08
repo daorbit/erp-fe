@@ -140,7 +140,7 @@ export default function SiteAdd() {
         <FItem label="Site Name" name="name" required><Input /></FItem>
         <FItem label="Short Name" name="code" required><Input /></FItem>
       </FRow>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-1">
+      <FRow>
         <Form.Item label="Is HO" name="isHO" valuePropName="checked">
           <Checkbox />
         </Form.Item>
@@ -154,15 +154,14 @@ export default function SiteAdd() {
             </Popover>
           </div>
         </Form.Item>
-        <div />
-      </div>
+      </FRow>
       <FRow>
         <Form.Item label="Company">
           <Input value={companyName} disabled />
         </Form.Item>
         <FItem label="Division" name="division"><Input /></FItem>
       </FRow>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-1">
+      <FRow>
         <Form.Item label="Dept. Type" name="departmentType">
           <Select placeholder="Please Select" options={[
             { value: 'civil', label: 'Civil' }, { value: 'electrical', label: 'Electrical' },
@@ -175,13 +174,15 @@ export default function SiteAdd() {
             { value: 'building', label: 'Building' }, { value: 'canal', label: 'Canal' },
           ]} allowClear />
         </Form.Item>
+      </FRow>
+      <FRow>
         <Form.Item label="Start Date" name="startDate">
           <DatePicker className="w-full" defaultValue={dayjs()} />
         </Form.Item>
         <Form.Item label="Purchase Limit" name="purchaseLimit">
           <InputNumber className="w-full" defaultValue={0} />
         </Form.Item>
-      </div>
+      </FRow>
       <FRow>
         <Form.Item label="Is Locked" name="isLocked" valuePropName="checked">
           <Checkbox><Text type="danger" className="text-xs">After Locking entry can not be made.</Text></Checkbox>
