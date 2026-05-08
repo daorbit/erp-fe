@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
   Card, Form, Input, Tabs, Button, Select, DatePicker, Checkbox, InputNumber,
-  Table, Typography, Space, Radio, App, Popover,
+  Table, Typography, Modal, Space, Radio, App, Popover,
 } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
-import { List as ListIcon, Info } from 'lucide-react';
+import { List as ListIcon, Info, MapPin } from 'lucide-react';
 import dayjs from 'dayjs';
 import branchService from '@/services/branchService';
 import { useAppSelector } from '@/store';
@@ -71,6 +71,9 @@ export default function SiteAdd() {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [locModal, setLocModal] = useState<{ open: boolean; siteId: string; siteName: string }>(
+    { open: false, siteId: '', siteName: '' },
+  );
   const user = useAppSelector((s) => s.auth.user);
   const companyName = typeof user?.company === 'object' ? user.company.name : '';
 
@@ -114,11 +117,13 @@ export default function SiteAdd() {
       if (isEdit && id) {
         await branchService.update(id, payload);
         message.success('Site/Plant/Project updated');
+        navigate('/admin-module/master/site/list');
       } else {
-        await branchService.create(payload);
+        const res: any = await branchService.create(payload);
+        const newSiteId = res?.data?._id || res?.data?.id || res?._id || res?.id;
         message.success('Site/Plant/Project created');
+        setLocModal({ open: true, siteId: newSiteId, siteName: values.name || '' });
       }
-      navigate('/admin-module/master/site/list');
     } catch (err: any) {
       if (err?.errorFields) return;
       message.error(err?.message || 'Failed to save');
@@ -342,6 +347,59 @@ export default function SiteAdd() {
           </div>
         </Form>
       </Card>
+
+      <Modal
+        open={locModal.open}
+        title={null}
+        closable={false}
+        maskClosable={false}
+        centered
+        width={480}
+        footer={null}
+      >
+        {/* Icon header */}
+        <div className="flex flex-col items-center text-center pt-4 pb-2">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 mb-4">
+            <MapPin size={32} className="text-blue-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">
+            Site Created Successfully!
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            <span className="font-medium text-slate-700 dark:text-slate-200">{locModal.siteName}</span> has been added.
+          </p>
+        </div>
+
+        {/* Info box */}
+        <div className="mx-2 my-4 rounded-lg border border-blue-100 bg-blue-50 dark:border-blue-800/40 dark:bg-blue-900/20 p-4 text-left space-y-2">
+          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1">
+            <MapPin size={14} /> What is a Site Location?
+          </p>
+          <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+            <li>A physical location within this site (e.g. Store, Quarry, Road point)</li>
+            <li>Used for GPS-based attendance — employees check-in within the allowed buffer radius</li>
+            <li>Supports route distances between locations for reporting</li>
+            <li>You can add multiple locations per site anytime from the Site Location menu</li>
+          </ul>
+        </div>
+
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-5">
+          Do you want to add a Site Location for <b>{locModal.siteName}</b> now?
+        </p>
+
+        {/* Buttons */}
+        <div className="flex justify-center gap-3 pb-2">
+          <Button
+            size="large"
+            type="primary"
+            danger
+            icon={<MapPin size={15} />}
+            onClick={() => { setLocModal({ open: false, siteId: '', siteName: '' }); navigate(`/admin-module/master/site-location/add?site=${locModal.siteId}`); }}
+          >
+            Add Site Location
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

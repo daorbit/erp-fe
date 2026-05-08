@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card, Form, Input, Tabs, Button, Select, InputNumber, Table, Typography, App,
 } from 'antd';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { List as ListIcon, MapPin } from 'lucide-react';
 import { useCreateLocation, useUpdateLocation, useLocation } from '@/hooks/queries/useLocations';
 import { cityHooks } from '@/hooks/queries/useMasterOther';
@@ -48,6 +48,8 @@ export default function LocationAdd() {
   const [routeKmMap, setRouteKmMap] = useState<Record<string, number>>({});
   const [previewCoords, setPreviewCoords] = useState<{ lat: number; lng: number } | null>(null);
   const isEdit = !!id;
+  const [searchParams] = useSearchParams();
+  const prefilledSiteId = searchParams.get('site');
 
   const { data: locationData, isLoading } = useLocation(id || '');
   const createMutation = useCreateLocation();
@@ -94,6 +96,12 @@ export default function LocationAdd() {
         };
       });
   }, [allLocations, branchById, isEdit, id]);
+
+  useEffect(() => {
+    if (!isEdit && prefilledSiteId) {
+      form.setFieldsValue({ site: prefilledSiteId });
+    }
+  }, [prefilledSiteId, isEdit, form]);
 
   useEffect(() => {
     if (isEdit && locationData?.data) {
