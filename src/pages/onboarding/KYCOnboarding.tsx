@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, Steps, Button, Input, Select, Radio, Upload, Checkbox, Divider, Typography, Progress, App, Spin } from 'antd';
+import { cityHooks } from '@/hooks/queries/useMasterOther';
 import {
   UserOutlined, IdcardOutlined, BankOutlined, SafetyCertificateOutlined,
   FileProtectOutlined, UploadOutlined, CheckCircleOutlined,
@@ -26,6 +27,8 @@ const steps = [
 ];
 
 const KYCOnboarding: React.FC = () => {
+  const { data: citiesData } = cityHooks.useList();
+  const cityOptions = (citiesData?.data ?? []).map((c: any) => ({ value: c.name, label: c.name }));
   const [current, setCurrent] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -125,7 +128,7 @@ const KYCOnboarding: React.FC = () => {
           <Text strong className="text-base">Address</Text>
           <div><label className="block text-xs font-medium text-gray-500 mb-1">Street Address *</label><Input size="large" placeholder="Street address" value={pi.address?.street || ''} onChange={(e) => updateField('personalInfo', 'address', { ...(pi.address || {}), street: e.target.value })} /></div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div><label className="block text-xs font-medium text-gray-500 mb-1">City *</label><Input size="large" placeholder="City" value={pi.address?.city || ''} onChange={(e) => updateField('personalInfo', 'address', { ...(pi.address || {}), city: e.target.value })} /></div>
+            <div><label className="block text-xs font-medium text-gray-500 mb-1">City *</label><Select size="large" className="w-full" showSearch optionFilterProp="label" placeholder="Select city" options={cityOptions} value={pi.address?.city || undefined} onChange={(v) => updateField('personalInfo', 'address', { ...(pi.address || {}), city: v })} allowClear /></div>
             <div><label className="block text-xs font-medium text-gray-500 mb-1">State *</label><Input size="large" placeholder="State" value={pi.address?.state || ''} onChange={(e) => updateField('personalInfo', 'address', { ...(pi.address || {}), state: e.target.value })} /></div>
             <div><label className="block text-xs font-medium text-gray-500 mb-1">PIN Code *</label><Input size="large" placeholder="PIN Code" maxLength={6} onKeyDown={numOnly} value={pi.address?.pinCode || ''} onChange={(e) => updateField('personalInfo', 'address', { ...(pi.address || {}), pinCode: e.target.value })} /></div>
           </div>
