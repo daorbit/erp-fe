@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { List as ListIcon, Info, MapPin } from 'lucide-react';
 import dayjs from 'dayjs';
 import branchService from '@/services/branchService';
+import { cityHooks } from '@/hooks/queries/useMasterOther';
 import { useAppSelector } from '@/store';
 
 const { Title, Text } = Typography;
@@ -76,6 +77,8 @@ export default function SiteAdd() {
   );
   const user = useAppSelector((s) => s.auth.user);
   const companyName = typeof user?.company === 'object' ? user.company.name : '';
+  const { data: citiesData } = cityHooks.useList();
+  const cityOptions = (citiesData?.data ?? []).map((c: any) => ({ value: c.name, label: c.name }));
 
   // ─── Load existing site on edit ──────────────────────────────────────────
   useEffect(() => {
@@ -211,7 +214,7 @@ export default function SiteAdd() {
       </FRow>
       <FRow>
         <FItem label="Address 03" name="address03" tooltip="Third line of the site's postal address (city/district/state if not separate fields)."><Input /></FItem>
-        <FItem label="City" name="city" required tooltip="City or town where this site is located."><Input placeholder="Type here atleast 3 character to search data" /></FItem>
+        <FItem label="City" name="city" required tooltip="City or town where this site is located."><Select showSearch optionFilterProp="label" placeholder="Select city" options={cityOptions} allowClear /></FItem>
       </FRow>
       <FRow>
         <FItem label="Pincode" name="pincode" tooltip="Postal/ZIP code for this site's address."><Input /></FItem>
