@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, Form, Input, Select, Radio, DatePicker, Button, Space, Typography, Table, Checkbox } from 'antd';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
@@ -82,17 +82,14 @@ const EmployeeFilterPanel: React.FC<Props> = ({
   const includes = (f: FilterField) => fields.includes(f);
 
   // Master data
-  const { data: myCompanyData } = useMyCompany();
-  const companyOptions = myCompanyData?.data
-    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
-    : [];
+  const { companyOptions, firstCompanyId } = useGroupCompanies();
 
   // Auto-select the user's company
   useEffect(() => {
-    if (myCompanyData?.data && !filters.company) {
-      setF('company', myCompanyData.data._id || myCompanyData.data.id);
+    if (firstCompanyId && !filters.company) {
+      setF('company', firstCompanyId);
     }
-  }, [myCompanyData]);
+  }, [firstCompanyId]);
 
   const { data: branches } = useBranchList();
   const { data: depts } = useDepartmentList();

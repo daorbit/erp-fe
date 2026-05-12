@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Card, Form, Input, Tabs, Button, Select, InputNumber, Table, Typography, App,
 } from 'antd';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { List as ListIcon, MapPin } from 'lucide-react';
 import { useCreateLocation, useUpdateLocation, useLocation } from '@/hooks/queries/useLocations';
 import { cityHooks } from '@/hooks/queries/useMasterOther';
@@ -24,14 +24,13 @@ function FRow({ children }: { children: React.ReactNode }) {
 }
 
 function FItem({
-  label, name, children, required,
-}: { label: string; name: string; children?: React.ReactNode; required?: boolean }) {
+  label, name, children, required, tooltip,
+}: { label: string; name: string; children?: React.ReactNode; required?: boolean; tooltip?: string }) {
   return (
     <Form.Item
       label={label}
       name={name}
-      labelCol={{ span: 9 }}
-      wrapperCol={{ span: 15 }}
+      tooltip={tooltip}
       rules={required ? [{ required: true, message: `${label} is required` }] : undefined}
     >
       {children || <Input />}
@@ -48,6 +47,8 @@ export default function LocationAdd() {
   const [routeKmMap, setRouteKmMap] = useState<Record<string, number>>({});
   const [previewCoords, setPreviewCoords] = useState<{ lat: number; lng: number } | null>(null);
   const isEdit = !!id;
+  const [searchParams] = useSearchParams();
+  const prefilledSiteId = searchParams.get('site');
 
   const { data: locationData, isLoading } = useLocation(id || '');
   const createMutation = useCreateLocation();
@@ -94,6 +95,12 @@ export default function LocationAdd() {
         };
       });
   }, [allLocations, branchById, isEdit, id]);
+
+  useEffect(() => {
+    if (!isEdit && prefilledSiteId) {
+      form.setFieldsValue({ site: prefilledSiteId });
+    }
+  }, [prefilledSiteId, isEdit, form]);
 
   useEffect(() => {
     if (isEdit && locationData?.data) {
@@ -206,8 +213,8 @@ export default function LocationAdd() {
   const locationDetailTab = (
     <div className="py-4">
       <FRow>
-        <FItem label="Location Name" name="name" required><Input /></FItem>
-        <FItem label="Site Name" name="site" required>
+        <FItem label="Location Name" name="name" required tooltip="Name of this specific location within the site (e.g. Store, Quarry Entrance, Admin Block)."><Input /></FItem>
+        <FItem label="Site Name" name="site" required tooltip="The parent site/plant/project this location belongs to.">
           <Select
             options={siteOptions}
             showSearch
@@ -218,36 +225,33 @@ export default function LocationAdd() {
         </FItem>
       </FRow>
       <FRow>
-        <FItem label="Contact Person 1" name="contactPerson1"><Input /></FItem>
-        <FItem label="Contact Person 2" name="contactPerson2"><Input /></FItem>
+        <FItem label="Contact Person 1" name="contactPerson1" tooltip="Primary contact person responsible for this location."><Input /></FItem>
+        <FItem label="Contact Person 2" name="contactPerson2" tooltip="Secondary contact person for this location."><Input /></FItem>
       </FRow>
       <FRow>
-        <FItem label="Store Manager" name="storeManager"><Input /></FItem>
-        <div />
-      </FRow>
-      <FRow>
-        <FItem label="Address 1" name="address1">
-          <TextArea rows={2} maxLength={100} showCount />
-        </FItem>
-        <FItem label="Address 2" name="address2">
-          <TextArea rows={2} maxLength={100} showCount />
+        <FItem label="Store Manager" name="storeManager" tooltip="Name of the store manager or in-charge at this location."><Input /></FItem>
+        <FItem label="Location Type" name="locationType" required tooltip="Category of this location (e.g. Store, Office, Quarry) used for attendance and reporting.">
+          <Select options={LOCATION_TYPE_OPTIONS} placeholder="Please Select" allowClear />
         </FItem>
       </FRow>
       <FRow>
-        <FItem label="Address 3" name="address3">
+        <FItem label="Address 1" name="address1" tooltip="First line of the physical address for this location.">
           <TextArea rows={2} maxLength={100} showCount />
         </FItem>
-        <div className="grid grid-cols-1 gap-y-1">
-          <FItem label="Location Type" name="locationType" required>
-            <Select options={LOCATION_TYPE_OPTIONS} placeholder="Please Select" allowClear />
-          </FItem>
-          <FItem label="Order No." name="orderNo">
-            <InputNumber min={0} className="w-full" />
-          </FItem>
-        </div>
+        <FItem label="Address 2" name="address2" tooltip="Second line of the physical address for this location.">
+          <TextArea rows={2} maxLength={100} showCount />
+        </FItem>
       </FRow>
       <FRow>
-        <FItem label="City" name="city" required>
+        <FItem label="Address 3" name="address3" tooltip="Third line of the physical address for this location.">
+          <TextArea rows={2} maxLength={100} showCount />
+        </FItem>
+        <FItem label="Order No." name="orderNo" tooltip="Display order for this location in lists and dropdowns.">
+          <InputNumber min={0} className="w-full" />
+        </FItem>
+      </FRow>
+      <FRow>
+        <FItem label="City" name="city" required tooltip="City or district where this location is situated.">
           <Select
             options={cityOptions}
             showSearch
@@ -256,7 +260,7 @@ export default function LocationAdd() {
             allowClear
           />
         </FItem>
-        <FItem label="PIN Code" name="pinCode"><Input /></FItem>
+        <FItem label="PIN Code" name="pinCode" tooltip="Postal/ZIP code for this location's address."><Input /></FItem>
       </FRow>
 
       {/* ─── Site Location (GPS) ──────────────────────────────────────────── */}
@@ -277,15 +281,19 @@ export default function LocationAdd() {
         </div>
 
         <div className="space-y-4 p-4">
-          <div>
-            <div className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">Google Maps Link</div>
+          <Form.Item
+            label="Google Maps Link"
+            name="googleMapLink"
+            className="!mb-0"
+            rules={[{ required: true, message: 'Please paste a Google Maps link' }]}
+          >
             <Input
               placeholder="Paste Google Maps URL to auto-fill latitude and longitude"
               onPaste={handleMapLinkPaste}
               allowClear
               prefix={<MapPin size={13} className="text-slate-400" />}
             />
-          </div>
+          </Form.Item>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <Form.Item label="Latitude" name="latitude" className="!mb-0">
@@ -424,7 +432,7 @@ export default function LocationAdd() {
       </Text>
 
       <Card bordered={false} className="!rounded-lg !shadow-sm" loading={isEdit && isLoading}>
-        <Form form={form} layout="horizontal" size="small" initialValues={{ orderNo: 0 }}>
+        <Form form={form} layout="vertical" size="small" initialValues={{ orderNo: 0 }}>
           <Tabs items={tabItems} type="card" />
 
           <div className="flex justify-center gap-3 mt-4">

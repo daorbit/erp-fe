@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Form, Select, Button, Space, Typography, Table, Empty, App } from 'antd';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import designationService from '@/services/designationService';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 import { useAppSelector } from '@/store';
 
 const { Title } = Typography;
@@ -20,20 +20,17 @@ const DesignationEmployeeCount: React.FC = () => {
   const { data: branchListData } = useBranchList();
   const branches = branchListData?.data ?? [];
 
-  const { data: myCompanyData } = useMyCompany();
-  const companyOptions = myCompanyData?.data
-    ? [{ value: myCompanyData.data._id || myCompanyData.data.id, label: myCompanyData.data.name }]
-    : [];
+  const { companyOptions, firstCompanyId } = useGroupCompanies();
 
   const userCompanyId =
     typeof user?.company === 'object' ? user?.company?._id || user?.company?.id : user?.company;
 
   // Auto-select the user's company when data loads
   useEffect(() => {
-    if (myCompanyData?.data) {
-      form.setFieldValue('companyId', myCompanyData.data._id || myCompanyData.data.id);
+    if (firstCompanyId) {
+      form.setFieldValue('companyId', firstCompanyId);
     }
-  }, [myCompanyData, form]);
+  }, [firstCompanyId, form]);
 
   const [rows, setRows] = useState<Array<{ designationId: string; designationName: string; shortName: string; count: number }>>([]);
   const [loading, setLoading] = useState(false);

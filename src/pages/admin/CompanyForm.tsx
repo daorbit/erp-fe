@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, InputNumber, Select, Switch, App, Button, Avatar, Upload as AntUpload } from 'antd';
-import { Upload, Camera, ArrowLeft } from 'lucide-react';
+import { Card, Form, Input, InputNumber, Select, Switch, App, Button, Avatar, Upload as AntUpload, Modal } from 'antd';
+import { Upload, Camera, ArrowLeft, UserPlus } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreateCompany, useUpdateCompany, useCompanyList } from '@/hooks/queries/useCompanies';
 import { useUploadImage } from '@/hooks/queries/useUpload';
@@ -23,6 +23,7 @@ const CompanyForm: React.FC = () => {
   const updateMutation = useUpdateCompany();
   const uploadMutation = useUploadImage();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [createdCompany, setCreatedCompany] = useState<{ id: string; email: string; name: string } | null>(null);
   const { data: companyData } = useCompanyList();
 
   const isEdit = !!id;
@@ -99,12 +100,18 @@ const CompanyForm: React.FC = () => {
       if (isEdit) {
         await updateMutation.mutateAsync({ id: editData._id || editData.id, data: payload });
         message.success('Company updated');
+        navigate('/admin/companies');
       } else {
         delete payload.isActive;
-        await createMutation.mutateAsync(payload);
+        const res = await createMutation.mutateAsync(payload);
+        const saved = res?.data;
         message.success('Company created');
+        setCreatedCompany({
+          id: saved?._id || saved?.id || '',
+          email: payload.email || '',
+          name: payload.name || '',
+        });
       }
-      navigate('/admin/companies');
     } catch (err: any) {
       message.error(err?.message || `Failed to ${isEdit ? 'update' : 'create'} company`);
     }
@@ -112,6 +119,37 @@ const CompanyForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Post-create dialog */}
+      <Modal
+        open={!!createdCompany}
+        onCancel={() => { setCreatedCompany(null); navigate('/admin/companies'); }}
+        footer={null}
+        centered
+        title={null}
+        width={420}
+      >
+        <div className="py-4 text-center space-y-3">
+          <div className="text-4xl">🎉</div>
+          <p className="font-semibold text-base">{createdCompany?.name} was created successfully.</p>
+          <p className="text-gray-500 text-sm">Would you like to create a user and assign them to this company?</p>
+          <div className="flex justify-center gap-3 pt-2">
+            <Button
+              type="primary"
+              icon={<UserPlus size={14} />}
+              onClick={() => {
+                const params = new URLSearchParams();
+                if (createdCompany?.email) params.set('email', createdCompany.email);
+                if (createdCompany?.id) params.set('company', createdCompany.id);
+                setCreatedCompany(null);
+                navigate(`/admin/users/create?${params.toString()}`);
+              }}
+            >
+              Create User
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       <div className="flex items-center gap-3">
         <Button type="text" icon={<ArrowLeft size={18} />} onClick={() => navigate('/admin/companies')} />
         <h2 className="text-xl font-semibold m-0">{isEdit ? `${t('edit')} ${t('company')}` : `${t('add')} ${t('company')}`}</h2>

@@ -8,6 +8,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import companyGstService from '@/services/companyGstService';
 import stateService from '@/services/stateService';
+import { cityHooks } from '@/hooks/queries/useMasterOther';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -18,6 +19,8 @@ export default function CompanyGstMaster() {
   const { message } = App.useApp();
   const qc = useQueryClient();
   const [form] = Form.useForm();
+  const { data: citiesData } = cityHooks.useList();
+  const cityOptions = (citiesData?.data ?? []).map((c: any) => ({ value: c.name, label: c.name }));
 
   const [mode, setMode] = useState<Mode>('new');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -288,7 +291,7 @@ export default function CompanyGstMaster() {
               <TextArea rows={1} />
             </Form.Item>
             <Form.Item label="City" name="city" labelCol={{ span: 7 }} wrapperCol={{ span: 17 }}>
-              <Input placeholder="Type here atleast 3 character to search data" />
+              <Select showSearch optionFilterProp="label" placeholder="Select city" options={cityOptions} allowClear />
             </Form.Item>
 
             <div className="grid grid-cols-2 gap-x-3">
@@ -379,7 +382,7 @@ export default function CompanyGstMaster() {
               <Input />
             </Form.Item>
             <Form.Item label="City" name="city" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
-              <Input placeholder="Type here atleast 3 character to search data" />
+              <Select showSearch optionFilterProp="label" placeholder="Select city" options={cityOptions} allowClear />
             </Form.Item>
             <Form.Item label="Pin Code" name="pinCode" labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
               <Input />

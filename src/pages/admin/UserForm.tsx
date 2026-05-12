@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, Form, Input, Select, Switch, App, Button, Typography, Space, Upload as AntUpload, Avatar } from 'antd';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
@@ -27,6 +27,7 @@ const UserForm: React.FC = () => {
   const queryClient = useQueryClient();
   const uploadMutation = useUploadImage();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
@@ -44,6 +45,14 @@ const UserForm: React.FC = () => {
     enabled: isSuperAdmin,
   });
   const companies: any[] = companyData?.data ?? [];
+
+  // Pre-populate email and company when navigated from company creation
+  useEffect(() => {
+    const preEmail = searchParams.get('email');
+    const preCompany = searchParams.get('company');
+    if (preEmail) form.setFieldsValue({ email: preEmail });
+    if (preCompany) form.setFieldsValue({ company: preCompany });
+  }, [searchParams, form, companies]); // re-run when companies load so Select can resolve the id
 
   const createUserMutation = useMutation({
     mutationFn: (data: any) => authService.register(data),

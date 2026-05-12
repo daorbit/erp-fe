@@ -457,6 +457,8 @@ export const adminModuleNav: NavItem[] = [
         dynamicLabel: 'companyName',
         children: [
           { titleKey: 'nav_adm_company_overview', href: '/admin-module/master/company', icon: Eye },
+          { titleKey: 'nav_add', href: '/admin-module/master/company/add', icon: Plus },
+          { titleKey: 'nav_list', href: '/admin-module/master/company/list', icon: List },
           {
             titleKey: 'nav_adm_site_plant_project',
             icon: Building,

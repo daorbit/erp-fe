@@ -23,6 +23,21 @@ export function useMyCompany() {
   });
 }
 
+/** Returns all companies in the user's group (main + siblings) as Select options. */
+export function useGroupCompanies() {
+  const { data, isLoading } = useQuery({
+    queryKey: [...companyKeys.all, 'group'] as const,
+    queryFn: () => companyService.getAll(),
+  });
+  const companies: any[] = (data as any)?.data ?? [];
+  const companyOptions = companies.map((c: any) => ({
+    value: c._id || c.id,
+    label: c.name,
+  }));
+  const firstCompanyId: string | undefined = companies[0]?._id || companies[0]?.id;
+  return { companyOptions, firstCompanyId, isLoading, companies };
+}
+
 export function useCompany(id: string) {
   return useQuery({
     queryKey: companyKeys.detail(id),

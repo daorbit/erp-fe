@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Card, Form, Input, InputNumber, Select, DatePicker, Checkbox, Button, Space, Typography,
@@ -12,7 +12,7 @@ import { useDepartmentList } from '@/hooks/queries/useDepartments';
 import { useDesignationList } from '@/hooks/queries/useDesignations';
 import { useBranchList } from '@/hooks/queries/useBranches';
 import { useEmployeeGroupList } from '@/hooks/queries/useEmployeeGroups';
-import { useMyCompany } from '@/hooks/queries/useCompanies';
+import { useGroupCompanies } from '@/hooks/queries/useCompanies';
 import {
   levelHooks, gradeHooks, tagHooks, cityHooks, bankHooks,
 } from '@/hooks/queries/useMasterOther';
@@ -51,7 +51,7 @@ const EmployeeAdd: React.FC = () => {
   const { data: desigs } = useDesignationList();
   const { data: branches } = useBranchList();
   const { data: empGroups } = useEmployeeGroupList();
-  const { data: myCompany } = useMyCompany();
+  const { companyOptions, firstCompanyId } = useGroupCompanies();
   const { data: levels } = levelHooks.useList();
   const { data: grades } = gradeHooks.useList();
   const { data: tags } = tagHooks.useList();
@@ -59,17 +59,11 @@ const EmployeeAdd: React.FC = () => {
   const { data: banks } = bankHooks.useList();
 
   // Auto-set company from current user's company
-  const companyOptions = useMemo(() => {
-    const c = myCompany?.data;
-    return c ? [{ value: c._id || c.id, label: c.name }] : [];
-  }, [myCompany]);
-
   useEffect(() => {
-    if (!isEdit && myCompany?.data) {
-      const c = myCompany.data;
-      form.setFieldValue('company', c._id || c.id);
+    if (!isEdit && firstCompanyId) {
+      form.setFieldValue('company', firstCompanyId);
     }
-  }, [myCompany, isEdit, form]);
+  }, [firstCompanyId, isEdit, form]);
 
   // Top-level scalar dates that need to be re-hydrated to dayjs for DatePicker.
   const SCALAR_DATE_FIELDS = [

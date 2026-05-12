@@ -62,7 +62,7 @@ export default function SiteList() {
 
   // Build query params from the *applied* filter snapshot — sent to the backend.
   const branchQueryParams = useMemo(() => {
-    const p: Record<string, string> = { limit: '200' };
+    const p: Record<string, string> = { limit: '200', sortBy: 'createdAt', sortOrder: 'desc' };
     if (applied.companySites.length) p.ids = applied.companySites.join(',');
     if (applied.siteStates.length) p.states = applied.siteStates.join(',');
     if (applied.division !== 'all') p.division = applied.division;
