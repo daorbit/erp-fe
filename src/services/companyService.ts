@@ -6,6 +6,10 @@ const companyService = {
   getMyCompany: () =>
     api.get<any>(`${COMPANIES_URL}/me`),
 
+  /** Returns parent + all siblings for the context switcher dropdown. */
+  getGroup: () =>
+    api.get<any[]>(`${COMPANIES_URL}/group`),
+
   getAll: (params?: Record<string, string>) =>
     api.get<any>(COMPANIES_URL, params),
 

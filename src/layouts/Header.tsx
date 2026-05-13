@@ -9,6 +9,7 @@ import {
 } from "antd";
 import { localeMap } from '@/config/i18n';
 import { useTranslation } from "@/hooks/useTranslation";
+import CompanySwitcher from "@/components/CompanySwitcher";
 import {
   Menu,
   PanelRightOpen,
@@ -94,6 +95,8 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
       {/* Right */}
       <Space size={4}>
+        <CompanySwitcher />
+
         <Tooltip title={isDark ? t('light') : t('dark')}>
           <AntButton
             type="text"

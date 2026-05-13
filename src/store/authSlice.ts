@@ -50,6 +50,7 @@ const authSlice = createSlice({
       state.loading = false;
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('activeCompanyId');
     },
     setUser(state, action: PayloadAction<IUser>) {
       state.user = action.payload;
