@@ -31,6 +31,12 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // Attach the active company context so the backend scopes all queries correctly
+  const activeCompanyId = store.getState().activeCompany?.activeCompanyId;
+  if (activeCompanyId) {
+    headers['X-Active-Company'] = activeCompanyId;
+  }
+
   const response = await fetch(url, {
     ...fetchOptions,
     headers,
